@@ -1,0 +1,9 @@
+{
+  "status": "success",
+  "tool": "workspace-control",
+  "message": "SAGE BOOK workspace initialized",
+  "entryUrl": "entry.html",
+  "defaultTheme": "dark",
+  "aiEnabled": true,
+  "timestamp": "2026-06-14T22:20:00Z"
+}

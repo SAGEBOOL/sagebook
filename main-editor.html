@@ -1,0 +1,2074 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE BOOK - 主编辑器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252525;
+            --bg-tertiary: #2a2a2a;
+            --bg-hover: #2f2f2f;
+            --bg-active: #383838;
+            --text-primary: #dcddde;
+            --text-secondary: #999999;
+            --text-muted: #666666;
+            --accent: #7c5cbf;
+            --accent-hover: #8d6fd4;
+            --accent-light: #a78bfa;
+            --border: #3e3e3e;
+            --border-light: #4a4a4a;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --error: #f87171;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* 菜单栏 */
+        .menu-bar {
+            height: 30px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 13px;
+            user-select: none;
+        }
+
+        .menu-item {
+            padding: 4px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            min-width: 180px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .menu-item:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 6px 6px 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 6px 6px;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
+        .shortcut {
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        /* 主布局 */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 30px - 28px);
+        }
+
+        /* 左侧栏 */
+        .sidebar-left {
+            width: 250px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-left.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 0;
+        }
+
+        .tree-item {
+            padding: 6px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+
+        .tree-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .tree-item.active {
+            background: var(--bg-active);
+            color: var(--accent-light);
+        }
+
+        .tree-item .icon {
+            font-size: 14px;
+        }
+
+        .tree-children {
+            padding-left: 20px;
+        }
+
+        .tree-toggle {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: transform 0.2s;
+        }
+
+        .tree-toggle.expanded {
+            transform: rotate(90deg);
+        }
+
+        /* 编辑区 */
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+        }
+
+        .tabs-bar {
+            height: 36px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 2px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 6px 15px;
+            background: var(--bg-tertiary);
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s;
+        }
+
+        .tab:hover {
+            background: var(--bg-hover);
+        }
+
+        .tab.active {
+            background: var(--bg-primary);
+            color: var(--accent-light);
+        }
+
+        .tab-close {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            opacity: 0.6;
+            transition: opacity 0.15s;
+        }
+
+        .tab-close:hover {
+            opacity: 1;
+            background: var(--bg-hover);
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            height: 40px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            gap: 5px;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+
+        .toolbar-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 5px;
+        }
+
+        .editor-pane {
+            flex: 1;
+            padding: 40px 60px;
+            overflow-y: auto;
+            font-size: 16px;
+            line-height: 1.8;
+            outline: none;
+        }
+
+        .editor-pane h1 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .editor-pane h2 {
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--accent-light);
+        }
+
+        .editor-pane p {
+            margin-bottom: 15px;
+        }
+
+        .editor-pane blockquote {
+            border-left: 3px solid var(--accent);
+            padding-left: 15px;
+            margin: 15px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .editor-pane strong {
+            color: var(--accent-light);
+        }
+
+        .editor-pane hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 30px 0;
+        }
+
+        /* 右侧栏 */
+        .sidebar-right {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+
+        .sidebar-right.collapsed {
+            width: 0;
+            overflow: hidden;
+        }
+
+        .panel {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .backlink-item {
+            padding: 8px 10px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .backlink-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .backlink-source {
+            color: var(--accent-light);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .backlink-preview {
+            color: var(--text-secondary);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 3px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .tag:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 28px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            gap: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 6px 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+
+        .modal-close:hover {
+            background: var(--bg-hover);
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* 输入框 */
+        .input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .input-label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        /* AI 建议面板 */
+        .ai-suggestion {
+            background: var(--bg-tertiary);
+            border-left: 3px solid var(--accent);
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .ai-suggestion-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            color: var(--accent-light);
+            font-weight: 500;
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-light);
+        }
+
+        /* 查找替换 */
+        .find-replace {
+            display: none;
+            position: absolute;
+            top: 80px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .find-replace.show {
+            display: block;
+        }
+
+        .find-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* Toast 通知 */
+        .toast {
+            position: fixed;
+            bottom: 50px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 3000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 3px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 3px solid var(--error);
+        }
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .toolbar {
+                padding: 0 10px;
+            }
+            
+            .toolbar-title {
+                font-size: 14px;
+            }
+            
+            .menu-bar {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .menu-item {
+                padding: 0 10px;
+            }
+            
+            .main-content,
+            .content-area {
+                padding: 10px;
+            }
+            
+            .sidebar-left {
+                position: fixed;
+                left: -280px;
+                width: 280px;
+                height: 100%;
+                z-index: 1000;
+                transition: left 0.3s ease;
+            }
+            
+            .sidebar-left.mobile-open {
+                left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block !important;
+            }
+            
+            .btn-group {
+                flex-wrap: wrap;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+            
+            .editor-pane {
+                font-size: 16px;
+            }
+            
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+            
+            .ai-panel {
+                width: 100%;
+                position: fixed;
+                bottom: 0;
+                right: 0;
+                height: 50%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .toolbar-title {
+                font-size: 12px;
+            }
+            
+            .menu-bar {
+                height: auto;
+                flex-wrap: wrap;
+            }
+            
+            .dropdown-menu {
+                position: fixed;
+                width: 100%;
+                left: 0 !important;
+            }
+            
+            .settings-group {
+                padding: 15px;
+            }
+            
+            .setting-item {
+                padding: 10px;
+            }
+        }
+        
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .mobile-menu-btn:active {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- 菜单栏 -->
+    <div class="menu-bar">
+        <div class="menu-item">
+            文件
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="newFile()">新建文件 <span class="shortcut">⌘N</span></div>
+                <div class="dropdown-item" onclick="openFile()">打开文件 <span class="shortcut">⌘O</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="saveFile()">保存 <span class="shortcut">⌘S</span></div>
+                <div class="dropdown-item" onclick="saveAsFile()">另存为... <span class="shortcut">⌘⇧S</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="exportFile()">导出... <span class="shortcut">⌘E</span></div>
+            </div>
+        </div>
+        <div class="menu-item">
+            编辑
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="document.execCommand('undo')">撤销 <span class="shortcut">⌘Z</span></div>
+                <div class="dropdown-item" onclick="document.execCommand('redo')">重做 <span class="shortcut">⌘⇧Z</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="document.execCommand('cut')">剪切 <span class="shortcut">⌘X</span></div>
+                <div class="dropdown-item" onclick="document.execCommand('copy')">复制 <span class="shortcut">⌘C</span></div>
+                <div class="dropdown-item" onclick="document.execCommand('paste')">粘贴 <span class="shortcut">⌘V</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="toggleFindReplace()">查找替换 <span class="shortcut">⌘F</span></div>
+            </div>
+        </div>
+        <div class="menu-item">
+            视图
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="toggleSidebar('left')">切换左侧栏 <span class="shortcut">⌘1</span></div>
+                <div class="dropdown-item" onclick="toggleSidebar('right')">切换右侧栏 <span class="shortcut">⌘2</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="toggleFocusMode()">专注模式 <span class="shortcut">⌘⇧F</span></div>
+                <div class="dropdown-item" onclick="togglePreview()">预览模式 <span class="shortcut">⌘P</span></div>
+            </div>
+        </div>
+        <div class="menu-item">
+            插入
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="insertTemplate('chapter')">章节标题</div>
+                <div class="dropdown-item" onclick="insertTemplate('scene')">场景分隔</div>
+                <div class="dropdown-item" onclick="insertTemplate('dialogue')">对话模板</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="insertTemplate('character')">角色引用</div>
+                <div class="dropdown-item" onclick="insertTemplate('location')">地点链接</div>
+            </div>
+        </div>
+        <div class="menu-item">
+            AI 助手
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="aiAction('continue')">智能续写 <span class="shortcut">⌘⇧C</span></div>
+                <div class="dropdown-item" onclick="aiAction('polish')">文本润色 <span class="shortcut">⌘⇧P</span></div>
+                <div class="dropdown-item" onclick="aiAction('expand')">扩写段落 <span class="shortcut">⌘⇧E</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="aiAction('analyze')">情节分析</div>
+                <div class="dropdown-item" onclick="aiAction('suggest')">写作建议</div>
+            </div>
+        </div>
+        <div class="menu-item">
+            帮助
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="showHelp()">快捷键参考 <span class="shortcut">⌘?</span></div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="showAbout()">关于 SAGEBOOK</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+        <!-- 左侧栏 -->
+        <div class="sidebar-left" id="sidebarLeft">
+            <div class="sidebar-header">
+                <span>📁 我的小说</span>
+                <button class="toolbar-btn" onclick="showNewChapterModal()" title="新建章节">+</button>
+            </div>
+            <div class="sidebar-content" id="fileTree">
+                <div class="tree-item" data-file="overview">
+                    <span class="tree-toggle expanded">▶</span>
+                    <span class="icon">📘</span>
+                    <span>《系统觉醒》</span>
+                </div>
+                <div class="tree-children">
+                    <div class="tree-item active" data-file="chapter1" onclick="loadFile('chapter1')">
+                        <span class="icon">📄</span>
+                        <span>第001章 觉醒</span>
+                    </div>
+                    <div class="tree-item" data-file="chapter2" onclick="loadFile('chapter2')">
+                        <span class="icon">📄</span>
+                        <span>第002章 初次任务</span>
+                    </div>
+                    <div class="tree-item" data-file="chapter3" onclick="loadFile('chapter3')">
+                        <span class="icon">📄</span>
+                        <span>第003章 危机降临</span>
+                    </div>
+                    <div class="tree-item" data-file="characters" onclick="loadFile('characters')">
+                        <span class="icon">👥</span>
+                        <span>角色设定</span>
+                    </div>
+                    <div class="tree-item" data-file="world" onclick="loadFile('world')">
+                        <span class="icon">🌍</span>
+                        <span>世界观</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 编辑区 -->
+        <div class="editor-container">
+            <div class="tabs-bar" id="tabsBar">
+                <div class="tab active" data-file="chapter1">
+                    <span>📄</span>
+                    <span>第001章 觉醒</span>
+                    <span class="tab-close" onclick="closeTab(event, 'chapter1')">×</span>
+                </div>
+            </div>
+
+            <!-- 顶部导航 -->
+            <div class="top-nav" style="display:flex;align-items:center;padding:6px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border);gap:16px;font-size:14px;">
+                <a href="index.html" style="color:var(--text-primary);text-decoration:none;font-weight:bold;">📚 SAGEBOOK</a>
+                <a href="index.html" style="color:var(--accent);text-decoration:none;">🏠 首页</a>
+                <span style="color:var(--border);">|</span>
+                <a href="main-editor.html" style="color:var(--accent);text-decoration:none;font-weight:bold;">编辑器</a>
+                <a href="knowledge-graph.html" style="color:var(--text-secondary);text-decoration:none;">知识图谱</a>
+                <a href="character-management.html" style="color:var(--text-secondary);text-decoration:none;">角色管理</a>
+                <a href="template-gallery.html" style="color:var(--text-secondary);text-decoration:none;">模板库</a>
+                <a href="outline-editor.html" style="color:var(--text-secondary);text-decoration:none;">大纲编辑器</a>
+                <a href="settings.html" style="color:var(--text-secondary);text-decoration:none;">设置</a>
+                <div style="flex:1"></div>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="菜单" style="display:none;">☰</button>
+            </div>
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" title="菜单">☰</button>
+                <button class="toolbar-btn" onclick="formatText('bold')" title="粗体 (⌘B)">𝐁</button>
+                <button class="toolbar-btn" onclick="formatText('italic')" title="斜体 (⌘I)">𝐼</button>
+                <button class="toolbar-btn" onclick="formatText('underline')" title="下划线 (⌘U)">U̲</button>
+                <button class="toolbar-btn" onclick="formatText('strikethrough')" title="删除线">S̶</button>
+                <div class="toolbar-divider"></div>
+                <button class="toolbar-btn" onclick="formatText('h1')" title="标题1">H1</button>
+                <button class="toolbar-btn" onclick="formatText('h2')" title="标题2">H2</button>
+                <button class="toolbar-btn" onclick="formatText('h3')" title="标题3">H3</button>
+                <div class="toolbar-divider"></div>
+                <button class="toolbar-btn" onclick="formatText('quote')" title="引用">❝</button>
+                <button class="toolbar-btn" onclick="formatText('list')" title="列表">•</button>
+                <button class="toolbar-btn" onclick="formatText('hr')" title="分隔线">—</button>
+                <div class="toolbar-divider"></div>
+                <button class="toolbar-btn" onclick="insertLink()" title="插入链接">🔗</button>
+                <button class="toolbar-btn" onclick="insertImage()" title="插入图片">🖼</button>
+                <div style="flex:1"></div>
+                <button class="toolbar-btn" onclick="toggleFocusMode()" title="专注模式">🎯</button>
+                <button class="toolbar-btn" onclick="togglePreview()" title="预览">👁</button>
+            </div>
+
+            <!-- 查找替换 -->
+            <div class="find-replace" id="findReplace">
+                <div class="find-input">
+                    <input type="text" class="input" id="findInput" placeholder="查找..." style="margin-bottom:0; width:200px;">
+                    <button class="btn-secondary btn" onclick="findNext()">下一个</button>
+                </div>
+                <div class="find-input">
+                    <input type="text" class="input" id="replaceInput" placeholder="替换为..." style="margin-bottom:0; width:200px;">
+                    <button class="btn-secondary btn" onclick="replaceOne()">替换</button>
+                    <button class="btn-secondary btn" onclick="replaceAll()">全部替换</button>
+                </div>
+            </div>
+
+            <div class="editor-wrapper">
+                <div class="editor-pane" id="editorPane" contenteditable="true" spellcheck="true">
+                    <h1>第001章 觉醒</h1>
+
+                    <p>凌晨三点，张三盯着电脑屏幕发呆。</p>
+
+                    <p>作为一名大三学生，他刚刚完成了最后一份期末论文，此刻躺在床上刷着短视频，却怎么也睡不着。</p>
+
+                    <p>窗外的城市依然灯火通明，远处的车鸣声隐隐约约传来。</p>
+
+                    <h2>✨ 系统激活</h2>
+
+                    <p>就在他准备放下手机的瞬间，一道陌生的声音在他脑海中响起：</p>
+
+                    <blockquote>
+                        <p><strong>【系统提示：检测到宿主精神状态稳定，觉醒倒计时开始】</strong></p>
+                    </blockquote>
+
+                    <p><strong>【系统提示：觉醒倒计时 00:05:00】</strong></p>
+
+                    <p>一行淡蓝色的文字突然出现在他的视野右下角，宛如游戏界面般清晰。</p>
+
+                    <p>张三眨了眨眼，以为自己还没睡醒。</p>
+
+                    <p>但那行字依然稳稳地悬停在那里，甚至还有一个倒计时正在一秒一秒地减少。</p>
+
+                    <p>"我...是不是熬夜太多出现幻觉了？"</p>
+
+                    <hr>
+
+                    <h2>📝 写作笔记</h2>
+
+                    <p><strong>遇到的问题：</strong></p>
+                    <ul style="padding-left:20px; color:var(--text-secondary);">
+                        <li>开篇是否需要更多铺垫？</li>
+                        <li>系统觉醒的时机是否合理？</li>
+                    </ul>
+
+                    <p><strong>待修改：</strong></p>
+                    <ul style="padding-left:20px; color:var(--text-secondary);">
+                        <li>张三的心理活动可以更丰富</li>
+                        <li>环境描写可以再细化一些</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧栏 -->
+        <div class="sidebar-right" id="sidebarRight">
+            <div class="panel">
+                <div class="panel-title">🔗 反向链接</div>
+                <div class="backlink-item" onclick="loadFile('characters')">
+                    <div class="backlink-source">📄 角色设定.md</div>
+                    <div class="backlink-preview">主角是[[张三]]，一个普通的大学生...</div>
+                </div>
+                <div class="backlink-item" onclick="loadFile('chapter2')">
+                    <div class="backlink-source">📄 第005章.md</div>
+                    <div class="backlink-preview">张三回想起第一[[第001章|觉醒]]那天的情景...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🏷️ 标签</div>
+                <span class="tag" onclick="filterByTag('第一卷')">#章节/第一卷</span>
+                <span class="tag" onclick="filterByTag('草稿')">#状态/草稿</span>
+                <span class="tag" onclick="filterByTag('张三')">#POV/张三</span>
+                <button class="btn-secondary btn" style="margin-top:8px; width:100%;" onclick="showTagsModal()">管理标签</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">📊 章节统计</div>
+                <div style="font-size:13px; color:var(--text-secondary);">
+                    <div style="margin-bottom:8px;">字数: <strong style="color:var(--text-primary);" id="wordCount">2,345</strong> / 3,000</div>
+                    <div style="background:var(--bg-primary); height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
+                        <div style="background:var(--accent); height:100%; width:78%;" id="progressBar"></div>
+                    </div>
+                    <div style="margin-bottom:8px;">预计阅读时间: <strong style="color:var(--text-primary);">约8分钟</strong></div>
+                    <div>最后修改: <strong style="color:var(--text-primary);" id="lastModified">刚刚</strong></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🤖 AI 助手</div>
+                <button class="btn" style="width:100%; margin-bottom:8px;" onclick="aiAction('continue')">✍️ 续写</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="aiAction('polish')">💅 润色</button>
+                <button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="aiAction('analyze')">📊 分析情节</button>
+                <button class="btn btn-secondary" style="width:100%;" onclick="showAIModal()">⚙️ 更多功能</button>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">📝 大纲</div>
+                <div style="font-size:13px;">
+                    <div style="padding:8px; background:var(--bg-tertiary); border-radius:6px; margin-bottom:8px;">
+                        <strong style="color:var(--accent-light);">本章目标</strong>
+                        <p style="margin-top:6px; color:var(--text-secondary);">主角张三在熬夜后意外觉醒系统，开启非凡人生。</p>
+                    </div>
+                    <div style="padding:8px; background:var(--bg-tertiary); border-radius:6px;">
+                        <strong style="color:var(--accent-light);">关键事件</strong>
+                        <ul style="margin-top:6px; padding-left:20px; color:var(--text-secondary);">
+                            <li>凌晨三点，张三完成论文</li>
+                            <li>系统意外激活</li>
+                            <li>倒计时开始</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="status-bar">
+        <div class="status-item">
+            <span>📝</span>
+            <span>字数: <span id="statusWordCount">2,345</span></span>
+        </div>
+        <div class="status-item">
+            <span>🔤</span>
+            <span>字符: <span id="statusCharCount">4,567</span></span>
+        </div>
+        <div class="status-item">
+            <span>⏱️</span>
+            <span>写作时间: <span id="writingTime">0:00</span></span>
+        </div>
+        <div class="status-item" id="syncStatus" style="color:var(--success);">
+            <span>☁️</span>
+            <span>已同步</span>
+        </div>
+        <div style="flex:1;"></div>
+        <div class="status-item">
+            <span>📍</span>
+            <span id="cursorPos">Ln 1, Col 1</span>
+        </div>
+        <div class="status-item" id="saveStatus">
+            <span>💾</span>
+            <span>已保存</span>
+        </div>
+    </div>
+
+    <!-- 新建章节模态框 -->
+    <div class="modal" id="newChapterModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">新建章节</div>
+                <div class="modal-close" onclick="closeModal('newChapterModal')">×</div>
+            </div>
+            <div class="modal-body">
+                <label class="input-label">章节标题</label>
+                <input type="text" class="input" id="newChapterTitle" placeholder="例如：第004章 新的挑战">
+
+                <label class="input-label">章节类型</label>
+                <select class="input" id="newChapterType">
+                    <option value="chapter">正文章节</option>
+                    <option value="prologue">序章</option>
+                    <option value="epilogue">尾声</option>
+                    <option value="interlude">插曲</option>
+                </select>
+
+                <label class="input-label">初始内容（可选）</label>
+                <textarea class="input" id="newChapterContent" rows="4" placeholder="可以输入章节大纲或初始内容..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('newChapterModal')">取消</button>
+                <button class="btn" onclick="createNewChapter()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 功能模态框 -->
+    <div class="modal" id="aiModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <div class="modal-title">🤖 AI 助手</div>
+                <div class="modal-close" onclick="closeModal('aiModal')">×</div>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <button class="btn" onclick="aiAction('continue')">✍️ 续写内容</button>
+                    <button class="btn" onclick="aiAction('polish')">💅 润色文本</button>
+                    <button class="btn" onclick="aiAction('expand')">📖 扩写段落</button>
+                    <button class="btn" onclick="aiAction('summarize')">📋 生成摘要</button>
+                    <button class="btn" onclick="aiAction('dialogue')">💬 生成对话</button>
+                    <button class="btn" onclick="aiAction('scene')">🎬 场景描写</button>
+                    <button class="btn" onclick="aiAction('analyze')">📊 情节分析</button>
+                    <button class="btn" onclick="aiAction('suggest')">💡 写作建议</button>
+                </div>
+
+                <div id="aiResult" style="display:none;">
+                    <label class="input-label">AI 生成结果</label>
+                    <div id="aiResultContent" style="background:var(--bg-tertiary); padding:15px; border-radius:6px; min-height:100px; white-space:pre-wrap; line-height:1.6;"></div>
+                    <div style="margin-top:12px; display:flex; gap:10px;">
+                        <button class="btn" onclick="applyAIResult()">应用到文档</button>
+                        <button class="btn btn-secondary" onclick="copyAIResult()">复制内容</button>
+                        <button class="btn btn-secondary" onclick="regenerateAI()">重新生成</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">操作成功</span>
+    </div>
+
+    <script>
+        // ===== 数据存储 =====
+        let novelData = {
+            title: '《系统觉醒》',
+            chapters: {
+                chapter1: {
+                    title: '第001章 觉醒',
+                    content: `<h1>第001章 觉醒</h1><p>凌晨三点，张三盯着电脑屏幕发呆。</p><p>作为一名大三学生，他刚刚完成了最后一份期末论文，此刻躺在床上刷着短视频，却怎么也睡不着。</p><p>窗外的城市依然灯火通明，远处的车鸣声隐隐约约传来。</p><h2>✨ 系统激活</h2><p>就在他准备放下手机的瞬间，一道陌生的声音在他脑海中响起：</p><blockquote><p><strong>【系统提示：检测到宿主精神状态稳定，觉醒倒计时开始】</strong></p></blockquote><p><strong>【系统提示：觉醒倒计时 00:05:00】</strong></p><p>一行淡蓝色的文字突然出现在他的视野右下角，宛如游戏界面般清晰。</p><p>张三眨了眨眼，以为自己还没睡醒。</p><p>但那行字依然稳稳地悬停在那里，甚至还有一个倒计时正在一秒一秒地减少。</p><p>"我...是不是熬夜太多出现幻觉了？"</p>`,
+                    wordCount: 2345,
+                    tags: ['第一卷', '草稿', '张三']
+                },
+                chapter2: {
+                    title: '第002章 初次任务',
+                    content: `<h1>第002章 初次任务</h1><p>倒计时结束的那一刻，张三的世界彻底改变了。</p><p>一道金色的光芒从他体内迸发，将他整个人包裹其中。</p>`,
+                    wordCount: 1800,
+                    tags: ['第一卷', '张三']
+                },
+                chapter3: {
+                    title: '第003章 危机降临',
+                    content: `<h1>第003章 危机降临</h1><p>任务开始了。</p>`,
+                    wordCount: 500,
+                    tags: ['第一卷', '张三']
+                }
+            },
+            characters: {
+                title: '角色设定',
+                content: `<h1>角色设定</h1><h2>张三</h2><p>年龄：21岁</p><p>身份：大三学生</p><p>性格：普通、善良、有些宅</p><h2>李四</h2><p>年龄：22岁</p><p>身份：张三的室友</p>`
+            },
+            world: {
+                title: '世界观',
+                content: `<h1>世界观设定</h1><h2>系统</h2><p>神秘的存在，能够赋予宿主特殊能力。</p><h2>任务</h2><p>系统发布的挑战，完成后可获得奖励。</p>`
+            }
+        };
+
+        let currentFile = 'chapter1';
+        let openTabs = ['chapter1'];
+        let writingSeconds = 0;
+        let autoSaveTimer = null;
+
+        // ===== 初始化 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFile('chapter1');
+            startWritingTimer();
+            startAutoSave();
+            setupEditorEvents();
+            loadFromStorage();
+        });
+
+        // ===== 文件操作 =====
+        function loadFile(fileId) {
+            const editor = document.getElementById('editorPane');
+            const file = novelData.chapters[fileId] || novelData[fileId];
+
+            if (file) {
+                editor.innerHTML = file.content;
+                currentFile = fileId;
+                updateStats();
+
+                // 添加到标签
+                if (!openTabs.includes(fileId)) {
+                    openTabs.push(fileId);
+                    updateTabs();
+                }
+
+                // 高亮左侧栏
+                document.querySelectorAll('.tree-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.file === fileId) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function saveCurrentFile() {
+            const editor = document.getElementById('editorPane');
+            const content = editor.innerHTML;
+
+            if (novelData.chapters[currentFile]) {
+                novelData.chapters[currentFile].content = content;
+                novelData.chapters[currentFile].wordCount = getWordCount(editor.innerText);
+            } else if (novelData[currentFile]) {
+                novelData[currentFile].content = content;
+            }
+
+            saveToStorage();
+            showToast('保存成功', 'success');
+        }
+
+        function saveToStorage() {
+            localStorage.setItem('sagebook_novel', JSON.stringify(novelData));
+        }
+
+        function loadFromStorage() {
+            const saved = localStorage.getItem('sagebook_novel');
+            if (saved) {
+                try {
+                    novelData = JSON.parse(saved);
+                } catch(e) {
+                    console.log('加载存储数据失败');
+                }
+            }
+        }
+
+        // ===== 标签管理 =====
+        function updateTabs() {
+            const tabsBar = document.getElementById('tabsBar');
+            tabsBar.innerHTML = openTabs.map(fileId => {
+                const file = novelData.chapters[fileId] || novelData[fileId];
+                const isActive = fileId === currentFile;
+                return `<div class="tab ${isActive ? 'active' : ''}" data-file="${fileId}" onclick="loadFile('${fileId}')">
+                    <span>📄</span>
+                    <span>${file ? file.title : fileId}</span>
+                    <span class="tab-close" onclick="closeTab(event, '${fileId}')">×</span>
+                </div>`;
+            }).join('');
+        }
+
+        function closeTab(event, fileId) {
+            event.stopPropagation();
+            openTabs = openTabs.filter(id => id !== fileId);
+            updateTabs();
+
+            if (currentFile === fileId && openTabs.length > 0) {
+                loadFile(openTabs[openTabs.length - 1]);
+            }
+        }
+
+        // ===== 编辑器功能 =====
+        function formatText(type) {
+            const editor = document.getElementById('editorPane');
+            const selection = window.getSelection();
+
+            switch(type) {
+                case 'bold':
+                    document.execCommand('bold');
+                    break;
+                case 'italic':
+                    document.execCommand('italic');
+                    break;
+                case 'underline':
+                    document.execCommand('underline');
+                    break;
+                case 'strikethrough':
+                    document.execCommand('strikeThrough');
+                    break;
+                case 'h1':
+                    document.execCommand('formatBlock', false, 'h1');
+                    break;
+                case 'h2':
+                    document.execCommand('formatBlock', false, 'h2');
+                    break;
+                case 'h3':
+                    document.execCommand('formatBlock', false, 'h3');
+                    break;
+                case 'quote':
+                    document.execCommand('formatBlock', false, 'blockquote');
+                    break;
+                case 'list':
+                    document.execCommand('insertUnorderedList');
+                    break;
+                case 'hr':
+                    document.execCommand('insertHTML', false, '<hr>');
+                    break;
+            }
+
+            editor.focus();
+        }
+
+        function insertLink() {
+            const url = prompt('请输入链接地址:', 'https://');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+        }
+
+        function insertImage() {
+            const url = prompt('请输入图片地址:', '');
+            if (url) {
+                document.execCommand('insertImage', false, url);
+            }
+        }
+
+        function insertTemplate(type) {
+            const editor = document.getElementById('editorPane');
+            let template = '';
+
+            switch(type) {
+                case 'chapter':
+                    template = '<h1>第XXX章 [章节名]</h1><p>[内容]</p>';
+                    break;
+                case 'scene':
+                    template = '<hr><h2>📍 [场景名]</h2><p>[场景描写]</p>';
+                    break;
+                case 'dialogue':
+                    template = '<p>"[对话内容]"</p><p>——[角色名]</p>';
+                    break;
+                case 'character':
+                    template = '[[角色名]]';
+                    break;
+                case 'location':
+                    template = '[[地点名]]';
+                    break;
+            }
+
+            document.execCommand('insertHTML', false, template);
+            editor.focus();
+        }
+
+        // ===== 统计功能 =====
+        function updateStats() {
+            const editor = document.getElementById('editorPane');
+            const text = editor.innerText;
+            const wordCount = getWordCount(text);
+            const charCount = text.length;
+
+            document.getElementById('wordCount').textContent = wordCount.toLocaleString();
+            document.getElementById('statusWordCount').textContent = wordCount.toLocaleString();
+            document.getElementById('statusCharCount').textContent = charCount.toLocaleString();
+
+            // 更新进度条
+            const progress = Math.min((wordCount / 3000) * 100, 100);
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function getWordCount(text) {
+            // 中文按字符数，英文按单词数
+            const chinese = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+            const english = (text.match(/[a-zA-Z]+/g) || []).length;
+            return chinese + english;
+        }
+
+        function startWritingTimer() {
+            setInterval(() => {
+                writingSeconds++;
+                const minutes = Math.floor(writingSeconds / 60);
+                const seconds = writingSeconds % 60;
+                document.getElementById('writingTime').textContent =
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function startAutoSave() {
+            autoSaveTimer = setInterval(() => {
+                saveCurrentFile();
+            }, 30000); // 30秒自动保存
+        }
+
+        function setupEditorEvents() {
+            const editor = document.getElementById('editorPane');
+
+            editor.addEventListener('input', () => {
+                updateStats();
+                document.getElementById('saveStatus').innerHTML = '<span>📝</span><span>未保存</span>';
+            });
+
+            editor.addEventListener('keyup', updateCursorPosition);
+            editor.addEventListener('click', updateCursorPosition);
+        }
+
+        function updateCursorPosition() {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const preCaretRange = range.cloneRange();
+                const editor = document.getElementById('editorPane');
+
+                preCaretRange.selectNodeContents(editor);
+                preCaretRange.setEnd(range.endContainer, range.endOffset);
+
+                const text = preCaretRange.toString();
+                const lines = text.split('\n');
+                const line = lines.length;
+                const col = lines[lines.length - 1].length + 1;
+
+                document.getElementById('cursorPos').textContent = `Ln ${line}, Col ${col}`;
+            }
+        }
+
+        // ===== 侧栏控制 =====
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const leftSidebar = document.getElementById('sidebarLeft');
+            const rightSidebar = document.getElementById('sidebarRight');
+            
+            // 在移动端，点击菜单按钮切换左侧栏滑出
+            if (window.innerWidth <= 768) {
+                leftSidebar.classList.toggle('mobile-open');
+            } else {
+                leftSidebar.classList.toggle('collapsed');
+            }
+        }
+        
+        // 点击文档空白处关闭移动端侧边栏
+        document.addEventListener('click', function(e) {
+            if (window.innerWidth <= 768) {
+                const leftSidebar = document.getElementById('sidebarLeft');
+                const menuBtn = document.querySelector('.mobile-menu-btn');
+                if (leftSidebar.classList.contains('mobile-open') &&
+                    !leftSidebar.contains(e.target) &&
+                    !menuBtn.contains(e.target)) {
+                    leftSidebar.classList.remove('mobile-open');
+                }
+            }
+        });
+        
+        function toggleSidebar(side) {
+            if (side === 'left') {
+                document.getElementById('sidebarLeft').classList.toggle('collapsed');
+            } else {
+                document.getElementById('sidebarRight').classList.toggle('collapsed');
+            }
+        }
+
+        // ===== 查找替换 =====
+        function toggleFindReplace() {
+            document.getElementById('findReplace').classList.toggle('show');
+        }
+
+        function findNext() {
+            const searchText = document.getElementById('findInput').value;
+            if (searchText) {
+                window.find(searchText);
+            }
+        }
+
+        function replaceOne() {
+            const searchText = document.getElementById('findInput').value;
+            const replaceText = document.getElementById('replaceInput').value;
+
+            if (searchText && window.getSelection().toString() === searchText) {
+                document.execCommand('insertText', false, replaceText);
+            }
+            findNext();
+        }
+
+        function replaceAll() {
+            const searchText = document.getElementById('findInput').value;
+            const replaceText = document.getElementById('replaceInput').value;
+
+            if (searchText) {
+                const editor = document.getElementById('editorPane');
+                editor.innerHTML = editor.innerHTML.split(searchText).join(replaceText);
+                showToast('已替换所有匹配项', 'success');
+            }
+        }
+
+        // ===== AI 功能 =====
+        async function aiAction(action) {
+            const editor = document.getElementById('editorPane');
+            const selectedText = window.getSelection().toString();
+            const fullText = editor.innerText;
+
+            // 显示 AI 结果区域
+            document.getElementById('aiResult').style.display = 'block';
+            document.getElementById('aiResultContent').textContent = '🤔 思考中...';
+
+            // 获取 AI 配置
+            const useLocal = localStorage.getItem('useLocalAI') === 'true';
+            const localModel = localStorage.getItem('localModel');
+            const cloudModel = localStorage.getItem('cloudModel');
+            const apiKey = localStorage.getItem('cloudApiKey');
+
+            let result = '';
+
+            try {
+                if (useLocal && localModel) {
+                    // 使用本地 Ollama
+                    result = await callLocalAI(action, selectedText || fullText, localModel);
+                } else if (apiKey) {
+                    // 使用云端 API
+                    result = await callCloudAI(action, selectedText || fullText, cloudModel, apiKey);
+                } else {
+                    // 降级到模拟
+                    result = generateMockResult(action, selectedText || fullText);
+                    showToast('⚠️ 未配置 AI，显示模拟结果', 'warning');
+                }
+            } catch (error) {
+                result = `❌ AI 调用失败: ${error.message}\n\n请检查：\n1. 本地 Ollama 是否运行\n2. API Key 是否正确\n3. 网络是否畅通`;
+            }
+
+            document.getElementById('aiResultContent').textContent = result;
+        }
+
+        // 调用本地 Ollama
+        async function callLocalAI(action, text, model) {
+            const prompt = buildPrompt(action, text);
+            
+            const response = await fetch('http://localhost:11434/api/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: model,
+                    prompt: prompt,
+                    stream: false,
+                    options: {
+                        temperature: 0.8,
+                        top_p: 0.9
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Ollama API error');
+
+            const data = await response.json();
+            return data.response;
+        }
+
+        // 调用云端 API
+        async function callCloudAI(action, text, model, apiKey) {
+            const prompt = buildPrompt(action, text);
+            
+            // 根据模型选择 API 端点
+            let endpoint, requestBody;
+            
+            if (model.startsWith('gpt')) {
+                endpoint = 'https://api.openai.com/v1/chat/completions';
+                requestBody = {
+                    model: model === 'gpt-4' ? 'gpt-4-turbo-preview' : 'gpt-3.5-turbo',
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.8
+                };
+            } else if (model.startsWith('claude')) {
+                endpoint = 'https://api.anthropic.com/v1/messages';
+                requestBody = {
+                    model: model,
+                    max_tokens: 2048,
+                    messages: [{ role: 'user', content: prompt }]
+                };
+            } else if (model.startsWith('qwen')) {
+                endpoint = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+                requestBody = {
+                    model: model,
+                    input: { prompt: prompt }
+                };
+            } else {
+                // 默认 OpenAI 兼容
+                endpoint = localStorage.getItem('customEndpoint') || 'https://api.openai.com/v1/chat/completions';
+                requestBody = {
+                    model: model,
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.8
+                };
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                    ...(model.startsWith('claude') ? { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } : {})
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error?.message || 'API error');
+            }
+
+            const data = await response.json();
+            
+            // 提取响应文本
+            if (data.choices) {
+                return data.choices[0].message.content;
+            } else if (data.content) {
+                return data.content[0].text;
+            } else if (data.output) {
+                return data.output.text;
+            }
+            
+            return JSON.stringify(data);
+        }
+
+        // 构建 AI 提示词
+        function buildPrompt(action, text) {
+            const prompts = {
+                continue: `你是一位资深小说作家。请根据以下内容续写200-300字，保持文风一致：\n\n${text}`,
+                polish: `你是一位文学编辑。请润色以下文字，使其更加优美流畅，保持原意不变：\n\n${text}`,
+                expand: `请将以下内容扩写为300-400字，增加细节描写和环境烘托：\n\n${text}`,
+                analyze: `请分析以下文本的写作风格、主题、人物特点，并提出改进建议：\n\n${text}`,
+                suggest: `基于以下文本，提供5个可能的情节发展方向：\n\n${text}`,
+                dialogue: `请根据以下情境创作一段对话，要求对话自然、有冲突、推动情节：\n\n${text}`,
+                scene: `请描写一个${text || '夜晚的城市'}场景，要求300字左右，有画面感和氛围感。`,
+                summarize: `请用100字概括以下内容的核心要点：\n\n${text}`
+            };
+            
+            return prompts[action] || prompts.continue;
+        }
+
+        // 模拟结果（降级方案）
+        function generateMockResult(action, text) {
+            switch(action) {
+                case 'continue': return generateContinue(text);
+                case 'polish': return generatePolish(text);
+                case 'expand': return generateExpand(text);
+                case 'analyze': return generateAnalyze(text);
+                case 'suggest': return generateSuggest(text);
+                case 'dialogue': return generateDialogue();
+                case 'scene': return generateScene();
+                case 'summarize': return generateSummary(text);
+                default: return generateContinue(text);
+            }
+        }
+
+        function generateContinue(text) {
+            return `【AI 续写建议】
+
+就在他准备放下手机的瞬间，一道陌生的声音在他脑海中响起：
+
+"欢迎来到系统空间，张三。"
+
+张三猛地坐起身，环顾四周，房间里空无一人。
+
+"谁？谁在说话？"
+
+"我是你的系统助手，你可以叫我小统。从今天起，你将开始一段全新的人生旅程。"
+
+金色的光芒在他视野中汇聚，形成了一个半透明的界面：
+
+━━━━━━━━━━━━━━━━━━
+【系统面板】
+宿主：张三
+等级：LV.1
+任务：无
+状态：觉醒中...
+━━━━━━━━━━━━━━━━━━
+
+张三揉了揉眼睛，界面依然存在。
+
+"这不是幻觉..."`;
+        }
+
+        function generatePolish(text) {
+            return `【润色建议】
+
+原文：${text.substring(0, 50)}...
+
+润色后：
+凌晨三点，张三怔怔地望着电脑屏幕，倦意如潮水般袭来。
+
+作为一名刚完成期末论文的大三学生，他此刻本该沉沉睡去，却总觉得心底有些不安。窗外，城市的灯火依旧闪烁，远处的车鸣声若有若无地传来。
+
+建议：
+1. 增加环境描写，营造氛围
+2. 强化主角心理活动
+3. 使用更生动的比喻`;
+        }
+
+        function generateAnalyze(text) {
+            return `【情节分析】
+
+📊 字数统计：${getWordCount(text)} 字
+
+✅ 优点：
+• 开篇节奏适中，能够吸引读者
+• 系统觉醒的悬念设置合理
+• 主角形象较为鲜明
+
+⚠️ 需要改进：
+• 环境描写可以更加细腻
+• 可以增加一些伏笔
+• 建议强化主角的情绪变化
+
+📈 情节曲线：
+开篇 → 日常铺垫 → 突发事件 → 悬念收尾
+
+💡 建议：
+下一章可以引入第一个任务，推动剧情发展`;
+        }
+
+        function generateSuggest(text) {
+            return `【写作建议】
+
+📝 结构建议：
+当前章节结构完整，建议：
+1. 开头：可以增加一些感官描写
+2. 中段：强化悬念感
+3. 结尾：可以加入一个小的转折
+
+🎭 角色塑造：
+张三的性格可以更加立体：
+• 添加一些小习惯或口头禅
+• 展现更多内心独白
+• 通过细节展现性格
+
+🌊 节奏把控：
+当前节奏适中，建议在觉醒时刻加快节奏，增强紧张感。
+
+🔗 伏笔建议：
+可以暗示系统的来源，或者主角的特殊之处`;
+        }
+
+        function generateDialogue() {
+            return `【对话模板】
+
+张三："这...这是什么东西？"
+
+【系统提示】：检测到宿主产生疑问，启动新手引导模式。
+
+张三："新手引导？这是什么游戏吗？"
+
+【系统提示】：本系统非游戏产物，而是真实存在的超维度辅助工具。
+
+张三："超维度？你是说...平行宇宙？"
+
+【系统提示】：信息等级不足，无法解答此问题。请完成新手任务解锁更多功能。
+
+张三深吸一口气，强迫自己冷静下来。
+
+张三："好吧，我需要做什么？"
+
+【系统提示】：新手任务已发布——
+任务目标：在24小时内完成第一次冥想
+任务奖励：解锁基础属性面板
+失败惩罚：强制休眠3天`;
+        }
+
+        function generateScene() {
+            return `【场景描写】
+
+🌙 凌晨的卧室
+
+时间：凌晨 3:17
+
+【视觉】
+窗帘的缝隙间透进城市微弱的光，在天花板上投下淡淡的光斑。电脑屏幕的蓝光是房间里最亮的存在，照亮了张三疲惫的脸庞。
+
+【听觉】
+街道上偶尔传来车辆的鸣笛声，空调运转的嗡嗡声，以及自己略显急促的呼吸声。
+
+【触觉】
+夏夜的空气有些闷热，额头上还残留着细密的汗珠。
+
+【嗅觉】
+房间里弥漫着一股陈旧的书本味道，混合着外卖盒残留的油腻气息。
+
+【氛围】
+一种说不清道不明的紧张感在空气中流动，仿佛暴风雨前的宁静。`;
+        }
+
+        function generateSummary(text) {
+            return `【章节摘要】
+
+📍 本章要点：
+1. 主角张三在凌晨三点完成论文
+2. 神秘系统突然觉醒
+3. 出现5分钟倒计时
+
+🎯 核心冲突：
+普通大学生与神秘系统的初次接触
+
+📌 关键词：
+系统觉醒、倒计时、悬念
+
+📊 情节推进度：15%
+
+💡 后续建议：
+下一章应解释系统的基本设定，并发布第一个任务`;
+        }
+
+        function generateExpand(text) {
+            return `【扩写内容】
+
+原文片段：张三盯着电脑屏幕发呆。
+
+扩写版本：
+张三怔怔地盯着电脑屏幕，光标在一行行文字间闪烁，仿佛在嘲笑他此刻的疲惫。文档的标题《论现代社会的信息传播机制》此刻看起来格外刺眼。
+
+他揉了揉酸痛的眼睛，窗外城市的灯火依旧明亮。凌晨三点的校园早已安静下来，只有他的房间里还亮着灯。
+
+桌上的咖啡杯已经空了，杯底残留着早已凉透的咖啡渍。手机屏幕亮了一下，是社交软件的推送通知，但他连看一眼的力气都没有。
+
+"终于...写完了。"他长出一口气，合上了笔记本电脑。`;
+        }
+
+        function showAIModal() {
+            document.getElementById('aiModal').classList.add('show');
+            document.getElementById('aiResult').style.display = 'none';
+        }
+
+        function applyAIResult() {
+            const result = document.getElementById('aiResultContent').textContent;
+            const editor = document.getElementById('editorPane');
+
+            // 在光标位置插入
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode('\n' + result + '\n'));
+            }
+
+            closeModal('aiModal');
+            showToast('已应用到文档', 'success');
+        }
+
+        function copyAIResult() {
+            const result = document.getElementById('aiResultContent').textContent;
+            navigator.clipboard.writeText(result);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        function regenerateAI() {
+            showToast('正在重新生成...', 'success');
+            // 重新调用上次的功能
+        }
+
+        // ===== 模态框 =====
+        function showNewChapterModal() {
+            document.getElementById('newChapterModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function createNewChapter() {
+            const title = document.getElementById('newChapterTitle').value;
+            const type = document.getElementById('newChapterType').value;
+            const content = document.getElementById('newChapterContent').value;
+
+            if (!title) {
+                showToast('请输入章节标题', 'error');
+                return;
+            }
+
+            const chapterId = 'chapter' + (Object.keys(novelData.chapters).length + 1);
+            novelData.chapters[chapterId] = {
+                title: title,
+                content: `<h1>${title}</h1><p>${content || '开始写作...'}</p>`,
+                wordCount: content ? getWordCount(content) : 0,
+                tags: []
+            };
+
+            // 更新文件树
+            updateFileTree();
+            saveToStorage();
+            closeModal('newChapterModal');
+            loadFile(chapterId);
+            showToast('章节创建成功', 'success');
+        }
+
+        function updateFileTree() {
+            const tree = document.getElementById('fileTree');
+            // 重新生成文件树
+            let html = `<div class="tree-item" data-file="overview">
+                <span class="tree-toggle expanded">▶</span>
+                <span class="icon">📘</span>
+                <span>${novelData.title}</span>
+            </div>
+            <div class="tree-children">`;
+
+            Object.keys(novelData.chapters).forEach(id => {
+                html += `<div class="tree-item" data-file="${id}" onclick="loadFile('${id}')">
+                    <span class="icon">📄</span>
+                    <span>${novelData.chapters[id].title}</span>
+                </div>`;
+            });
+
+            html += `<div class="tree-item" data-file="characters" onclick="loadFile('characters')">
+                <span class="icon">👥</span>
+                <span>角色设定</span>
+            </div>
+            <div class="tree-item" data-file="world" onclick="loadFile('world')">
+                <span class="icon">🌍</span>
+                <span>世界观</span>
+            </div>
+            </div>`;
+
+            tree.innerHTML = html;
+        }
+
+        // ===== 其他功能 =====
+        function newFile() {
+            showNewChapterModal();
+        }
+
+        function openFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.md,.html';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('editorPane').innerHTML = event.target.result;
+                    updateStats();
+                    showToast('文件已打开', 'success');
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function saveFile() {
+            saveCurrentFile();
+        }
+
+        function saveAsFile() {
+            const content = document.getElementById('editorPane').innerHTML;
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chapter.html';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('文件已下载', 'success');
+        }
+
+        function exportFile() {
+            const content = document.getElementById('editorPane').innerText;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chapter.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('已导出为文本文件', 'success');
+        }
+
+        function toggleFocusMode() {
+            document.getElementById('sidebarLeft').classList.add('collapsed');
+            document.getElementById('sidebarRight').classList.add('collapsed');
+            showToast('专注模式已开启，按 ESC 退出', 'success');
+        }
+
+        function togglePreview() {
+            // 切换预览模式
+            showToast('预览模式开发中', 'success');
+        }
+
+        function filterByTag(tag) {
+            showToast(`筛选标签: ${tag}`, 'success');
+        }
+
+        function showTagsModal() {
+            showToast('标签管理功能开发中', 'success');
+        }
+
+        function showHelp() {
+            alert(`快捷键参考：
+
+⌘N - 新建文件
+⌘O - 打开文件
+⌘S - 保存
+⌘Z - 撤销
+⌘⇧Z - 重做
+⌘F - 查找替换
+⌘B - 粗体
+⌘I - 斜体
+⌘U - 下划线
+⌘1 - 切换左侧栏
+⌘2 - 切换右侧栏
+⌘⇧F - 专注模式
+
+ESC - 退出专注模式`);
+        }
+
+        function showAbout() {
+            alert(`SAGEBOOK v1.0
+专业的长篇小说创作平台
+
+功能特点：
+• Markdown 编辑
+• 双向链接
+• 知识图谱
+• AI 写作助手
+
+Created by DSArt-Design | 2026-06`);
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            toast.className = 'toast ' + type;
+            icon.textContent = type === 'success' ? '✓' : '✗';
+            msg.textContent = message;
+
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ===== 键盘快捷键 =====
+        document.addEventListener('keydown', function(e) {
+            if (e.metaKey || e.ctrlKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        saveFile();
+                        break;
+                    case 'n':
+                        e.preventDefault();
+                        newFile();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        openFile();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        toggleFindReplace();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        formatText('bold');
+                        break;
+                    case 'i':
+                        e.preventDefault();
+                        formatText('italic');
+                        break;
+                    case 'u':
+                        e.preventDefault();
+                        formatText('underline');
+                        break;
+                    case '1':
+                        e.preventDefault();
+                        toggleSidebar('left');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        toggleSidebar('right');
+                        break;
+                }
+
+                if (e.shiftKey) {
+                    switch(e.key) {
+                        case 'F':
+                            e.preventDefault();
+                            toggleFocusMode();
+                            break;
+                        case 'Z':
+                            e.preventDefault();
+                            document.execCommand('redo');
+                            break;
+                    }
+                }
+            }
+
+            if (e.key === 'Escape') {
+                document.getElementById('sidebarLeft').classList.remove('collapsed');
+                document.getElementById('sidebarRight').classList.remove('collapsed');
+            }
+        });
+    </script>
+</body>
+</html>

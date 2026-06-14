@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SAGE BOOK - 网文平台工具</title>
+    <style>
+        * { margin:0;padding:0;box-sizing:border-box; }
+        :root[data-theme="dark"] { --bg-primary:#1a1a2e;--bg-secondary:#16213e;--bg-card:#1e2a45;--bg-hover:#253352;--text-primary:#e0e0e0;--text-secondary:#a0a0b0;--accent:#7c5cbf;--accent-hover:#9b7fd4;--accent-glow:rgba(124,92,191,0.3);--border:#2a2a4a;--success:#4ade80;--warning:#fbbf24;--error:#f87171; }
+        :root[data-theme="light"] { --bg-primary:#f5f0ff;--bg-secondary:#ffffff;--bg-card:#ffffff;--bg-hover:#f0e8ff;--text-primary:#1a1a2e;--text-secondary:#666680;--accent:#7c5cbf;--accent-hover:#6a4dac;--accent-glow:rgba(124,92,191,0.15);--border:#e0d8f0;--success:#22c55e;--warning:#f59e0b;--error:#ef4444; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh; }
+        .container { max-width:1200px;margin:0 auto;padding:20px; }
+        .header { text-align:center;padding:40px 20px 20px;position:relative; }
+        .logo { font-size:36px;margin-bottom:8px; }
+        .title { font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c5cbf,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+        .subtitle { font-size:14px;color:var(--text-secondary);margin-top:6px; }
+        .nav { display:flex;justify-content:center;gap:20px;margin:20px 0;flex-wrap:wrap; }
+        .nav-link { color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:8px;transition:all .2s; }
+        .nav-link:hover { color:var(--text-primary);background:var(--bg-hover); }
+        .nav-link.active { color:var(--accent);background:var(--bg-card);border:1px solid var(--border); }
+        .theme-switcher { position:fixed;top:15px;right:20px;display:flex;gap:4px;z-index:100; }
+        .theme-btn { padding:6px 10px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
+        .theme-btn:hover { border-color:var(--accent); }
+        .theme-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .mobile-menu-btn { display:none;position:fixed;top:15px;left:15px;z-index:100;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:18px;cursor:pointer; }
+        .tabs { display:flex;gap:8px;margin:20px 0;flex-wrap:wrap; }
+        .tab-btn { padding:8px 20px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);border-radius:10px;cursor:pointer;font-size:14px;transition:all .2s; }
+        .tab-btn:hover { border-color:var(--accent); }
+        .tab-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .platform-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:16px 0; }
+        .platform-card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all .3s; }
+        .platform-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+        .platform-card.selected { border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow); }
+        .platform-icon { font-size:32px;margin-bottom:8px; }
+        .platform-name { font-size:16px;font-weight:700;margin-bottom:4px; }
+        .platform-desc { font-size:12px;color:var(--text-secondary);margin-bottom:12px; }
+        .platform-req { font-size:11px;color:var(--text-secondary); }
+        .platform-req span { display:inline-block;padding:2px 8px;border-radius:10px;margin:2px 4px 2px 0; }
+        .platform-req .cap { background:rgba(124,92,191,0.2);color:var(--accent); }
+        .hook-list { display:flex;flex-direction:column;gap:12px;margin:16px 0; }
+        .hook-item { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px; }
+        .hook-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:8px; }
+        .hook-chapter { font-size:14px;font-weight:600; }
+        .hook-score { font-size:20px;font-weight:800; }
+        .hook-score.high { color:var(--success); }
+        .hook-score.medium { color:var(--warning); }
+        .hook-score.low { color:var(--error); }
+        .hook-text { font-size:13px;color:var(--text-secondary);line-height:1.6; }
+        .hook-suggestion { margin-top:8px;padding:8px 12px;background:var(--bg-hover);border-radius:8px;font-size:12px;color:var(--accent); }
+        .update-plan { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0; }
+        .plan-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px; }
+        .plan-title { font-size:16px;font-weight:700; }
+        .plan-progress { display:flex;align-items:center;gap:12px; }
+        .plan-bar { flex:1;height:8px;background:var(--bg-hover);border-radius:4px;overflow:hidden; }
+        .plan-fill { height:100%;border-radius:4px;transition:width .5s; }
+        .plan-stat { font-size:14px;font-weight:600; }
+        .calendar { display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:16px 0; }
+        .cal-day { aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:all .2s; }
+        .cal-day:hover { transform:scale(1.1); }
+        .cal-day.done { background:var(--accent);color:white; }
+        .cal-day.today { border:2px solid var(--accent); }
+        .cal-day.missed { background:var(--error);opacity:0.5; }
+        .cal-day.empty { background:transparent;cursor:default; }
+        .cal-day .num { font-weight:600; }
+        .cal-day .words { font-size:9px;opacity:0.8; }
+        .reader-feedback { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin:8px 0; }
+        .feedback-header { display:flex;justify-content:space-between;margin-bottom:8px; }
+        .feedback-chapter { font-size:13px;font-weight:600; }
+        .feedback-type { font-size:11px;padding:2px 8px;border-radius:10px; }
+        .feedback-type.positive { background:rgba(74,222,128,0.2);color:var(--success); }
+        .feedback-type.negative { background:rgba(248,113,113,0.2);color:var(--error); }
+        .feedback-type.suggestion { background:rgba(251,191,36,0.2);color:var(--warning); }
+        .feedback-text { font-size:13px;line-height:1.6; }
+        .feedback-tags { display:flex;gap:6px;margin-top:8px; }
+        .feedback-tag { font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg-hover);color:var(--text-secondary); }
+        .series-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0; }
+        .series-card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center; }
+        .series-cover { width:80px;height:110px;background:var(--bg-hover);border-radius:8px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:32px; }
+        .series-title { font-size:14px;font-weight:600;margin-bottom:4px; }
+        .series-meta { font-size:12px;color:var(--text-secondary); }
+        .btn { padding:8px 16px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
+        .btn:hover { border-color:var(--accent); }
+        .btn-primary { background:var(--accent);color:white;border-color:var(--accent); }
+        .btn-primary:hover { background:var(--accent-hover); }
+        .btn-group { display:flex;gap:8px;margin:16px 0;flex-wrap:wrap; }
+        .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
+        .footer a { color:var(--accent);text-decoration:none; }
+        @media(max-width:768px) {
+            .header { padding:50px 15px 15px; } .title { font-size:24px; }
+            .nav { gap:10px; } .nav-link { font-size:13px;padding:5px 10px; }
+            .mobile-menu-btn { display:block; }
+            .platform-grid { grid-template-columns:1fr; }
+            .calendar { gap:2px; } .cal-day { font-size:10px; }
+        }
+        @media(max-width:480px) { .theme-switcher { top:10px;right:10px; } .theme-btn { padding:4px 8px;font-size:12px; } }
+    </style>
+</head>
+<body>
+    <div class="theme-switcher">
+        <button class="theme-btn active" onclick="setTheme('dark')">🌙</button>
+        <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+        <button class="theme-btn" onclick="setTheme('system')">💻</button>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📱</div>
+            <div class="title">网文平台工具</div>
+            <div class="subtitle">格式导出 · 章节钩子 · 更新规划 · 读者反馈 · 系列管理</div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">🏠 首页</a>
+                <a href="main-editor.html" class="nav-link">编辑器</a>
+                <a href="character-management.html" class="nav-link">角色</a>
+                <a href="template-gallery.html" class="nav-link">模板</a>
+                <a href="outline-editor.html" class="nav-link">大纲</a>
+                <a href="knowledge-graph.html" class="nav-link">图谱</a>
+                <a href="writing-analysis.html" class="nav-link">分析</a>
+                <a href="platform-tools.html" class="nav-link active">平台</a>
+                <a href="world-builder.html" class="nav-link">世界观</a>
+                <a href="ai-suite.html" class="nav-link">AI</a>
+                <a href="settings.html" class="nav-link">设置</a>
+            </nav>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('export')">📤 格式导出</button>
+            <button class="tab-btn" onclick="switchTab('hooks')">🪝 钩子分析</button>
+            <button class="tab-btn" onclick="switchTab('schedule')">📅 更新规划</button>
+            <button class="tab-btn" onclick="switchTab('feedback')">💬 读者反馈</button>
+            <button class="tab-btn" onclick="switchTab('series')">📚 系列管理</button>
+        </div>
+        <!-- 格式导出 -->
+        <div id="tab-export" class="tab-content active">
+            <div class="platform-grid">
+                <div class="platform-card selected"><div class="platform-icon">🟢</div><div class="platform-name">起点中文网</div><div class="platform-desc">最大原创文学平台，付费阅读模式</div><div class="platform-req"><span class="cap">首行缩进</span><span class="cap">章节签名</span><span class="cap">字数适配</span></div></div>
+                <div class="platform-card"><div class="platform-icon">🍅</div><div class="platform-name">番茄小说</div><div class="platform-desc">免费阅读+广告分成，算法推荐</div><div class="platform-req"><span class="cap">短段落</span><span class="cap">快节奏</span><span class="cap">字数≥10万</span></div></div>
+                <div class="platform-card"><div class="platform-icon">🟡</div><div class="platform-name">七猫小说</div><div class="platform-desc">免费阅读平台，偏向都市/玄幻</div><div class="platform-req"><span class="cap">短段落</span><span class="cap">对话密集</span></div></div>
+                <div class="platform-card"><div class="platform-icon">🔵</div><div class="platform-name">塔读文学</div><div class="platform-desc">新兴平台，分成比例优厚</div><div class="platform-req"><span class="cap">标准排版</span><span class="cap">字数适配</span></div></div>
+                <div class="platform-card"><div class="platform-icon">🟣</div><div class="platform-name">晋江文学城</div><div class="platform-desc">女性向为主，言情/纯爱</div><div class="platform-req"><span class="cap">特殊排版</span><span class="cap">评论系统</span></div></div>
+                <div class="platform-card"><div class="platform-icon">⚫</div><div class="platform-name">纵横中文网</div><div class="platform-desc">老牌平台，签约制度完善</div><div class="platform-req"><span class="cap">标准排版</span><span class="cap">字数适配</span></div></div>
+            </div>
+            <div class="card" style="margin-top:16px">
+                <div class="card-title">📊 字数适配检测</div>
+                <div class="stat-row"><span class="stat-label">当前章节字数</span><span class="stat-val">3,280 字</span></div>
+                <div class="stat-row"><span class="stat-label">起点要求</span><span class="stat-val" style="color:var(--success)">✅ ≥2000 字</span></div>
+                <div class="stat-row"><span class="stat-label">番茄要求</span><span class="stat-val" style="color:var(--success)">✅ ≥2000 字</span></div>
+                <div class="stat-row"><span class="stat-label">七猫建议</span><span class="stat-val" style="color:var(--warning)">⚠️ 建议 ≥3000 字</span></div>
+            </div>
+        </div>
+        <!-- 钩子分析 -->
+        <div id="tab-hooks" class="tab-content">
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-title">🪝 章节结尾悬念强度分析</div>
+                <div class="hook-list">
+                    <div class="hook-item"><div class="hook-header"><span class="hook-chapter">第 18 章 - 秘境突围</span><span class="hook-score high">9.2</span></div><div class="hook-text">"就在他们以为安全的时候，身后传来一声低沉的咆哮——"</div><div class="hook-suggestion">💡 优秀！悬念+危机双重钩子，读者追读率高</div></div>
+                    <div class="hook-item"><div class="hook-header"><span class="hook-chapter">第 22 章 - 真相大白</span><span class="hook-score high">8.8</span></div><div class="hook-text">"戒指中的声音突然响起：'你终于来了，我已经等了三千年...'"</div><div class="hook-suggestion">💡 身份揭秘+新悬念，完美衔接</div></div>
+                    <div class="hook-item"><div class="hook-header"><span class="hook-chapter">第 25 章 - 日常</span><span class="hook-score low">4.5</span></div><div class="hook-text">"吃完晚饭后，主角回到了房间，准备明天的修炼。"</div><div class="hook-suggestion">⚠️ 结尾太平淡！建议增加一个小转折或伏笔</div></div>
+                    <div class="hook-item"><div class="hook-header"><span class="hook-chapter">第 28 章 - 训练</span><span class="hook-score medium">6.8</span></div><div class="hook-text">"主角继续刻苦修炼，灵力稳步增长。"</div><div class="hook-suggestion">💡 可以加一句意外事件作为钩子</div></div>
+                </div>
+            </div>
+        </div>
+        <!-- 更新规划 -->
+        <div id="tab-schedule" class="tab-content">
+            <div class="update-plan">
+                <div class="plan-header"><div class="plan-title">📅 本月更新计划</div><div class="plan-progress"><span class="plan-stat">18/30 天</span></div></div>
+                <div class="plan-bar"><div class="plan-fill" style="width:60%;background:var(--accent)"></div></div>
+                <div style="margin-top:8px;font-size:13px;color:var(--text-secondary)">总字数: 58,400 / 目标 100,000 字</div>
+            </div>
+            <div class="calendar" id="calendar"></div>
+            <div class="card" style="margin-top:16px">
+                <div class="card-title">⏰ 番茄钟设置</div>
+                <div class="stat-row"><span class="stat-label">单次写作时长</span><span class="stat-val">25 分钟</span></div>
+                <div class="stat-row"><span class="stat-label">休息时间</span><span class="stat-val">5 分钟</span></div>
+                <div class="stat-row"><span class="stat-label">每日目标</span><span class="stat-val">4 个番茄 = 100 分钟</span></div>
+                <div class="stat-row"><span class="stat-label">今日完成</span><span class="stat-val" style="color:var(--success)">3/4 个番茄</span></div>
+            </div>
+        </div>
+        <!-- 读者反馈 -->
+        <div id="tab-feedback" class="tab-content">
+            <div class="card" style="margin-bottom:16px">
+                <div class="card-title">📊 反馈统计</div>
+                <div class="stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:12px 0">
+                    <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--success)">72%</div><div style="font-size:12px;color:var(--text-secondary)">好评率</div></div>
+                    <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--warning)">18%</div><div style="font-size:12px;color:var(--text-secondary)">中评率</div></div>
+                    <div style="text-align:center"><div style="font-size:28px;font-weight:800;color:var(--error)">10%</div><div style="font-size:12px;color:var(--text-secondary)">差评率</div></div>
+                    <div style="text-align:center"><div style="font-size:28px;font-weight:800">1,247</div><div style="font-size:12px;color:var(--text-secondary)">总评论数</div></div>
+                </div>
+            </div>
+            <div class="reader-feedback"><div class="feedback-header"><span class="feedback-chapter">第 18 章</span><span class="feedback-type positive">好评</span></div><div class="feedback-text">"这一章太精彩了！秘境突围写得惊心动魄，主角的冷静分析让人佩服！"</div><div class="feedback-tags"><span class="feedback-tag">情节</span><span class="feedback-tag">角色</span></div></div>
+            <div class="reader-feedback"><div class="feedback-header"><span class="feedback-chapter">第 25 章</span><span class="feedback-type negative">差评</span></div><div class="feedback-text">"这章好无聊啊，全是日常描写，没有剧情推进。"</div><div class="feedback-tags"><span class="feedback-tag">节奏</span><span class="feedback-tag">剧情</span></div></div>
+            <div class="reader-feedback"><div class="feedback-header"><span class="feedback-chapter">第 22 章</span><span class="feedback-type suggestion">建议</span></div><div class="feedback-text">"反派BOSS的身份能不能早点揭示？等太久了！"</div><div class="feedback-tags"><span class="feedback-tag">建议</span><span class="feedback-tag">剧情</span></div></div>
+        </div>
+        <!-- 系列管理 -->
+        <div id="tab-series" class="tab-content">
+            <div class="btn-group"><button class="btn btn-primary">➕ 新建关联书籍</button></div>
+            <div class="series-grid">
+                <div class="series-card"><div class="series-cover">📕</div><div class="series-title">第一部：觉醒之路</div><div class="series-meta">已完成 · 320 章 · 120万字</div></div>
+                <div class="series-card"><div class="series-cover">📗</div><div class="series-title">第二部：暗影降临</div><div class="series-meta">连载中 · 42 章 · 14万字</div></div>
+                <div class="series-card"><div class="series-cover">📘</div><div class="series-title">外传：精灵公主</div><div class="series-meta">计划中 · 0 章</div></div>
+                <div class="series-card"><div class="series-cover">📙</div><div class="series-title">前传：师父的过去</div><div class="series-meta">计划中 · 0 章</div></div>
+            </div>
+            <div class="card" style="margin-top:16px">
+                <div class="card-title">🔗 跨书索引</div>
+                <div class="stat-row"><span class="stat-label">共享角色</span><span class="stat-val">12 个</span></div>
+                <div class="stat-row"><span class="stat-label">共享设定</span><span class="stat-val">38 个词条</span></div>
+                <div class="stat-row"><span class="stat-label">冲突检测</span><span class="stat-val" style="color:var(--success)">✅ 无冲突</span></div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="exportFormat()">📤 一键导出</button>
+            <button class="btn" onclick="analyzeHooks()">🔍 全篇钩子分析</button>
+        </div>
+        <div class="footer">
+            <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06</p>
+            <p style="margin-top:6px">Powered by Ollama · OpenAI · Claude · Qwen</p>
+        </div>
+    </div>
+    <script>
+        function setTheme(t){const h=document.documentElement,b=document.querySelectorAll('.theme-btn');
+        if(t==='system'){const d=window.matchMedia('(prefers-color-scheme:dark)').matches;h.setAttribute('data-theme',d?'dark':'light')}
+        else h.setAttribute('data-theme',t);b.forEach(x=>x.classList.remove('active'));
+        document.querySelector(`.theme-btn[onclick="setTheme('${t}')"]`).classList.add('active');
+        localStorage.setItem('theme',t)}
+        const st=localStorage.getItem('theme')||'dark';setTheme(st);
+        function switchTab(id){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        document.getElementById('tab-'+id).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        event.target.classList.add('active')}
+        function toggleMobileMenu(){const n=document.querySelector('.nav');
+        n.style.display=n.style.display==='flex'?'none':'flex';n.style.flexDirection='column';n.style.alignItems='center'}
+        // Calendar
+        const cal=document.getElementById('calendar');
+        const daysInMonth=30;const today=13;
+        for(let i=1;i<=daysInMonth;i++){const d=document.createElement('div');d.className='cal-day';
+        if(i<=today){if(i<=12)d.classList.add('done');else if(i===today)d.classList.add('today','done');else if(i>12&&i<today)d.classList.add('missed');
+        d.innerHTML=`<span class="num">${i}</span><span class="words">${i<=12?'✓':''}</span>`}
+        else d.classList.add('empty');
+        cal.appendChild(d)}
+        function exportFormat(){alert('已按选定平台格式导出')}
+        function analyzeHooks(){alert('正在分析所有章节结尾的悬念强度...')}
+    </script>
+</body>
+</html>

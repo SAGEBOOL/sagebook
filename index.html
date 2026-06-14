@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SAGE BOOK - 创作平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root[data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #1e2a45;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0b0;
+            --accent: #7c5cbf;
+            --accent-hover: #9b7fd4;
+            --accent-glow: rgba(124, 92, 191, 0.3);
+            --border: #2a2a4a;
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+
+        :root[data-theme="light"] {
+            --bg-primary: #f5f0ff;
+            --bg-secondary: #ffffff;
+            --bg-card: #ffffff;
+            --text-primary: #1a1a2e;
+            --text-secondary: #666680;
+            --accent: #7c5cbf;
+            --accent-hover: #6a4dac;
+            --accent-glow: rgba(124, 92, 191, 0.15);
+            --border: #e0d8f0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #a78bfa, #7c5cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-top: 12px;
+        }
+
+        /* 模块网格 */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            padding: 20px 0;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .module-card:active {
+            transform: translateY(-2px);
+        }
+
+        .module-icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+        }
+
+        .module-name {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .module-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .module-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 12px;
+            background: var(--accent-glow);
+            color: var(--accent);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px 25px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-width: 120px;
+        }
+
+        .status-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .status-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 主题切换 */
+        .theme-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 6px;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .theme-btn {
+            background: none;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .theme-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* 移动端 */
+        @media (max-width: 768px) {
+            .header { padding: 40px 20px 20px; }
+            .logo { font-size: 36px; }
+            .title { font-size: 28px; }
+            .module-grid { grid-template-columns: 1fr; gap: 16px; }
+            .status-bar { gap: 10px; }
+            .status-item { min-width: 80px; padding: 10px 15px; }
+        }
+
+        @media (max-width: 480px) {
+            .theme-switcher { top: 10px; right: 10px; }
+            .theme-btn { padding: 4px 8px; font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主题切换 -->
+    <div class="theme-switcher">
+        <button class="theme-btn" data-theme="dark" onclick="switchTheme('dark')">🌙 深色</button>
+        <button class="theme-btn" data-theme="light" onclick="switchTheme('light')">☀️ 浅色</button>
+        <button class="theme-btn" data-theme="system" onclick="switchTheme('system')">💻 自动</button>
+    </div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="logo">📘</div>
+            <div class="title">SAGE BOOK</div>
+            <div class="subtitle">你的智能创作伙伴 · 用 AI 激发写作灵感</div>
+        </div>
+
+        <!-- 状态栏 -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-value">10</div>
+                <div class="status-label">创作工具</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">本地</div>
+                <div class="status-label">AI 模式</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">实时</div>
+                <div class="status-label">自动保存</div>
+            </div>
+        </div>
+
+        <!-- 模块网格 -->
+        <div class="module-grid">
+            <a class="module-card" href="main-editor.html">
+                <div class="module-icon">📝</div>
+                <div class="module-name">主编辑器</div>
+                <div class="module-desc">全功能写作编辑器，支持格式化、AI 续写、自动保存、字数统计和快捷键</div>
+                <div class="module-badge">AI 续写 · 润色 · 扩写</div>
+            </a>
+
+            <a class="module-card" href="character-management.html">
+                <div class="module-icon">👥</div>
+                <div class="module-name">角色管理</div>
+                <div class="module-desc">创建和管理小说角色，支持属性设定、标签分类和关系关联</div>
+                <div class="module-badge">属性面板 · 标签系统 · 关系图</div>
+            </a>
+
+            <a class="module-card" href="world-builder.html">
+                <div class="module-icon">🌍</div>
+                <div class="module-name">世界观管理</div>
+                <div class="module-desc">地理地图、时间线、势力系统、力量体系、规则引擎、设定百科</div>
+                <div class="module-badge">6 大子系统 · 规则校验</div>
+            </a>
+
+            <a class="module-card" href="writing-analysis.html">
+                <div class="module-icon">📊</div>
+                <div class="module-name">写作分析</div>
+                <div class="module-desc">节奏分析、伏笔追踪、章节评分、风格洞察、写作目标</div>
+                <div class="module-badge">4 大维度 · AI 评分</div>
+            </a>
+
+            <a class="module-card" href="platform-tools.html">
+                <div class="module-icon">📱</div>
+                <div class="module-name">网文平台工具</div>
+                <div class="module-desc">格式导出、章节钩子分析、更新规划、读者反馈、系列管理</div>
+                <div class="module-badge">6 平台适配 · 数据驱动</div>
+            </a>
+
+            <a class="module-card" href="ai-suite.html">
+                <div class="module-icon">🤖</div>
+                <div class="module-name">AI 深度集成</div>
+                <div class="module-desc">AI 辅助写作、设定管理、写作教练、三模型对比写作</div>
+                <div class="module-badge">4 大功能 · 多模型</div>
+            </a>
+
+            <a class="module-card" href="knowledge-graph.html">
+                <div class="module-icon">🕸️</div>
+                <div class="module-name">知识图谱</div>
+                <div class="module-desc">可视化故事结构，管理角色关系、事件脉络和世界观节点</div>
+                <div class="module-badge">力导向图 · 节点管理 · 导出</div>
+            </a>
+
+            <a class="module-card" href="template-gallery.html">
+                <div class="module-icon">📚</div>
+                <div class="module-name">模板库</div>
+                <div class="module-desc">12+ 写作模板，支持自定义，快速开始你的创作</div>
+                <div class="module-badge">12 预设模板 · 自定义模板</div>
+            </a>
+
+            <a class="module-card" href="outline-editor.html">
+                <div class="module-icon">📋</div>
+                <div class="module-name">大纲编辑器</div>
+                <div class="module-desc">树形大纲结构，支持章节拖拽排序、字数追踪和进度管理</div>
+                <div class="module-badge">树形结构 · 进度追踪 · 拖拽排序</div>
+            </a>
+
+
+            <a class="module-card" href="settings.html">
+                <div class="module-icon">⚙️</div>
+                <div class="module-name">设置</div>
+                <div class="module-desc">配置 AI 模型（本地 Ollama / 云端 API），主题切换，写作偏好</div>
+                <div class="module-badge">Ollama 集成 · 云端 API · 主题</div>
+            </a>
+        </div>
+
+        <!-- 快速开始 -->
+        <div style="text-align: center; margin: 40px 0 20px;">
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">🚀 快速开始</div>
+            <div style="max-width: 600px; margin: 0 auto; text-align: left; font-size: 14px; color: var(--text-secondary); line-height: 2;">
+                <div>1️⃣ 打开 <a href="settings.html" style="color: var(--accent);">设置页面</a> 配置 AI 模型（推荐本地 Ollama）</div>
+                <div>2️⃣ 使用 <a href="template-gallery.html" style="color: var(--accent);">模板库</a> 选择一个写作模板</div>
+                <div>3️⃣ 在 <a href="outline-editor.html" style="color: var(--accent);">大纲编辑器</a> 中规划章节结构</div>
+                <div>4️⃣ 在 <a href="main-editor.html" style="color: var(--accent);">主编辑器</a> 中开始创作，使用 AI 辅助写作</div>
+            </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="footer">
+            <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06 | 10 大功能模块</p>
+            <p style="margin-top: 6px;">Powered by Ollama · OpenAI · Claude · Qwen</p>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换
+        function switchTheme(theme) {
+            const html = document.documentElement;
+            const buttons = document.querySelectorAll('.theme-btn');
+
+            if (theme === 'system') {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+            } else {
+                html.setAttribute('data-theme', theme);
+            }
+
+            buttons.forEach(b => b.classList.remove('active'));
+            document.querySelector(`.theme-btn[data-theme="${theme}"]`).classList.add('active');
+            localStorage.setItem('theme', theme);
+        }
+
+        // 加载保存的主题
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        switchTheme(savedTheme);
+
+        // AI 状态显示
+        async function checkAIStatus() {
+            const useLocal = localStorage.getItem('useLocalAI') === 'true';
+            const localModel = localStorage.getItem('localModel');
+            const cloudModel = localStorage.getItem('cloudModel');
+
+            const statusEl = document.querySelector('.status-item:nth-child(2) .status-value');
+            if (useLocal && localModel) {
+                statusEl.textContent = localModel.split(':')[0];
+            } else if (cloudModel) {
+                statusEl.textContent = cloudModel;
+            }
+        }
+        checkAIStatus();
+    </script>
+</body>
+</html>

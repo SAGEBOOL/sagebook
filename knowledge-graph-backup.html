@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAGE BOOK - 知识图谱</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252525;
+            --bg-tertiary: #2a2a2a;
+            --text-primary: #dcddde;
+            --text-secondary: #999999;
+            --accent: #7c5cbf;
+            --accent-light: #a78bfa;
+            --border: #3e3e3e;
+            --node-character: #4ecdc4;
+            --node-location: #ffe66d;
+            --node-event: #ff6b6b;
+            --node-item: #95e1d3;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            height: 50px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .toolbar-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-right: 20px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.15s;
+        }
+
+        .filter-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .toolbar-spacer {
+            flex: 1;
+        }
+
+        .toolbar-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* 图谱容器 */
+        .graph-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 50px - 40px);
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        .graph-container:active {
+            cursor: grabbing;
+        }
+
+        /* SVG 连线 */
+        .graph-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .graph-edge {
+            stroke: var(--border);
+            stroke-width: 2;
+            opacity: 0.6;
+        }
+
+        .graph-edge:hover {
+            stroke: var(--accent-light);
+            opacity: 1;
+        }
+
+        /* 节点 */
+        .graph-node {
+            position: absolute;
+            padding: 10px 15px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .graph-node:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .graph-node.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(124, 92, 191, 0.3);
+        }
+
+        .node-character {
+            border-color: var(--node-character);
+        }
+
+        .node-location {
+            border-color: var(--node-location);
+        }
+
+        .node-event {
+            border-color: var(--node-event);
+        }
+
+        .node-item {
+            border-color: var(--node-item);
+        }
+
+        .node-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .node-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .node-type {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 3px;
+        }
+
+        /* 底部状态栏 */
+        .status-bar {
+            height: 40px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            gap: 20px;
+        }
+
+        .zoom-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .zoom-btn {
+            width: 30px;
+            height: 30px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .zoom-btn:hover {
+            background: var(--bg-hover);
+        }
+
+        .zoom-level {
+            font-size: 13px;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* 图例 */
+        .legend {
+            position: absolute;
+            bottom: 60px;
+            left: 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 12px;
+        }
+
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部工具栏 -->
+    <div class="toolbar">
+        <div class="toolbar-title">🌐 知识图谱 - 我的小说</div>
+        
+        <button class="filter-btn active">全部</button>
+        <button class="filter-btn">角色</button>
+        <button class="filter-btn">地点</button>
+        <button class="filter-btn">事件</button>
+        <button class="filter-btn">物品</button>
+
+        <div style="width:1px; height:20px; background:var(--border);"></div>
+
+        <button class="filter-btn">🔍 搜索节点...</button>
+        <button class="filter-btn">📥 导入</button>
+        <button class="filter-btn">📤 导出PNG</button>
+
+        <div class="toolbar-spacer"></div>
+
+        <div class="toolbar-info">
+            共 45 个节点 | 78 条连接
+        </div>
+    </div>
+
+    <!-- 图谱容器 -->
+    <div class="graph-container" id="graphContainer">
+        <!-- SVG 连线层 -->
+        <svg class="graph-svg" id="graphSvg"></svg>
+
+        <!-- 节点 -->
+        <div class="graph-node node-character selected" style="left:400px; top:200px;" data-id="1">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">👤</span>
+                <div>
+                    <div class="node-label">张三</div>
+                    <div class="node-type">主角</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-node node-character" style="left:200px; top:350px;" data-id="2">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">👤</span>
+                <div>
+                    <div class="node-label">李四</div>
+                    <div class="node-type">配角</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-node node-character" style="left:600px; top:350px;" data-id="3">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">👤</span>
+                <div>
+                    <div class="node-label">王五</div>
+                    <div class="node-type">反派</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-node node-location" style="left:400px; top:450px;" data-id="4">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">🏙️</span>
+                <div>
+                    <div class="node-label">天京城</div>
+                    <div class="node-type">主城</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-node node-event" style="left:150px; top:150px;" data-id="5">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">⚡</span>
+                <div>
+                    <div class="node-label">觉醒事件</div>
+                    <div class="node-type">第1章</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="graph-node node-item" style="left:650px; top:150px;" data-id="6">
+            <div style="display:flex; align-items:center;">
+                <span class="node-icon">⚔️</span>
+                <div>
+                    <div class="node-label">神秘古剑</div>
+                    <div class="node-type">神器</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-title">图例</div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:var(--node-character);"></div>
+                <span>角色</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:var(--node-location);"></div>
+                <span>地点</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:var(--node-event);"></div>
+                <span>事件</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background:var(--node-item);"></div>
+                <span>物品</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="status-bar">
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">−</button>
+            <div class="zoom-level" id="zoomLevel">100%</div>
+            <button class="zoom-btn" id="zoomIn">+</button>
+            <button class="zoom-btn" id="zoomReset">⟲</button>
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <div>🖱️ 滚轮缩放 | 拖拽移动 | 点击节点查看详情</div>
+    </div>
+
+    <script>
+        // 简单的交互逻辑
+        const container = document.getElementById('graphContainer');
+        const nodes = document.querySelectorAll('.graph-node');
+        let selectedNode = null;
+
+        // 节点点击选择
+        nodes.forEach(node => {
+            node.addEventListener('click', function(e) {
+                e.stopPropagation();
+                nodes.forEach(n => n.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedNode = this;
+            });
+        });
+
+        // 点击空白处取消选择
+        container.addEventListener('click', function(e) {
+            if (e.target === container || e.target.id === 'graphSvg') {
+                nodes.forEach(n => n.classList.remove('selected'));
+                selectedNode = null;
+            }
+        });
+
+        // 拖拽功能
+        let isDragging = false;
+        let dragNode = null;
+        let dragStartX, dragStartY, nodeStartX, nodeStartY;
+
+        nodes.forEach(node => {
+            node.addEventListener('mousedown', function(e) {
+                if (e.button === 0) {
+                    isDragging = true;
+                    dragNode = this;
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                    nodeStartX = parseInt(this.style.left);
+                    nodeStartY = parseInt(this.style.top);
+                    e.preventDefault();
+                }
+            });
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging && dragNode) {
+                const dx = e.clientX - dragStartX;
+                const dy = e.clientY - dragStartY;
+                dragNode.style.left = (nodeStartX + dx) + 'px';
+                dragNode.style.top = (nodeStartY + dy) + 'px';
+                // 这里应该更新连线位置
+            }
+        });
+
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            dragNode = null;
+        });
+
+        // 缩放功能（简化版）
+        let zoom = 100;
+        const zoomLevel = document.getElementById('zoomLevel');
+
+        document.getElementById('zoomIn').addEventListener('click', function() {
+            zoom = Math.min(zoom + 10, 200);
+            zoomLevel.textContent = zoom + '%';
+            applyZoom();
+        });
+
+        document.getElementById('zoomOut').addEventListener('click', function() {
+            zoom = Math.max(zoom - 10, 50);
+            zoomLevel.textContent = zoom + '%';
+            applyZoom();
+        });
+
+        document.getElementById('zoomReset').addEventListener('click', function() {
+            zoom = 100;
+            zoomLevel.textContent = zoom + '%';
+            applyZoom();
+        });
+
+        function applyZoom() {
+            const scale = zoom / 100;
+            nodes.forEach(node => {
+                node.style.transform = `scale(${scale})`;
+            });
+        }
+
+        // 筛选按钮
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (this.textContent === '全部' || this.textContent === '角色' || 
+                    this.textContent === '地点' || this.textContent === '事件' || 
+                    this.textContent === '物品') {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SAGE BOOK - 世界观管理</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root[data-theme="dark"] { --bg-primary:#1a1a2e;--bg-secondary:#16213e;--bg-card:#1e2a45;--bg-hover:#253352;--text-primary:#e0e0e0;--text-secondary:#a0a0b0;--accent:#7c5cbf;--accent-hover:#9b7fd4;--accent-glow:rgba(124,92,191,0.3);--border:#2a2a4a;--success:#4ade80;--warning:#fbbf24;--error:#f87171; }
+        :root[data-theme="light"] { --bg-primary:#f5f0ff;--bg-secondary:#ffffff;--bg-card:#ffffff;--bg-hover:#f0e8ff;--text-primary:#1a1a2e;--text-secondary:#666680;--accent:#7c5cbf;--accent-hover:#6a4dac;--accent-glow:rgba(124,92,191,0.15);--border:#e0d8f0;--success:#22c55e;--warning:#f59e0b;--error:#ef4444; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh; }
+        .container { max-width:1200px;margin:0 auto;padding:20px; }
+        .header { text-align:center;padding:40px 20px 20px;position:relative; }
+        .logo { font-size:36px;margin-bottom:8px; }
+        .title { font-size:28px;font-weight:800;background:linear-gradient(135deg,#7c5cbf,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+        .subtitle { font-size:14px;color:var(--text-secondary);margin-top:6px; }
+        .nav { display:flex;justify-content:center;gap:20px;margin:20px 0;flex-wrap:wrap; }
+        .nav-link { color:var(--text-secondary);text-decoration:none;font-size:14px;padding:6px 12px;border-radius:8px;transition:all .2s; }
+        .nav-link:hover { color:var(--text-primary);background:var(--bg-hover); }
+        .nav-link.active { color:var(--accent);background:var(--bg-card);border:1px solid var(--border); }
+        .theme-switcher { position:fixed;top:15px;right:20px;display:flex;gap:4px;z-index:100; }
+        .theme-btn { padding:6px 10px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
+        .theme-btn:hover { border-color:var(--accent); }
+        .theme-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .mobile-menu-btn { display:none;position:fixed;top:15px;left:15px;z-index:100;padding:8px 12px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:18px;cursor:pointer; }
+        .tabs { display:flex;gap:8px;margin:20px 0;flex-wrap:wrap; }
+        .tab-btn { padding:8px 20px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary);border-radius:10px;cursor:pointer;font-size:14px;transition:all .2s; }
+        .tab-btn:hover { border-color:var(--accent); }
+        .tab-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+        .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
+        .grid-3 { display:grid;grid-template-columns:repeat(3,1fr);gap:16px; }
+        .card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px; }
+        .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px; }
+        .stat-row { display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border); }
+        .stat-row:last-child { border-bottom:none; }
+        .stat-label { color:var(--text-secondary);font-size:13px; }
+        .stat-val { font-weight:600;font-size:14px; }
+        .timeline { position:relative;padding-left:24px; }
+        .timeline::before { content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border); }
+        .tl-item { position:relative;margin:12px 0; }
+        .tl-item::before { content:'';position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-primary); }
+        .tl-date { font-size:12px;color:var(--text-secondary); }
+        .tl-content { font-size:14px;margin-top:4px; }
+        .tl-item.conflict::before { background:var(--error); }
+        .tl-item.resolve::before { background:var(--success); }
+        .map-placeholder { height:300px;background:var(--bg-hover);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:14px;position:relative;overflow:hidden; }
+        .map-grid { display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(6,1fr);height:100%;width:100%;gap:2px;padding:10px; }
+        .map-cell { border-radius:4px;transition:all .2s;cursor:pointer; }
+        .map-cell:hover { transform:scale(1.1);z-index:1; }
+        .map-cell.city { background:var(--accent); }
+        .map-cell.forest { background:#22c55e; }
+        .map-cell.mountain { background:#8b8b8b; }
+        .map-cell.water { background:#3b82f6; }
+        .map-cell.dungeon { background:#f87171; }
+        .map-cell.empty { background:var(--bg-hover); }
+        .faction-list { display:flex;flex-direction:column;gap:12px; }
+        .faction-item { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-hover);border-radius:8px;cursor:pointer;transition:all .2s; }
+        .faction-item:hover { background:var(--border); }
+        .faction-icon { font-size:24px; }
+        .faction-info { flex:1; }
+        .faction-name { font-size:14px;font-weight:600; }
+        .faction-desc { font-size:12px;color:var(--text-secondary);margin-top:2px; }
+        .power-level { font-size:12px;padding:2px 8px;border-radius:10px;background:var(--accent);color:white; }
+        .rule-item { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-hover);border-radius:8px;margin:8px 0; }
+        .rule-status { width:10px;height:10px;border-radius:50%; }
+        .rule-status.pass { background:var(--success); }
+        .rule-status.fail { background:var(--error); }
+        .rule-status.warn { background:var(--warning); }
+        .rule-text { flex:1;font-size:14px; }
+        .rule-count { font-size:12px;color:var(--text-secondary); }
+        .encyclopedia-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px; }
+        .encyclopedia-item { background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .2s; }
+        .encyclopedia-item:hover { border-color:var(--accent); }
+        .encyclopedia-title { font-size:14px;font-weight:600;margin-bottom:6px; }
+        .encyclopedia-preview { font-size:12px;color:var(--text-secondary);line-height:1.5; }
+        .encyclopedia-meta { display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-secondary); }
+        .btn { padding:8px 16px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
+        .btn:hover { border-color:var(--accent); }
+        .btn-primary { background:var(--accent);color:white;border-color:var(--accent); }
+        .btn-primary:hover { background:var(--accent-hover); }
+        .btn-group { display:flex;gap:8px;margin:16px 0;flex-wrap:wrap; }
+        .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
+        .footer a { color:var(--accent);text-decoration:none; }
+        @media(max-width:768px) {
+            .header { padding:50px 15px 15px; } .title { font-size:24px; }
+            .nav { gap:10px; } .nav-link { font-size:13px;padding:5px 10px; }
+            .grid-2,.grid-3 { grid-template-columns:1fr; }
+            .mobile-menu-btn { display:block; }
+        }
+        @media(max-width:480px) { .theme-switcher { top:10px;right:10px; } .theme-btn { padding:4px 8px;font-size:12px; } }
+    </style>
+</head>
+<body>
+    <div class="theme-switcher">
+        <button class="theme-btn active" onclick="setTheme('dark')">🌙</button>
+        <button class="theme-btn" onclick="setTheme('light')">☀️</button>
+        <button class="theme-btn" onclick="setTheme('system')">💻</button>
+    </div>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌍</div>
+            <div class="title">世界观管理</div>
+            <div class="subtitle">地理系统 · 时间线 · 势力 · 力量体系 · 设定百科</div>
+            <nav class="nav">
+                <a href="index.html" class="nav-link">🏠 首页</a>
+                <a href="main-editor.html" class="nav-link">编辑器</a>
+                <a href="character-management.html" class="nav-link">角色</a>
+                <a href="template-gallery.html" class="nav-link">模板</a>
+                <a href="outline-editor.html" class="nav-link">大纲</a>
+                <a href="knowledge-graph.html" class="nav-link">图谱</a>
+                <a href="writing-analysis.html" class="nav-link">分析</a>
+                <a href="platform-tools.html" class="nav-link">平台</a>
+                <a href="world-builder.html" class="nav-link active">世界观</a>
+                <a href="ai-suite.html" class="nav-link">AI</a>
+                <a href="settings.html" class="nav-link">设置</a>
+            </nav>
+        </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('map')">🗺️ 地图编辑器</button>
+            <button class="tab-btn" onclick="switchTab('timeline')">⏳ 时间线</button>
+            <button class="tab-btn" onclick="switchTab('factions')">⚔️ 势力系统</button>
+            <button class="tab-btn" onclick="switchTab('power')">💪 力量体系</button>
+            <button class="tab-btn" onclick="switchTab('rules')">📜 规则引擎</button>
+            <button class="tab-btn" onclick="switchTab('encyclopedia')">📖 设定百科</button>
+        </div>
+        <!-- 地图编辑器 -->
+        <div id="tab-map" class="tab-content active">
+            <div class="btn-group">
+                <button class="btn btn-primary">🖊️ 绘制</button>
+                <button class="btn">🏷️ 标注</button>
+                <button class="btn">🗑️ 清除</button>
+                <button class="btn">📤 导出地图</button>
+            </div>
+            <div class="map-placeholder">
+                <div class="map-grid">
+                    <div class="map-cell water"></div><div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell mountain"></div><div class="map-cell mountain"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell water"></div>
+                    <div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell mountain"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell dungeon"></div><div class="map-cell water"></div>
+                    <div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell water"></div>
+                    <div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell water"></div>
+                    <div class="map-cell water"></div><div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell mountain"></div><div class="map-cell mountain"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell water"></div>
+                    <div class="map-cell empty"></div><div class="map-cell water"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div>
+                </div>
+            </div>
+            <div class="grid-2" style="margin-top:16px">
+                <div class="card">
+                    <div class="card-title">📍 地点列表</div>
+                    <div class="stat-row"><span class="stat-label">主城</span><span class="stat-val" style="color:var(--accent)">王都·天启城</span></div>
+                    <div class="stat-row"><span class="stat-label">精灵森林</span><span class="stat-val" style="color:var(--success)">迷雾林地</span></div>
+                    <div class="stat-row"><span class="stat-label">遗迹</span><span class="stat-val" style="color:var(--error)">远古神殿</span></div>
+                    <div class="stat-row"><span class="stat-label">山脉</span><span class="stat-val" style="color:#8b8b8b">断龙山脉</span></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 地图统计</div>
+                    <div class="stat-row"><span class="stat-label">已探索区域</span><span class="stat-val">68%</span></div>
+                    <div class="stat-row"><span class="stat-label">地点总数</span><span class="stat-val">24</span></div>
+                    <div class="stat-row"><span class="stat-label">未探索区域</span><span class="stat-val">32%</span></div>
+                    <div class="stat-row"><span class="stat-label">危险区域</span><span class="stat-val" style="color:var(--error)">5</span></div>
+                </div>
+            </div>
+        </div>
+        <!-- 时间线 -->
+        <div id="tab-timeline" class="tab-content">
+            <div class="btn-group">
+                <button class="btn btn-primary">➕ 添加事件</button>
+                <button class="btn">🔍 冲突检测</button>
+                <button class="btn">📊 统计</button>
+            </div>
+            <div class="card">
+                <div class="card-title">📅 故事时间线</div>
+                <div class="timeline">
+                    <div class="tl-item resolve"><div class="tl-date">第 1 章 - 序章</div><div class="tl-content">主角出生在天启城，平民家庭</div></div>
+                    <div class="tl-item"><div class="tl-date">第 3 章 - 觉醒</div><div class="tl-content">主角觉醒灵根，被宗门招收</div></div>
+                    <div class="tl-item"><div class="tl-date">第 7 章 - 师父失踪</div><div class="tl-content">师父在秘境探索中离奇消失</div></div>
+                    <div class="tl-item conflict"><div class="tl-date">⚠️ 第 12 章 - 时间冲突</div><div class="tl-content">主角已在第10章"去世"，但第12章仍有对话</div></div>
+                    <div class="tl-item"><div class="tl-date">第 15 章 - 秘境突围</div><div class="tl-content">主角找到师父遗留的线索</div></div>
+                    <div class="tl-item resolve"><div class="tl-date">第 20 章 - 真相</div><div class="tl-content">师父被魔教绑架，戒指身世之谜揭晓</div></div>
+                    <div class="tl-item"><div class="tl-date">第 25 章 - 双月之夜（预告）</div><div class="tl-content">预言石碑记载的"暗影吞噬光明"之夜</div></div>
+                    <div class="tl-item"><div class="tl-date">第 30 章 - 终章预告</div><div class="tl-content">最终决战：光明 vs 暗影</div></div>
+                </div>
+            </div>
+        </div>
+        <!-- 势力系统 -->
+        <div id="tab-factions" class="tab-content">
+            <div class="btn-group">
+                <button class="btn btn-primary">➕ 新建势力</button>
+                <button class="btn">🔗 关系图</button>
+                <button class="btn">📊 影响力分析</button>
+            </div>
+            <div class="faction-list">
+                <div class="faction-item"><div class="faction-icon">🏯</div><div class="faction-info"><div class="faction-name">天启王朝</div><div class="faction-desc">人类帝国，统治中央大陆，兵力最强</div></div><span class="power-level">★★★★★</span></div>
+                <div class="faction-item"><div class="faction-icon">⚔️</div><div class="faction-info"><div class="faction-name">青云宗</div><div class="faction-desc">正道第一宗门，主角所在宗门</div></div><span class="power-level">★★★★</span></div>
+                <div class="faction-item"><div class="faction-icon">🌑</div><div class="faction-info"><div class="faction-name">魔教</div><div class="faction-desc">邪恶组织，暗中操控多国政局</div></div><span class="power-level">★★★★</span></div>
+                <div class="faction-item"><div class="faction-icon">🌲</div><div class="faction-info"><div class="faction-name">精灵族</div><div class="faction-desc">隐居迷雾森林，不问世事</div></div><span class="power-level">★★★</span></div>
+                <div class="faction-item"><div class="faction-icon">🐉</div><div class="faction-info"><div class="faction-name">龙族遗族</div><div class="faction-desc">神秘种族，隐居断龙山脉</div></div><span class="power-level">★★★★★</span></div>
+                <div class="faction-item"><div class="faction-icon">🏴</div><div class="faction-info"><div class="faction-name">暗影商会</div><div class="faction-desc">地下情报网，操控黑市交易</div></div><span class="power-level">★★★</span></div>
+            </div>
+            <div class="card" style="margin-top:16px">
+                <div class="card-title">🔗 势力关系</div>
+                <div class="stat-row"><span class="stat-label">天启王朝 ↔ 青云宗</span><span class="stat-val" style="color:var(--success)">同盟</span></div>
+                <div class="stat-row"><span class="stat-label">青云宗 ↔ 魔教</span><span class="stat-val" style="color:var(--error)">敌对</span></div>
+                <div class="stat-row"><span class="stat-label">魔教 ↔ 暗影商会</span><span class="stat-val" style="color:var(--warning)">暗盟</span></div>
+                <div class="stat-row"><span class="stat-label">精灵族 ↔ 天启王朝</span><span class="stat-val">中立</span></div>
+            </div>
+        </div>
+        <!-- 力量体系 -->
+        <div id="tab-power" class="tab-content">
+            <div class="card">
+                <div class="card-title">💪 修炼等级体系</div>
+                <div class="stat-row"><span class="stat-label">1. 炼气期</span><span class="stat-val">入门阶段，感应灵气</span></div>
+                <div class="stat-row"><span class="stat-label">2. 筑基期</span><span class="stat-val">打牢根基，灵力稳固</span></div>
+                <div class="stat-row"><span class="stat-label">3. 凝丹期</span><span class="stat-val">凝结金丹，实力大增</span></div>
+                <div class="stat-row"><span class="stat-label">4. 元婴期</span><span class="stat-val">元婴出窍，可御空飞行</span></div>
+                <div class="stat-row"><span class="stat-label">5. 化神期</span><span class="stat-val">化神入虚，触摸法则</span></div>
+                <div class="stat-row"><span class="stat-label">6. 渡劫期</span><span class="stat-val">渡九重天劫，飞升仙界</span></div>
+                <div class="stat-row"><span class="stat-label" style="color:var(--accent)">?. 神境</span><span class="stat-val" style="color:var(--accent)">传说级别，主角最终目标</span></div>
+            </div>
+            <div class="card" style="margin-top:16px">
+                <div class="card-title">📊 战力平衡检查</div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">主角升级节奏合理（每3-5章一次突破）</div></div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">反派实力递进正常</div></div>
+                <div class="rule-item"><div class="rule-status warn"></div><div class="rule-text">第18章主角实力提升过快（从凝丹到元婴仅1章）</div></div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">技能冷却时间设置合理</div></div>
+            </div>
+        </div>
+        <!-- 规则引擎 -->
+        <div id="tab-rules" class="tab-content">
+            <div class="btn-group">
+                <button class="btn btn-primary">➕ 添加规则</button>
+                <button class="btn">🔍 全面检测</button>
+                <button class="btn">📊 统计</button>
+            </div>
+            <div class="card">
+                <div class="card-title">📜 全局规则</div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">魔法冷却时间不少于3天</div><div class="rule-count">命中 12 次</div></div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">主角不可同时出现在两个地点</div><div class="rule-count">命中 8 次</div></div>
+                <div class="rule-item"><div class="rule-status fail"></div><div class="rule-text">已死角色不可出现对话</div><div class="rule-count">⚠️ 检测到 2 处违规</div></div>
+                <div class="rule-item"><div class="rule-status warn"></div><div class="rule-text">同一武器不可同时存在于两处</div><div class="rule-count">⚠️ 1 处疑似</div></div>
+                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">修炼等级不可跨级提升</div><div class="rule-count">命中 0 次</div></div>
+            </div>
+        </div>
+        <!-- 设定百科 -->
+        <div id="tab-encyclopedia" class="tab-content">
+            <div class="btn-group">
+                <button class="btn btn-primary">➕ 新建词条</button>
+                <button class="btn">🔍 搜索</button>
+                <button class="btn">📊 热度分析</button>
+            </div>
+            <div class="encyclopedia-grid">
+                <div class="encyclopedia-item"><div class="encyclopedia-title">📍 天启城</div><div class="encyclopedia-preview">人类帝国首都，人口百万，城墙高三十丈...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 42 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">⚔️ 青云剑诀</div><div class="encyclopedia-preview">青云宗招牌剑法，共十二式，以"青云直上"...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 38 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">🏔️ 断龙山脉</div><div class="encyclopedia-preview">位于大陆西北，终年积雪，龙族遗迹所在地...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 31 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">🌲 迷雾森林</div><div class="encyclopedia-preview">精灵族居住地，常年被魔法迷雾笼罩...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 18 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">💍 神秘戒指</div><div class="encyclopedia-preview">主角在第三章节获得，内藏远古灵魂...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 25 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">📜 预言石碑</div><div class="encyclopedia-preview">第十二章节发现，记载着关于世界末日的预言...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 15 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">🧪 回春丹</div><div class="encyclopedia-preview">三品丹药，可恢复灵力损伤...</div><div class="encyclopedia-meta"><span>🟢 低热度</span><span>引用 3 次</span></div></div>
+                <div class="encyclopedia-item"><div class="encyclopedia-title">🗡️ 断渊刀</div><div class="encyclopedia-preview">上古神器，曾属于龙族的战神...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 9 次</span></div></div>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="btn" onclick="exportWorld()">📤 导出世界观</button>
+            <button class="btn" onclick="aiComplete()">🤖 AI 补全建议</button>
+        </div>
+        <div class="footer">
+            <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06</p>
+            <p style="margin-top:6px">Powered by Ollama · OpenAI · Claude · Qwen</p>
+        </div>
+    </div>
+    <script>
+        function setTheme(t){const h=document.documentElement,b=document.querySelectorAll('.theme-btn');
+        if(t==='system'){const d=window.matchMedia('(prefers-color-scheme:dark)').matches;h.setAttribute('data-theme',d?'dark':'light')}
+        else h.setAttribute('data-theme',t);b.forEach(x=>x.classList.remove('active'));
+        document.querySelector(`.theme-btn[onclick="setTheme('${t}')"]`).classList.add('active');
+        localStorage.setItem('theme',t)}
+        const st=localStorage.getItem('theme')||'dark';setTheme(st);
+        function switchTab(id){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+        document.getElementById('tab-'+id).classList.add('active');
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        event.target.classList.add('active')}
+        function toggleMobileMenu(){const n=document.querySelector('.nav');
+        n.style.display=n.style.display==='flex'?'none':'flex';n.style.flexDirection='column';n.style.alignItems='center'}
+        function exportWorld(){alert('世界观设定已导出为 JSON 格式')}
+        function aiComplete(){alert('正在分析世界观完整性，推荐补全维度...')}
+    </script>
+</body>
+</html>
