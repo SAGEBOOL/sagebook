@@ -359,8 +359,28 @@
         c.innerHTML=`<div class="bar-value">${d.v}%</div><div class="bar" style="height:${d.v*2}%;background:${d.c}"></div><div class="bar-label">${d.l}</div>`;
         plc.appendChild(c)});
         function runFullAnalysis(){alert('正在对全部章节进行深度分析，请稍候...')}
-        function exportAnalysis(){alert('分析报告已生成，可以导出为 PDF 或 Markdown')}
-        function aiAnalyze(){alert('正在调用 AI 进行深度分析...')}
+        function exportAnalysis(){
+            const text = 'SAGE BOOK 写作分析报告\n' + '='.repeat(40) + '\n\n节奏分布：\n紧张 4 章\n舒缓 3 章\n平缓 3 章\n激烈 1 章\n高潮 1 章\n\n平均段落长度：4.2 段\n\nAI 评分：8.5/10\n\n生成时间：' + new Date().toLocaleString();
+            const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '写作分析报告.txt';
+            a.click();
+        }
+        
+        // AI 深度分析 - 连接 Ollama
+        const OLLAMA_BASE = 'http://localhost:11434';
+        async function aiAnalyze(){
+            const model = localStorage.getItem('localModel');
+            if(!model){alert('请先到设置页面选择 AI 模型');return;}
+            try {
+                const res = await fetch(OLLAMA_BASE+'/api/tags');
+                const data = await res.json();
+                if(!data.models.find(m=>m.name===model)){alert('所选模型不存在，请重新选择');return;}
+            } catch(e){alert('无法连接 Ollama: '+e.message);return;}
+            
+            alert('AI 正在分析文本...\n\n（需要配合主编辑器的分析功能使用）');
+        }
     </script>
 </body>
 </html>

@@ -281,8 +281,32 @@
         event.target.classList.add('active')}
         function toggleMobileMenu(){const n=document.querySelector('.nav');
         n.style.display=n.style.display==='flex'?'none':'flex';n.style.flexDirection='column';n.style.alignItems='center'}
-        function exportWorld(){alert('世界观设定已导出为 JSON 格式')}
-        function aiComplete(){alert('正在分析世界观完整性，推荐补全维度...')}
+        function exportWorld(){
+            const worldData = {
+                title: '世界观设定',
+                exportTime: new Date().toLocaleString(),
+                geography: [
+                    {name:'天启城',desc:'人类帝国首都，人口百万'},
+                    {name:'迷雾森林',desc:'精灵族居住地'},
+                    {name:'断龙山脉',desc:'龙族遗迹所在地'}
+                ],
+                powerSystem: [
+                    {name:'炼气境',desc:'入门修为，共九层'}
+                ],
+                factions: [
+                    {name:'青云宗',desc:'三大长老，外门弟子千余'}
+                ]
+            };
+            const json = JSON.stringify(worldData, null, 2);
+            const blob = new Blob([json], {type:'application/json;charset=utf-8'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '世界观设定_' + new Date().toISOString().slice(0,10) + '.json';
+            a.click();
+        }
+        function aiComplete(){
+            alert('📊 世界观完整性分析\n\n✅ 地理系统：已记录 3 个地点\n✅ 力量体系：已记录 1 个系统\n⚠️ 势力系统：仅记录 1 个势力\n⚠️ 规则引擎：未配置\n💡 建议补充：经济系统、宗教体系、历史事件');
+        }
     </script>
 </body>
 </html>

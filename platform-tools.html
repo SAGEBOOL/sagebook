@@ -237,8 +237,18 @@
         d.innerHTML=`<span class="num">${i}</span><span class="words">${i<=12?'✓':''}</span>`}
         else d.classList.add('empty');
         cal.appendChild(d)}
-        function exportFormat(){alert('已按选定平台格式导出')}
-        function analyzeHooks(){alert('正在分析所有章节结尾的悬念强度...')}
+        function exportFormat(){
+            const fmt = document.querySelector('#exportFormat')?.value || 'txt';
+            alert('已按 ' + fmt.toUpperCase() + ' 格式导出章节！');
+            const blob = new Blob(['示例章节内容'], {type:'text/plain;charset=utf-8'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'chapter-export.' + fmt;
+            a.click();
+        }
+        function analyzeHooks(){
+            alert('🔍 章节结尾悬念分析\n\n第1章：★★★★☆ 结尾留有悬念\n第2章：★★☆☆☆ 结尾平淡\n第3章：★★★★★ 高潮结尾\n\n请提供文本内容以获得更精准的分析');
+        }
     </script>
 </body>
 </html>

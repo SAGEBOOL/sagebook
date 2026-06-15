@@ -594,10 +594,27 @@
                     <div class="status-dot disconnected" id="ollamaStatus"></div>
                     <div>
                         <div style="font-weight: 600; margin-bottom: 3px;" id="ollamaStatusText">未连接</div>
-                        <div style="font-size: 12px; color: var(--text-secondary);">请确保 Ollama 已启动 (ollama serve)</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);" id="ollamaHint">请确保 Ollama 已启动，然后点击下方"检测"按钮</div>
                     </div>
                     <div style="flex: 1;"></div>
-                    <button class="btn btn-secondary" onclick="checkOllama()">🔄 检测</button>
+                    <button class="btn btn-secondary" onclick="debugCheckOllama()">🔍 检测</button>
+                </div>
+
+                <!-- 调试面板 -->
+                <div id="debugPanel" style="display:none; padding: 15px; background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; line-height: 1.8; margin-top: 10px; font-family: monospace; max-height: 300px; overflow-y: auto; white-space: pre-wrap;">
+                    <div id="debugLog">点击"检测"按钮查看诊断结果...</div>
+                </div>
+
+                <div style="padding: 15px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; font-size: 13px; color: var(--success); line-height: 2; margin-bottom: 10px;">
+                    <strong>📌 重要说明：</strong><br>
+                    你当前页面是通过 <code style="color:#fbbf24">file://</code> 协议打开的本地文件，浏览器出于安全限制，<strong>禁止本地页面请求 localhost 接口</strong>（CORS 限制）。<br><br>
+                    <strong>解决方法：</strong><br>
+                    1. 打开终端，运行以下命令：<br>
+                    <code style="display:block;background:var(--bg-primary);padding:8px;border-radius:6px;margin:8px 0;font-size:12px;cursor:pointer;" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000')" title="点击复制">cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000</code>
+                    <span style="font-size:11px;color:var(--text-secondary);"> (点击可复制)</span><br>
+                    2. 然后在浏览器中打开：<br>
+                    <a href="http://localhost:8000/settings.html" style="color:var(--accent-light);text-decoration:underline;font-weight:600;">http://localhost:8000/settings.html</a><br><br>
+                    ✅ 这样就能正常连接 Ollama 了！
                 </div>
 
                 <select class="select-box" id="localModel" onchange="handleLocalModelChange()">
@@ -835,6 +852,9 @@
             return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
         }
 
+        // Ollama API 地址
+        const OLLAMA_BASE = 'http://localhost:11434';
+        
         // 检测 Ollama
         async function checkOllama() {
             const statusDot = document.getElementById('ollamaStatus');
@@ -844,20 +864,56 @@
             statusDot.className = 'status-dot';
             statusText.textContent = '检测中...';
             
+            const debugLog = document.getElementById('debugLog');
+            const debugPanel = document.getElementById('debugPanel');
+            if (debugPanel) debugPanel.style.display = 'block';
+            if (debugLog) debugLog.innerHTML = '';
+            
+            function addLog(msg) {
+                if (debugLog) debugLog.innerHTML += msg + '\\n';
+                console.log('[SageBook]', msg);
+            }
+            
+            addLog('🔍 开始检测 Ollama...');
+            
             try {
-                const response = await fetch('http://localhost:11434/api/tags', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
                 
-                if (!response.ok) throw new Error('Ollama not running');
+                // 步骤1: 基础连通测试
+                addLog('➜ 测试基础连通性...');
+                const pongResponse = await fetch('http://localhost:11434/', { method: 'GET' });
+                const pongStatus = pongResponse.status;
+                const pongText = await pongResponse.text();
+                addLog(`✅ 基础连通: ${pongStatus} - ${pongText}`);
+                
+                // 步骤2: 获取模型列表
+                addLog('➜ 获取模型列表...');
+                const controller2 = new AbortController();
+                const timeoutId2 = setTimeout(() => controller2.abort(), 5000);
+                const response = await fetch(`${OLLAMA_BASE}/api/tags`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller2.signal
+                });
+                clearTimeout(timeoutId2);
+                
+                addLog(`✅ API响应: ${response.status} ${response.statusText}`);
+                
+                if (!response.ok) throw new Error(`HTTP ${response.status}: Ollama not running`);
                 
                 const data = await response.json();
                 
                 statusDot.className = 'status-dot connected';
                 statusText.textContent = `已连接 (${data.models.length} 个模型)`;
                 
+                addLog(`✅ API响应: ${response.status} ${response.statusText}`);
+                addLog(`📋 找到 ${data.models.length} 个模型:`);
+                
                 if (data.models && data.models.length > 0) {
+                    data.models.forEach(m => {
+                        addLog(`  ✓ ${m.name} (${m.details.parameter_size})`);
+                    });
                     modelSelect.innerHTML = data.models.map(m => 
                         `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`
                     ).join('');
@@ -867,19 +923,35 @@
                 
                 localStorage.setItem('ollamaConnected', 'true');
                 localStorage.setItem('ollamaModels', JSON.stringify(data.models || []));
+                addLog('✅ 本地存储已更新');
                 
                 // 恢复之前选中的模型
                 const savedLocalModel = localStorage.getItem('localModel');
                 if (savedLocalModel && modelSelect.querySelector(`option[value="${savedLocalModel}"]`)) {
                     modelSelect.value = savedLocalModel;
+                    addLog(`✅ 已恢复上次使用的模型: ${savedLocalModel}`);
                 }
                 
                 showToast('✅ Ollama 检测成功！');
+                addLog('✅ 检测完成！请从上方下拉框选择模型并点击"保存"。');
             } catch (error) {
                 statusDot.className = 'status-dot disconnected';
                 statusText.textContent = '未连接';
                 modelSelect.innerHTML = '<option value="">请先启动 Ollama</option>';
                 localStorage.setItem('ollamaConnected', 'false');
+                
+                addLog(`❌ 检测失败: ${error.message}`);
+                addLog('');
+                addLog('🔧 可能原因:');
+                addLog('  ❶ 浏览器CORS限制 — 你用 file:// 打开页面，必须通过 http://localhost 访问');
+                addLog('  ❷ Ollama服务未启动或未监听在 localhost:11434');
+                addLog('  ❸ 防火墙或杀毒软件阻止了请求');
+                addLog('');
+                addLog('📌 解决方法:');
+                addLog('  1. 打开终端运行:');
+                addLog('     cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000');
+                addLog('  2. 浏览器打开: http://localhost:8000/settings.html');
+                
                 console.error('Ollama 连接失败:', error);
             }
         }
@@ -896,7 +968,7 @@
             statusText.textContent = `拉取中: ${modelName}...`;
             
             try {
-                const response = await fetch('http://localhost:11434/api/pull', {
+                const response = await fetch(`${OLLAMA_BASE}/api/pull`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: modelName, stream: false })
@@ -965,8 +1037,11 @@
                 if (btn.dataset.theme === savedTheme) btn.classList.add('active');
             });
 
-            // ① 立刻检测 Ollama（填充模型列表）
-            checkOllama();
+            // ① 自动检测 Ollama（填充模型列表）
+            console.log('[SageBook] Page loaded, auto-checking Ollama...');
+            setTimeout(() => {
+                checkOllama();
+            }, 500);
 
             // ② 恢复开关状态
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
@@ -991,8 +1066,79 @@
                         lm.value = localModel;
                     }
                 }
-            }, 1500);
+            }, 2000);
         });
+        
+        // 手动检测函数（用于按钮点击）
+        window.checkOllama = checkOllama;
+        
+        // 带调试输出的检测函数
+        async function debugCheckOllama() {
+            const statusDot = document.getElementById('ollamaStatus');
+            const statusText = document.getElementById('ollamaStatusText');
+            const modelSelect = document.getElementById('localModel');
+            const debugLog = document.getElementById('debugLog');
+            const debugPanel = document.getElementById('debugPanel');
+            debugPanel.style.display = 'block';
+            
+            debugLog.innerHTML = '🔍 开始检测 Ollama...\n';
+            
+            try {
+                // 步骤1: 测试基础连通性
+                debugLog.innerHTML += '➜ 测试基础连通性...\n';
+                const pong = await fetch('http://localhost:11434/', { method: 'GET' });
+                debugLog.innerHTML += `✅ 基础连通: ${pong.status} (${await pong.text()})\n`;
+                
+                // 步骤2: 获取模型列表
+                debugLog.innerHTML += '\n➜ 获取模型列表...\n';
+                const response = await fetch('http://localhost:11434/api/tags', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                debugLog.innerHTML += `✅ API响应: ${response.status} ${response.statusText}\n`;
+                
+                const data = await response.json();
+                debugLog.innerHTML += `📋 找到 ${data.models.length} 个模型:\n`;
+                
+                // 步骤3: 填充下拉框
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = `已连接 (${data.models.length} 个模型)`;
+                
+                modelSelect.innerHTML = data.models.map(m => 
+                    `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`
+                ).join('');
+                
+                data.models.forEach(m => {
+                    debugLog.innerHTML += `  - ${m.name} (${m.details.parameter_size})\n`;
+                });
+                
+                localStorage.setItem('ollamaConnected', 'true');
+                localStorage.setItem('ollamaModels', JSON.stringify(data.models || []));
+                
+                // 步骤4: 恢复之前选中的模型
+                const savedLocalModel = localStorage.getItem('localModel');
+                if (savedLocalModel && modelSelect.querySelector(`option[value="${savedLocalModel}"]`)) {
+                    modelSelect.value = savedLocalModel;
+                    debugLog.innerHTML += `\n✅ 已恢复上次使用的模型: ${savedLocalModel}\n`;
+                }
+                
+                showToast('✅ Ollama 检测成功！');
+                debugLog.innerHTML += '\n✅ 检测完成！请在上方下拉框选择要使用的模型，然后点击"保存"。';
+                
+            } catch (error) {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = '未连接';
+                modelSelect.innerHTML = '<option value="">请先启动 Ollama</option>';
+                localStorage.setItem('ollamaConnected', 'false');
+                debugLog.innerHTML += `\n❌ 检测失败: ${error.message}\n`;
+                debugLog.innerHTML += `\n🔧 可能的原因:\n`;
+                debugLog.innerHTML += `  1. Ollama 服务未启动\n`;
+                debugLog.innerHTML += `  2. Ollama 监听在非 localhost 地址\n`;
+                debugLog.innerHTML += `  3. 防火墙阻止了请求\n`;
+                debugLog.innerHTML += `  4. 跨域(CORS)限制\n`;
+                console.error('Ollama 连接失败:', error);
+            }
+        }
     </script>
 </body>
 </html>
