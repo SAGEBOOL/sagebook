@@ -239,15 +239,40 @@
         cal.appendChild(d)}
         function exportFormat(){
             const fmt = document.querySelector('#exportFormat')?.value || 'txt';
-            alert('已按 ' + fmt.toUpperCase() + ' 格式导出章节！');
-            const blob = new Blob(['示例章节内容'], {type:'text/plain;charset=utf-8'});
+            const editorContent = localStorage.getItem('sagebook_editor_content') || '';
+            if (!editorContent) {
+                alert('请先在主编辑器中写入内容');
+                return;
+            }
+            let content = editorContent;
+            if (fmt === 'epub' || fmt === 'fb2') {
+                content = '<h1>章节标题</h1><p>' + editorContent.replace(/\n\n/g, '</p><p>') + '</p>';
+            } else if (fmt === 'markdown') {
+                content = '# Chapter\n\n' + editorContent;
+            }
+            const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = 'chapter-export.' + fmt;
             a.click();
         }
         function analyzeHooks(){
-            alert('🔍 章节结尾悬念分析\n\n第1章：★★★★☆ 结尾留有悬念\n第2章：★★☆☆☆ 结尾平淡\n第3章：★★★★★ 高潮结尾\n\n请提供文本内容以获得更精准的分析');
+            const editorContent = localStorage.getItem('sagebook_editor_content') || '';
+            if (!editorContent) {
+                alert('请先在主编辑器中写入内容以获得精准分析');
+                return;
+            }
+            const paragraphs = editorContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+            let result = '🔍 章节结尾悬念分析\n\n';
+            paragraphs.slice(0, 3).forEach((p, i) => {
+                const len = p.trim().length;
+                const endsWithQuestion = /[？!?]/.test(p.trim().slice(-1));
+                const score = endsWithQuestion ? '★★★★★' : (len > 200 ? '★★★☆☆' : '★★☆☆☆');
+                const analysis = endsWithQuestion ? '结尾留有悬念' : (len > 200 ? '结尾较为平淡' : '结尾较短');
+                result += `第${i+1}章：${score} ${analysis}\n`;
+            });
+            result += '\n💡 建议：在章节结尾设置悬念、转折或情感高潮，增加读者追读欲望';
+            alert(result);
         }
     </script>
 </body>

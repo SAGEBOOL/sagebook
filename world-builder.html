@@ -305,7 +305,70 @@
             a.click();
         }
         function aiComplete(){
-            alert('📊 世界观完整性分析\n\n✅ 地理系统：已记录 3 个地点\n✅ 力量体系：已记录 1 个系统\n⚠️ 势力系统：仅记录 1 个势力\n⚠️ 规则引擎：未配置\n💡 建议补充：经济系统、宗教体系、历史事件');
+            const worldData = loadWorldData();
+            const local = localStorage.getItem('sagebook_world_data');
+            const factions = JSON.parse(local || '[]');
+            const geoCount = worldData.geography.length;
+            const factionCount = factions.length;
+            const hasRules = worldData.rules.length > 0;
+            const suggestions = [];
+            if (geoCount < 5) suggestions.push('补充更多地理地点（建议至少 5 个）');
+            if (factionCount < 2) suggestions.push('添加更多势力组织');
+            if (!hasRules) suggestions.push('配置规则引擎以确保世界观一致性');
+            suggestions.push('建议补充：经济系统、宗教体系、历史事件');
+            const prompt = `请基于以下世界观信息，提供补充建议：\n\n地理系统 (${geoCount} 个地点)：${worldData.geography.map(g=>g.name).join('、')}\n势力系统 (${factionCount} 个)：${factions.map(f=>f.name).join('、')}\n\n请提供 5 条具体的补充建议。`;
+            callAIComplete(prompt, suggestions);
+        }
+
+        function callAIComplete(prompt, defaultSuggestions) {
+            const output = document.getElementById('aiCompleteOutput');
+            if (!output) {
+                // 如果没有输出区域，创建一个
+                const btnGroup = document.querySelector('.btn-group:last-child');
+                if (btnGroup) {
+                    const div = document.createElement('div');
+                    div.id = 'aiCompleteOutput';
+                    div.className = 'card';
+                    div.style.marginTop = '16px';
+                    div.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-loading">🔄 生成中...</div>';
+                    btnGroup.parentNode.insertBefore(div, btnGroup.nextSibling);
+                }
+                return;
+            }
+            output.innerHTML = '<div class="ai-loading">🔄 AI 正在分析世界观并生成补充建议...</div>';
+
+            const localModel = localStorage.getItem('localModel');
+            if (!localModel) {
+                output.innerHTML = '<div style="color:var(--warning)">⚠️ 请先在设置中配置本地 AI 模型</div>';
+                return;
+            }
+
+            const OLLAMA_BASE = 'http://localhost:11434';
+            fetch(OLLAMA_BASE + '/api/generate', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ model: localModel, prompt: prompt, stream: false, options: { temperature: 0.7 } })
+            }).then(async res => {
+                if (!res.ok) throw new Error('Ollama API error: ' + res.status);
+                const data = await res.json();
+                output.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-result">' + data.response.replace(/\n/g, '<br>') + '</div>';
+            }).catch(err => {
+                output.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-fallback">' +
+                    '<div>⚠️ AI 服务暂不可用，以下基于本地数据自动分析：</div><br>' +
+                    defaultSuggestions.map(s => '<div style="padding:4px 0">💡 ' + s + '</div>').join('') +
+                    '</div>';
+            });
+        }
+
+        function loadWorldData() {
+            return {
+                geography: [
+                    {name:'天启城', desc:'人类帝国首都，人口百万'},
+                    {name:'迷雾森林', desc:'精灵族居住地'},
+                    {name:'断龙山脉', desc:'龙族遗迹所在地'}
+                ],
+                rules: []
+            };
         }
     </script>
 </body>
