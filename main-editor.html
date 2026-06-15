@@ -1952,8 +1952,37 @@
         }
 
         function togglePreview() {
-            // 切换预览模式
-            showToast('预览模式开发中', 'success');
+            const previewDiv = document.getElementById('previewPane');
+            if (!previewDiv) {
+                // 创建预览面板
+                const editor = document.getElementById('editorPane');
+                const wrapper = editor.closest('.split-pane');
+                const div = document.createElement('div');
+                div.id = 'previewPane';
+                div.className = 'editor-pane preview-pane';
+                div.style.padding = '16px';
+                div.style.overflowY = 'auto';
+                div.innerHTML = '<h3 style="margin-bottom:12px;color:var(--accent);">📖 实时预览</h3>';
+                const contentDiv = document.createElement('div');
+                contentDiv.id = 'previewContent';
+                contentDiv.style.lineHeight = '1.8';
+                contentDiv.style.fontSize = '14px';
+                div.appendChild(contentDiv);
+                wrapper.appendChild(div);
+            }
+            const previewContent = document.getElementById('previewContent');
+            const editorContent = document.getElementById('editorPane').innerHTML;
+            // 简单的 Markdown 到 HTML 转换
+            let html = editorContent
+                .replace(/### (.*)/g, '<h3>$1</h3>')
+                .replace(/## (.*)/g, '<h2>$1</h2>')
+                .replace(/# (.*)/g, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+            previewContent.innerHTML = html;
+            previewContent.scrollIntoView({ behavior: 'smooth' });
+            showToast('预览模式已开启', 'success');
         }
 
         function filterByTag(tag) {
@@ -1961,7 +1990,21 @@
         }
 
         function showTagsModal() {
-            showToast('标签管理功能开发中', 'success');
+            const editor = document.getElementById('editorPane');
+            const selectedText = window.getSelection().toString();
+            if (!selectedText) {
+                showToast('请先选中要添加标签的文本', 'warning');
+                return;
+            }
+            const tag = prompt('输入标签名称（如：场景/对话/心理）：');
+            if (tag && tag.trim()) {
+                const tagSpan = document.createElement('span');
+                tagSpan.className = 'tag';
+                tagSpan.textContent = '[' + tag.trim() + '] ';
+                const range = window.getSelection().getRangeAt(0);
+                range.surroundContents(tagSpan);
+                showToast('标签已添加', 'success');
+            }
         }
 
         function showHelp() {
