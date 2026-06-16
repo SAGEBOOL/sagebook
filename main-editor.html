@@ -1486,10 +1486,8 @@
 
             try {
                 if (useLocal && localModel) {
-                    // 使用本地 Ollama
-                    const OLLAMA_BASE = window.location.hostname === 'localhost' && window.location.port ? 
-                        `http://${window.location.hostname}:${window.location.port}` : 
-                        'http://localhost:11434';
+                    // 使用本地 Ollama（优先使用用户自定义地址）
+                    const OLLAMA_BASE = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
                     result = await callLocalAI(action, selectedText || fullText, localModel, OLLAMA_BASE);
                 } else if (apiKey) {
                     // 使用云端 API

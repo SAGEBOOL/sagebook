@@ -343,7 +343,7 @@
                 return;
             }
 
-            const OLLAMA_BASE = 'http://localhost:11434';
+            const OLLAMA_BASE = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
             fetch(OLLAMA_BASE + '/api/generate', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},

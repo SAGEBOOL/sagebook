@@ -153,69 +153,73 @@
         document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
         event.target.classList.add('active')}
 
-        // Ollama API 地址
-        const OLLAMA_BASE = 'http://localhost:11434';
+        // Ollama API 地址（优先使用用户自定义地址）
+        function getOllamaBase(){ return localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434'; }
 
         // 获取选中的模型
         function getSelectedModel(){
             const active = document.querySelector('.model-btn.active');
-            return active ? active.dataset.model : null;
+            return active ? active.dataset.model : (localStorage.getItem('localModel') || null);
         }
 
         // 自动检测 Ollama 模型列表
         async function loadOllamaModels(){
             const container = document.getElementById('continueModels');
             container.innerHTML = '🔍 加载模型中...';
-            try {
-                const res = await fetch(OLLAMA_BASE + '/api/tags');
-                const data = await res.json();
-                if(data.models && data.models.length > 0){
-                    container.innerHTML = '';
-                    container.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);margin-right:8px;">选择模型：</span>';
-                    data.models.forEach(m => {
-                        const btn = document.createElement('button');
-                        btn.className = 'model-btn' + (m.name === localStorage.getItem('localModel') ? ' active' : '');
-                        btn.dataset.model = m.name;
-                        btn.textContent = m.name.split(':')[0];
-                        btn.onclick = function(){
-                            document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
-                            this.classList.add('active');
-                            localStorage.setItem('localModel', this.dataset.model);
-                        };
-                        container.appendChild(btn);
-                    });
-                    if(!document.querySelector('.model-btn.active')){
-                        container.firstElementChild.classList.add('active');
+            const OLLAMA_BASE = getOllamaBase();
+
+            // 先从缓存恢复（不依赖网络连接）
+            const cachedModels = localStorage.getItem('ollamaModels');
+            let models = [];
+            if (cachedModels) {
+                try { models = JSON.parse(cachedModels); } catch {}
+            }
+
+            // 再尝试在线获取（仅 http:// 协议下）
+            if (location.protocol !== 'file:') {
+                try {
+                    const res = await fetch(OLLAMA_BASE + '/api/tags', { signal: AbortSignal.timeout(5000) });
+                    const data = await res.json();
+                    if (data.models && data.models.length > 0) {
+                        models = data.models;
+                        localStorage.setItem('ollamaModels', JSON.stringify(models));
                     }
-                } else {
-                    container.innerHTML = '❌ 未找到模型';
+                } catch(e){
+                    console.warn('Ollama 在线检测失败，使用缓存:', e.message);
                 }
-            } catch(e){
-                container.innerHTML = '❌ 无法连接 Ollama — 请确保 http://localhost:11434 运行';
-                console.warn('Ollama 未连接:', e);
+            }
+
+            if (models.length > 0) {
+                container.innerHTML = '<span style="font-size:12px;color:var(--text-secondary);margin-right:8px;">选择模型：</span>';
+                const savedModel = localStorage.getItem('localModel');
+                models.forEach((m, idx) => {
+                    const btn = document.createElement('button');
+                    const isActive = m.name === savedModel || (!savedModel && idx === 0);
+                    btn.className = 'model-btn' + (isActive ? ' active' : '');
+                    btn.dataset.model = m.name;
+                    btn.textContent = m.name.split(':')[0];
+                    btn.onclick = function(){
+                        document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
+                        this.classList.add('active');
+                        localStorage.setItem('localModel', this.dataset.model);
+                    };
+                    container.appendChild(btn);
+                });
+            } else if (location.protocol === 'file:') {
+                container.innerHTML = `<span style="color:var(--warning);font-size:12px;">⚠️ file:// 协议限制，无法加载模型。请用 <code>OLLAMA_ORIGINS='*' ollama serve</code> 重启 Ollama 后，通过 <a href="http://localhost:8000/ai-suite.html" style="color:var(--accent-light)">http://localhost:8000</a> 访问。</span>`;
+            } else {
+                container.innerHTML = `<span style="color:var(--error);font-size:12px;">❌ 无法连接 Ollama (${OLLAMA_BASE})。请先在<a href="settings.html" style="color:var(--accent-light)">设置页面</a>检测并配置。</span>`;
             }
         }
 
-        // 加载保存的模型选择
-        (function(){
-            const saved = localStorage.getItem('localModel');
-            if(saved){
-                const btns = document.querySelectorAll('.model-btn');
-                btns.forEach(b => { if(b.dataset.model === saved) b.classList.add('active'); });
-            }
-            if(btns.length === 0){
-                // 默认选择第一个
-                const first = container.firstElementChild;
-                if(first) first.classList.add('active');
-            }
-        })();
-
         // 调用 Ollama API
         async function callOllama(prompt, model){
+            const OLLAMA_BASE = getOllamaBase();
             const res = await fetch(OLLAMA_BASE + '/api/generate', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ model: model, prompt: prompt, stream: false, options: { temperature: 0.7, top_p: 0.9 } })
+                body: JSON.stringify({ model: model, prompt: prompt, stream: false, options: { temperature: 0.7, top_p: 0.9 } }),
+                signal: AbortSignal.timeout(60000)
             });
             if(!res.ok) throw new Error('Ollama API error: ' + res.status);
             const data = await res.json();

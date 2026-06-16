@@ -605,16 +605,16 @@
                     <div id="debugLog">点击"检测"按钮查看诊断结果...</div>
                 </div>
 
-                <div style="padding: 15px; background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); border-radius: 8px; font-size: 13px; color: var(--success); line-height: 2; margin-bottom: 10px;">
-                    <strong>📌 重要说明：</strong><br>
-                    你当前页面是通过 <code style="color:#fbbf24">file://</code> 协议打开的本地文件，浏览器出于安全限制，<strong>禁止本地页面请求 localhost 接口</strong>（CORS 限制）。<br><br>
-                    <strong>解决方法：</strong><br>
-                    1. 打开终端，运行以下命令：<br>
-                    <code style="display:block;background:var(--bg-primary);padding:8px;border-radius:6px;margin:8px 0;font-size:12px;cursor:pointer;" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000')" title="点击复制">cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000</code>
-                    <span style="font-size:11px;color:var(--text-secondary);"> (点击可复制)</span><br>
-                    2. 然后在浏览器中打开：<br>
-                    <a href="http://localhost:8000/settings.html" style="color:var(--accent-light);text-decoration:underline;font-weight:600;">http://localhost:8000/settings.html</a><br><br>
-                    ✅ 这样就能正常连接 Ollama 了！
+                <!-- 动态提示框：根据协议自动显示不同内容 -->
+                <div id="ollamaCorsHint" style="padding:15px;border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;"></div>
+
+                <!-- 自定义 Ollama 地址 -->
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">Ollama 服务地址（默认 http://localhost:11434）</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="input-box" id="ollamaEndpoint" placeholder="http://localhost:11434" style="flex:1;font-size:13px;">
+                        <button class="btn btn-secondary" style="white-space:nowrap;" onclick="saveOllamaEndpoint()">保存地址</button>
+                    </div>
                 </div>
 
                 <select class="select-box" id="localModel" onchange="handleLocalModelChange()">
@@ -1024,7 +1024,55 @@
         }
 
         // ====== 页面初始化 ======
+        // 保存自定义 Ollama 地址
+        function saveOllamaEndpoint() {
+            const ep = document.getElementById('ollamaEndpoint').value.trim();
+            if (!ep) { showToast('请输入有效地址'); return; }
+            localStorage.setItem('ollamaEndpoint', ep);
+            showToast('✅ 地址已保存，请重新检测');
+        }
+
+        // 渲染 Ollama 提示框（根据当前协议动态生成）
+        function renderOllamaHint() {
+            const hint = document.getElementById('ollamaCorsHint');
+            if (!hint) return;
+            const isFile = location.protocol === 'file:';
+            const isCloudStudio = location.hostname.includes('codebuddy.work') || location.hostname.includes('cloudstudio');
+
+            if (isFile) {
+                hint.style.cssText = 'padding:15px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--warning)';
+                hint.innerHTML = `<strong>⚠️ 当前通过 file:// 协议打开</strong><br>浏览器安全策略会阻止本地文件请求 localhost 接口（CORS 限制）。<br><br>
+                <strong>解决方法 A（推荐）——让 Ollama 允许跨域：</strong><br>
+                关闭正在运行的 Ollama，在终端执行：<br>
+                <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('OLLAMA_ORIGINS=\\'*\\' ollama serve');showToast('已复制')">OLLAMA_ORIGINS='*' ollama serve</code>
+                <span style="font-size:11px;color:var(--text-muted);">点击可复制，执行后点击"检测"即可正常使用</span><br><br>
+                <strong>解决方法 B——通过 HTTP 服务器访问：</strong><br>
+                <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000');showToast('已复制')">cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000</code>
+                然后访问 <a href="http://localhost:8000/settings.html" style="color:var(--accent-light)">http://localhost:8000/settings.html</a>`;
+            } else if (isCloudStudio) {
+                hint.style.cssText = 'padding:15px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--warning)';
+                hint.innerHTML = `<strong>⚠️ 当前通过公网链接访问</strong><br>公网页面无法直接访问你电脑上的 <code>localhost:11434</code>。<br><br>
+                <strong>解决方法——让 Ollama 允许跨域访问：</strong><br>
+                关闭正在运行的 Ollama，在终端执行：<br>
+                <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('OLLAMA_ORIGINS=\\'*\\' OLLAMA_HOST=0.0.0.0 ollama serve');showToast('已复制')">OLLAMA_ORIGINS='*' OLLAMA_HOST=0.0.0.0 ollama serve</code>
+                然后在下方"Ollama 服务地址"输入你的局域网 IP 地址（如 <code>http://192.168.x.x:11434</code>），点击保存后再检测。`;
+            } else {
+                hint.style.cssText = 'padding:12px 15px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.25);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--success)';
+                hint.innerHTML = `✅ 通过 HTTP 协议访问，Ollama 连接正常工作。如果检测失败，请确认 Ollama 已启动（<code>ollama serve</code>）。`;
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
+            // 渲染 CORS 提示
+            renderOllamaHint();
+
+            // 恢复自定义 Ollama 地址
+            const savedEndpoint = localStorage.getItem('ollamaEndpoint');
+            if (savedEndpoint) {
+                const ep = document.getElementById('ollamaEndpoint');
+                if (ep) ep.value = savedEndpoint;
+            }
+
             // 恢复主题
             const savedTheme = localStorage.getItem('theme') || 'dark';
             if (savedTheme === 'system') {
@@ -1037,34 +1085,46 @@
                 if (btn.dataset.theme === savedTheme) btn.classList.add('active');
             });
 
-            // ① 自动检测 Ollama（填充模型列表）
-            console.log('[SageBook] Page loaded, auto-checking Ollama...');
-            setTimeout(() => {
-                checkOllama();
-            }, 500);
+            // ① 先尝试从缓存恢复模型列表（不依赖网络）
+            const cachedModels = localStorage.getItem('ollamaModels');
+            if (cachedModels) {
+                try {
+                    const models = JSON.parse(cachedModels);
+                    if (models.length > 0) {
+                        const modelSelect = document.getElementById('localModel');
+                        modelSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`).join('');
+                        const saved = localStorage.getItem('localModel');
+                        if (saved && modelSelect.querySelector(`option[value="${saved}"]`)) modelSelect.value = saved;
+                        document.getElementById('ollamaStatus').className = 'status-dot';
+                        document.getElementById('ollamaStatusText').textContent = `已缓存 (${models.length} 个模型)`;
+                    }
+                } catch {}
+            }
 
-            // ② 恢复开关状态
+            // ② 自动在线检测 Ollama（如果页面是 http:// 则检测，file:// 则跳过避免报错）
+            if (location.protocol !== 'file:') {
+                console.log('[SageBook] HTTP protocol detected, auto-checking Ollama...');
+                setTimeout(() => debugCheckOllama(), 500);
+            }
+
+            // ③ 恢复开关状态
             document.querySelectorAll('.toggle-switch').forEach(toggle => {
                 const id = toggle.id;
                 const saved = localStorage.getItem(id);
                 if (saved === 'false') toggle.classList.remove('active');
             });
 
-            // ③ 恢复下拉选择（延迟执行，等 checkOllama 填充完）
+            // ④ 恢复下拉选择
             setTimeout(() => {
                 const cloudModel = localStorage.getItem('cloudModel');
                 if (cloudModel) {
                     const cm = document.getElementById('cloudModel');
-                    if (cm && cm.querySelector(`option[value="${cloudModel}"]`)) {
-                        cm.value = cloudModel;
-                    }
+                    if (cm && cm.querySelector(`option[value="${cloudModel}"]`)) cm.value = cloudModel;
                 }
-                const localModel = localStorage.getItem('localModel');
-                if (localModel) {
-                    const lm = document.getElementById('localModel');
-                    if (lm && lm.querySelector(`option[value="${localModel}"]`)) {
-                        lm.value = localModel;
-                    }
+                const modelStrategy = localStorage.getItem('modelStrategy');
+                if (modelStrategy) {
+                    const ms = document.getElementById('modelStrategy');
+                    if (ms && ms.querySelector(`option[value="${modelStrategy}"]`)) ms.value = modelStrategy;
                 }
             }, 2000);
         });
@@ -1080,63 +1140,120 @@
             const debugLog = document.getElementById('debugLog');
             const debugPanel = document.getElementById('debugPanel');
             debugPanel.style.display = 'block';
-            
-            debugLog.innerHTML = '🔍 开始检测 Ollama...\n';
-            
+            statusDot.className = 'status-dot';
+            statusText.textContent = '检测中...';
+
+            const protocol = location.protocol; // 'file:' or 'http:'
+            const isFileProtocol = protocol === 'file:';
+            const ollamaBase = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
+
+            function log(msg) {
+                debugLog.innerHTML += msg + '\n';
+                console.log('[SageBook]', msg);
+            }
+
+            debugLog.innerHTML = '';
+            log(`🔍 开始检测 Ollama... (${ollamaBase})`);
+            log(`📡 当前页面协议: ${protocol}`);
+            if (isFileProtocol) {
+                log(`⚠️  检测到 file:// 协议，浏览器可能拦截跨域请求`);
+                log(`   → 推荐方式 A: 重启 Ollama 并允许跨域（见下方说明）`);
+                log(`   → 推荐方式 B: 通过 http://localhost:8000 访问本站`);
+                log('');
+            }
+
+            // 步骤1: 先用 no-cors 测试基础连通性（绕过 CORS 预检）
+            log('➜ 步骤1: 测试基础连通性 (no-cors)...');
+            let reachable = false;
             try {
-                // 步骤1: 测试基础连通性
-                debugLog.innerHTML += '➜ 测试基础连通性...\n';
-                const pong = await fetch('http://localhost:11434/', { method: 'GET' });
-                debugLog.innerHTML += `✅ 基础连通: ${pong.status} (${await pong.text()})\n`;
-                
-                // 步骤2: 获取模型列表
-                debugLog.innerHTML += '\n➜ 获取模型列表...\n';
-                const response = await fetch('http://localhost:11434/api/tags', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                debugLog.innerHTML += `✅ API响应: ${response.status} ${response.statusText}\n`;
-                
-                const data = await response.json();
-                debugLog.innerHTML += `📋 找到 ${data.models.length} 个模型:\n`;
-                
-                // 步骤3: 填充下拉框
-                statusDot.className = 'status-dot connected';
-                statusText.textContent = `已连接 (${data.models.length} 个模型)`;
-                
-                modelSelect.innerHTML = data.models.map(m => 
-                    `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`
-                ).join('');
-                
-                data.models.forEach(m => {
-                    debugLog.innerHTML += `  - ${m.name} (${m.details.parameter_size})\n`;
-                });
-                
-                localStorage.setItem('ollamaConnected', 'true');
-                localStorage.setItem('ollamaModels', JSON.stringify(data.models || []));
-                
-                // 步骤4: 恢复之前选中的模型
-                const savedLocalModel = localStorage.getItem('localModel');
-                if (savedLocalModel && modelSelect.querySelector(`option[value="${savedLocalModel}"]`)) {
-                    modelSelect.value = savedLocalModel;
-                    debugLog.innerHTML += `\n✅ 已恢复上次使用的模型: ${savedLocalModel}\n`;
-                }
-                
-                showToast('✅ Ollama 检测成功！');
-                debugLog.innerHTML += '\n✅ 检测完成！请在上方下拉框选择要使用的模型，然后点击"保存"。';
-                
-            } catch (error) {
+                const pong = await fetch(ollamaBase + '/', { method: 'GET', mode: 'no-cors', signal: AbortSignal.timeout(4000) });
+                // no-cors 返回 opaque response，type='opaque' 表示服务器可达
+                reachable = (pong.type === 'opaque' || pong.status === 200);
+                log(`✅ 服务器可达 (type=${pong.type})`);
+            } catch (e) {
+                log(`❌ 服务器不可达: ${e.message}`);
+                log(`   → 请确认 Ollama 已启动：终端运行 ollama serve`);
                 statusDot.className = 'status-dot disconnected';
-                statusText.textContent = '未连接';
+                statusText.textContent = '未连接 (服务未启动)';
                 modelSelect.innerHTML = '<option value="">请先启动 Ollama</option>';
                 localStorage.setItem('ollamaConnected', 'false');
-                debugLog.innerHTML += `\n❌ 检测失败: ${error.message}\n`;
-                debugLog.innerHTML += `\n🔧 可能的原因:\n`;
-                debugLog.innerHTML += `  1. Ollama 服务未启动\n`;
-                debugLog.innerHTML += `  2. Ollama 监听在非 localhost 地址\n`;
-                debugLog.innerHTML += `  3. 防火墙阻止了请求\n`;
-                debugLog.innerHTML += `  4. 跨域(CORS)限制\n`;
-                console.error('Ollama 连接失败:', error);
+                return;
+            }
+
+            // 步骤2: 用正常 cors 请求获取模型列表
+            log('\n➜ 步骤2: 获取模型列表 (CORS)...');
+            try {
+                const response = await fetch(`${ollamaBase}/api/tags`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: AbortSignal.timeout(5000)
+                });
+                const data = await response.json();
+                const models = data.models || [];
+
+                log(`✅ 获取成功！找到 ${models.length} 个模型:`);
+                models.forEach(m => log(`   ✓ ${m.name} (${m.details?.parameter_size || '未知大小'})`));
+
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = `已连接 (${models.length} 个模型)`;
+
+                modelSelect.innerHTML = models.length > 0
+                    ? models.map(m => `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`).join('')
+                    : '<option value="">暂无模型，请先拉取</option>';
+
+                localStorage.setItem('ollamaConnected', 'true');
+                localStorage.setItem('ollamaModels', JSON.stringify(models));
+
+                // 恢复之前选中的模型
+                const saved = localStorage.getItem('localModel');
+                if (saved && modelSelect.querySelector(`option[value="${saved}"]`)) {
+                    modelSelect.value = saved;
+                    log(`\n✅ 已恢复上次选用的模型: ${saved}`);
+                }
+
+                showToast('✅ Ollama 已连接！');
+                log('\n✅ 检测完成！请选择模型后点击"保存"。');
+
+            } catch (corsErr) {
+                // 步骤2失败：服务可达但 CORS 被拒
+                log(`❌ CORS 错误: ${corsErr.message}`);
+                log('');
+                log('🔧 Ollama 运行中，但拒绝跨域请求。解决方法（任选其一）：');
+                log('');
+                log('═══ 方法 A：重启 Ollama 并允许跨域（推荐）═══');
+                log('  在终端执行：');
+                log('  macOS/Linux:');
+                log('    OLLAMA_ORIGINS="*" ollama serve');
+                log('  或永久设置（macOS launchd）：');
+                log('    launchctl setenv OLLAMA_ORIGINS "*"');
+                log('    然后重启 Ollama');
+                log('');
+                log('═══ 方法 B：通过 HTTP 服务器访问本站 ═══');
+                log('  终端运行：');
+                log('    cd /Volumes/D/WorkBuddy/sagebook网站/repo');
+                log('    python3 -m http.server 8000');
+                log('  然后访问：http://localhost:8000/settings.html');
+
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'CORS 限制（见诊断日志）';
+
+                // 尝试读取缓存的模型列表
+                const cachedModels = localStorage.getItem('ollamaModels');
+                if (cachedModels) {
+                    try {
+                        const models = JSON.parse(cachedModels);
+                        if (models.length > 0) {
+                            modelSelect.innerHTML = models.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+                            const saved = localStorage.getItem('localModel');
+                            if (saved && modelSelect.querySelector(`option[value="${saved}"]`)) modelSelect.value = saved;
+                            log('\n💡 已从缓存恢复模型列表（上次检测的结果）。');
+                            statusDot.className = 'status-dot';
+                            statusText.textContent = '已缓存 (CORS 限制中)';
+                        }
+                    } catch {}
+                }
+
+                localStorage.setItem('ollamaConnected', 'false');
             }
         }
     </script>
