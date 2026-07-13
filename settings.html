@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,46 +9,6 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-        }
-
-        :root[data-theme="dark"] {
-            --bg-primary: #1e1e1e;
-            --bg-secondary: #252525;
-            --bg-tertiary: #2a2a2a;
-            --bg-hover: #2f2f2f;
-            --text-primary: #dcddde;
-            --text-secondary: #999999;
-            --text-muted: #666666;
-            --accent: #7c5cbf;
-            --accent-hover: #8d6fd4;
-            --accent-light: #a78bfa;
-            --border: #3e3e3e;
-            --success: #4ade80;
-            --warning: #fbbf24;
-            --error: #f87171;
-            --card-bg: #252525;
-        }
-
-        :root[data-theme="light"] {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f5f5f5;
-            --bg-tertiary: #eeeeee;
-            --bg-hover: #e8e8e8;
-            --text-primary: #1a1a1a;
-            --text-secondary: #666666;
-            --text-muted: #999999;
-            --accent: #7c5cbf;
-            --accent-hover: #6a4da8;
-            --accent-light: #9b7dd4;
-            --border: #e0e0e0;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --error: #ef4444;
-            --card-bg: #ffffff;
-        }
-
-        [data-theme="system"] {
-            /* Handled by JS */
         }
 
         body {
@@ -358,47 +318,6 @@
             background: var(--error);
         }
 
-        /* 主题切换器 */
-        .theme-switcher {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-            z-index: 1000;
-        }
-
-        .theme-btn {
-            display: block;
-            width: 100%;
-            padding: 8px 15px;
-            background: transparent;
-            border: none;
-            border-radius: 6px;
-            color: var(--text-primary);
-            cursor: pointer;
-            font-size: 13px;
-            text-align: left;
-            transition: all 0.2s;
-            margin-bottom: 5px;
-        }
-
-        .theme-btn:last-child {
-            margin-bottom: 0;
-        }
-
-        .theme-btn:hover {
-            background: var(--bg-hover);
-        }
-
-        .theme-btn.active {
-            background: var(--accent);
-            color: white;
-        }
-
         /* 保存提示 */
         .save-toast {
             position: fixed;
@@ -528,6 +447,7 @@
             background: var(--accent);
         }
     </style>
+    <link rel="stylesheet" href="design-system.css">
 </head>
 <body>
     <!-- 顶部工具栏 -->
@@ -723,55 +643,12 @@
         </div>
     </div>
 
-    <!-- 主题切换器 -->
-    <div class="theme-switcher">
-        <button class="theme-btn active" data-theme="dark">🌙 深色</button>
-        <button class="theme-btn" data-theme="light">☀️ 浅色</button>
-        <button class="theme-btn" data-theme="system">💻 跟随系统</button>
-    </div>
-
     <!-- 保存成功提示 -->
     <div class="save-toast" id="saveToast">
         ✅ 设置已保存！
     </div>
 
     <script>
-        // 主题切换
-        const themeButtons = document.querySelectorAll('.theme-btn');
-        const html = document.documentElement;
-
-        themeButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                const theme = this.dataset.theme;
-                
-                if (theme === 'system') {
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-                } else {
-                    html.setAttribute('data-theme', theme);
-                }
-
-                themeButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-
-                localStorage.setItem('theme', theme);
-            });
-        });
-
-        // 加载保存的主题
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        if (savedTheme === 'system') {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-        } else {
-            html.setAttribute('data-theme', savedTheme);
-        }
-        themeButtons.forEach(btn => {
-            if (btn.dataset.theme === savedTheme) {
-                btn.classList.add('active');
-            }
-        });
-
         // 开关切换
         function toggleSwitch(id) {
             const el = document.getElementById(id);
@@ -1156,18 +1033,6 @@
                 const ep = document.getElementById('ollamaEndpoint');
                 if (ep) ep.value = savedEndpoint;
             }
-
-            // 恢复主题
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            if (savedTheme === 'system') {
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-            } else {
-                document.documentElement.setAttribute('data-theme', savedTheme);
-            }
-            document.querySelectorAll('.theme-btn').forEach(btn => {
-                if (btn.dataset.theme === savedTheme) btn.classList.add('active');
-            });
 
             // ① 先尝试从缓存恢复模型列表（不依赖网络）
             const cachedModels = localStorage.getItem('ollamaModels');
