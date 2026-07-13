@@ -82,7 +82,7 @@
 
         /* 设置项 */
         .setting-item {
-            background: var(--card-bg);
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 20px;
@@ -92,7 +92,7 @@
 
         .setting-item:hover {
             border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(124, 92, 191, 0.1);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.12);
         }
 
         .setting-header {
@@ -232,7 +232,8 @@
         }
 
         .btn-success:hover {
-            background: #22c55e;
+            background: var(--success);
+            filter: brightness(1.1);
         }
 
         /* 模型卡片 */
@@ -252,7 +253,7 @@
 
         .model-card.selected {
             border-color: var(--accent);
-            background: rgba(124, 92, 191, 0.1);
+            background: var(--accent-dim);
         }
 
         .model-header {
@@ -315,7 +316,7 @@
         }
 
         .status-dot.disconnected {
-            background: var(--error);
+            background: var(--danger);
         }
 
         /* 保存提示 */

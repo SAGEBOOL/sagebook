@@ -53,9 +53,7 @@
         .logo-text {
             font-size: 20px;
             font-weight: bold;
-            background: linear-gradient(to right, var(--accent), var(--accent-light));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--accent);
         }
 
         .nav {
@@ -231,7 +229,7 @@
         }
 
         .character-card {
-            background: var(--card-bg);
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 20px;
             border: 1px solid var(--border);
@@ -241,7 +239,7 @@
 
         .character-card:hover {
             border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(124, 92, 191, 0.2);
+            box-shadow: 0 4px 12px rgba(217, 119, 87, 0.15);
             transform: translateY(-2px);
         }
 
@@ -264,15 +262,15 @@
         }
 
         .avatar-protagonist {
-            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            background: var(--accent);
         }
 
         .avatar-supporting {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            background: var(--info);
         }
 
         .avatar-antagonist {
-            background: linear-gradient(135deg, #ef4444, #f87171);
+            background: var(--danger);
         }
 
         .card-info {
@@ -691,7 +689,7 @@
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--border-light);
+            background: var(--text-tertiary);
         }
         /* 移动端适配 */
         @media (max-width: 768px) {
