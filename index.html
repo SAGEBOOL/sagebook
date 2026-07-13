@@ -254,14 +254,18 @@
         }
         .more-card:hover { border-color: var(--accent); color: var(--accent); }
         @media (max-width: 768px) { .cta-card { padding: 22px 30px; } }
+
+        /* TargetCursor 扩展样式（核心逻辑见 target-cursor.css / .js） */
+        .cursor-target { cursor: none; }
     </style>
+    <link rel="stylesheet" href="target-cursor.css">
 </head>
 <body>
     <!-- 主题切换 -->
     <div class="theme-switcher">
-        <button class="theme-btn" data-theme="dark" onclick="switchTheme('dark')">🌙 深色</button>
-        <button class="theme-btn" data-theme="light" onclick="switchTheme('light')">☀️ 浅色</button>
-        <button class="theme-btn" data-theme="system" onclick="switchTheme('system')">💻 自动</button>
+        <button class="theme-btn cursor-target" data-theme="dark" onclick="switchTheme('dark')">🌙 深色</button>
+        <button class="theme-btn cursor-target" data-theme="light" onclick="switchTheme('light')">☀️ 浅色</button>
+        <button class="theme-btn cursor-target" data-theme="system" onclick="switchTheme('system')">💻 自动</button>
     </div>
 
     <div class="container">
@@ -290,7 +294,7 @@
 
         <!-- 主入口：打开即写 -->
         <div style="text-align:center; padding: 24px 0 6px;">
-            <a href="main-editor.html" class="cta-card">
+            <a href="main-editor.html" class="cta-card cursor-target">
                 <div class="cta-icon">✍️</div>
                 <div class="cta-title">开始写作</div>
                 <div class="cta-sub">打开即写 · AI 技能与导出都在右侧抽屉里，不离开页面</div>
@@ -299,18 +303,18 @@
 
         <!-- 更多创作工具（折叠，默认收起）-->
         <details class="more-tools">
-            <summary>🧰 更多创作工具（构思 / 分析 / 发布）</summary>
+            <summary class="cursor-target">🧰 更多创作工具（构思 / 分析 / 发布）</summary>
             <div class="more-grid">
-                <a class="more-card" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
-                <a class="more-card" href="outline-editor.html">📋 大纲编辑器</a>
-                <a class="more-card" href="character-management.html">👥 角色管理</a>
-                <a class="more-card" href="world-builder.html">🌍 世界观管理</a>
-                <a class="more-card" href="knowledge-graph.html">🕸️ 知识图谱</a>
-                <a class="more-card" href="writing-analysis.html">📊 写作分析</a>
-                <a class="more-card" href="platform-tools.html">📱 网文平台工具</a>
-                <a class="more-card" href="ai-suite.html">🤖 AI 深度集成</a>
-                <a class="more-card" href="template-gallery.html">📚 模板库</a>
-                <a class="more-card" href="settings.html">⚙️ 设置</a>
+                <a class="more-card cursor-target" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
+                <a class="more-card cursor-target" href="outline-editor.html">📋 大纲编辑器</a>
+                <a class="more-card cursor-target" href="character-management.html">👥 角色管理</a>
+                <a class="more-card cursor-target" href="world-builder.html">🌍 世界观管理</a>
+                <a class="more-card cursor-target" href="knowledge-graph.html">🕸️ 知识图谱</a>
+                <a class="more-card cursor-target" href="writing-analysis.html">📊 写作分析</a>
+                <a class="more-card cursor-target" href="platform-tools.html">📱 网文平台工具</a>
+                <a class="more-card cursor-target" href="ai-suite.html">🤖 AI 深度集成</a>
+                <a class="more-card cursor-target" href="template-gallery.html">📚 模板库</a>
+                <a class="more-card cursor-target" href="settings.html">⚙️ 设置</a>
             </div>
         </details>
 
@@ -368,5 +372,9 @@
         }
         checkAIStatus();
     </script>
+
+    <!-- TargetCursor 扩展（React Bits 原生移植，依赖 GSAP） -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="target-cursor.js"></script>
 </body>
 </html>
