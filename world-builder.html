@@ -31,7 +31,7 @@
         .tab-content.active { display:block; }
         .grid-2 { display:grid;grid-template-columns:1fr 1fr;gap:16px; }
         .grid-3 { display:grid;grid-template-columns:repeat(3,1fr);gap:16px; }
-        .card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px; }
+        .card { background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:12px 0; }
         .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px; }
         .stat-row { display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border); }
         .stat-row:last-child { border-bottom:none; }
@@ -39,50 +39,57 @@
         .stat-val { font-weight:600;font-size:14px; }
         .timeline { position:relative;padding-left:24px; }
         .timeline::before { content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--border); }
-        .tl-item { position:relative;margin:12px 0; }
-        .tl-item::before { content:'';position:absolute;left:-20px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-primary); }
+        .tl-item { position:relative;margin:12px 0;background:var(--bg-hover);border-radius:8px;padding:12px; }
+        .tl-item::before { content:'';position:absolute;left:-20px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg-primary); }
+        .tl-item.conflict::before { background:var(--error); }
+        .tl-item.resolved::before { background:var(--success); }
         .tl-date { font-size:12px;color:var(--text-secondary); }
         .tl-content { font-size:14px;margin-top:4px; }
-        .tl-item.conflict::before { background:var(--error); }
-        .tl-item.resolve::before { background:var(--success); }
-        .map-placeholder { height:300px;background:var(--bg-hover);border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);font-size:14px;position:relative;overflow:hidden; }
-        .map-grid { display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(6,1fr);height:100%;width:100%;gap:2px;padding:10px; }
-        .map-cell { border-radius:4px;transition:all .2s;cursor:pointer; }
-        .map-cell:hover { transform:scale(1.1);z-index:1; }
+        .map-grid { display:grid;grid-template-columns:repeat(10,1fr);gap:3px;padding:10px;background:var(--bg-hover);border-radius:12px; }
+        .map-cell { aspect-ratio:1;border-radius:4px;cursor:pointer;transition:transform .1s; }
+        .map-cell:hover { transform:scale(1.12);z-index:1; }
         .map-cell.city { background:var(--accent); }
         .map-cell.forest { background:#22c55e; }
         .map-cell.mountain { background:#8b8b8b; }
         .map-cell.water { background:#3b82f6; }
         .map-cell.dungeon { background:#f87171; }
-        .map-cell.empty { background:var(--bg-hover); }
-        .faction-list { display:flex;flex-direction:column;gap:12px; }
-        .faction-item { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-hover);border-radius:8px;cursor:pointer;transition:all .2s; }
-        .faction-item:hover { background:var(--border); }
-        .faction-icon { font-size:24px; }
+        .map-cell.empty { background:var(--bg-primary);border:1px solid var(--border); }
+        .terrain-picker { display:flex;gap:8px;flex-wrap:wrap;margin:10px 0; }
+        .terrain-opt { display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:4px 10px;border:1px solid var(--border);border-radius:20px; }
+        .terrain-opt.active { border-color:var(--accent);background:var(--accent-glow); }
+        .swatch { width:14px;height:14px;border-radius:3px; }
+        .faction-list { display:flex;flex-direction:column;gap:10px; }
+        .faction-item { display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-hover);border-radius:8px; }
+        .faction-icon { font-size:22px; }
         .faction-info { flex:1; }
         .faction-name { font-size:14px;font-weight:600; }
         .faction-desc { font-size:12px;color:var(--text-secondary);margin-top:2px; }
         .power-level { font-size:12px;padding:2px 8px;border-radius:10px;background:var(--accent);color:white; }
-        .rule-item { display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-hover);border-radius:8px;margin:8px 0; }
-        .rule-status { width:10px;height:10px;border-radius:50%; }
+        .rule-item { display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg-hover);border-radius:8px;margin:6px 0; }
+        .rule-status { width:10px;height:10px;border-radius:50%;flex:none; }
         .rule-status.pass { background:var(--success); }
         .rule-status.fail { background:var(--error); }
         .rule-status.warn { background:var(--warning); }
         .rule-text { flex:1;font-size:14px; }
-        .rule-count { font-size:12px;color:var(--text-secondary); }
-        .encyclopedia-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px; }
-        .encyclopedia-item { background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all .2s; }
-        .encyclopedia-item:hover { border-color:var(--accent); }
+        .encyclopedia-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px; }
+        .encyclopedia-item { background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;padding:14px; }
         .encyclopedia-title { font-size:14px;font-weight:600;margin-bottom:6px; }
-        .encyclopedia-preview { font-size:12px;color:var(--text-secondary);line-height:1.5; }
+        .encyclopedia-preview { font-size:12px;color:var(--text-secondary);line-height:1.5;white-space:pre-wrap; }
         .encyclopedia-meta { display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--text-secondary); }
+        .row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0; }
+        .row input, .row select, .row textarea { background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:8px 10px;font-size:13px;font-family:inherit; }
+        .row input { min-width:130px; }
+        .row textarea { flex:1;min-width:200px;min-height:36px;resize:vertical; }
         .btn { padding:8px 16px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
         .btn:hover { border-color:var(--accent); }
         .btn-primary { background:var(--accent);color:white;border-color:var(--accent); }
         .btn-primary:hover { background:var(--accent-hover); }
+        .btn-danger { color:var(--error); }
         .btn-group { display:flex;gap:8px;margin:16px 0;flex-wrap:wrap; }
+        .empty-hint { text-align:center;padding:24px 16px;color:var(--text-secondary);font-size:13px;line-height:1.8; }
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
         .footer a { color:var(--accent);text-decoration:none; }
+        #aiCompleteOutput { white-space:pre-wrap;line-height:1.8; }
         @media(max-width:768px) {
             .header { padding:50px 15px 15px; } .title { font-size:24px; }
             .nav { gap:10px; } .nav-link { font-size:13px;padding:5px 10px; }
@@ -103,7 +110,7 @@
         <div class="header">
             <div class="logo">🌍</div>
             <div class="title">世界观管理</div>
-            <div class="subtitle">地理系统 · 时间线 · 势力 · 力量体系 · 设定百科</div>
+            <div class="subtitle">地图 · 时间线 · 势力 · 力量体系 · 规则引擎 · 设定百科（均本地保存）</div>
             <nav class="nav">
                 <a href="index.html" class="nav-link">🏠 首页</a>
                 <a href="main-editor.html" class="nav-link">编辑器</a>
@@ -126,149 +133,135 @@
             <button class="tab-btn" onclick="switchTab('rules')">📜 规则引擎</button>
             <button class="tab-btn" onclick="switchTab('encyclopedia')">📖 设定百科</button>
         </div>
+
         <!-- 地图编辑器 -->
         <div id="tab-map" class="tab-content active">
-            <div class="btn-group">
-                <button class="btn btn-primary">🖊️ 绘制</button>
-                <button class="btn">🏷️ 标注</button>
-                <button class="btn">🗑️ 清除</button>
-                <button class="btn">📤 导出地图</button>
+            <div class="terrain-picker" id="terrainPicker"></div>
+            <div class="map-grid" id="mapGrid"></div>
+            <div class="row">
+                <button class="btn" onclick="clearMap()">🗑️ 清空地图</button>
+                <button class="btn btn-primary" onclick="exportWorld()">📤 导出世界观</button>
+                <button class="btn" onclick="aiComplete()">🤖 AI 补全建议</button>
             </div>
-            <div class="map-placeholder">
-                <div class="map-grid">
-                    <div class="map-cell water"></div><div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell mountain"></div><div class="map-cell mountain"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell water"></div>
-                    <div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell mountain"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell dungeon"></div><div class="map-cell water"></div>
-                    <div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell water"></div>
-                    <div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell city"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell forest"></div><div class="map-cell water"></div>
-                    <div class="map-cell water"></div><div class="map-cell water"></div><div class="map-cell forest"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell mountain"></div><div class="map-cell mountain"></div><div class="map-cell empty"></div><div class="map-cell forest"></div><div class="map-cell water"></div>
-                    <div class="map-cell empty"></div><div class="map-cell water"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div><div class="map-cell empty"></div>
-                </div>
-            </div>
-            <div class="grid-2" style="margin-top:16px">
+            <div id="aiCompleteOutput" class="card" style="display:none"></div>
+            <div class="grid-2">
                 <div class="card">
                     <div class="card-title">📍 地点列表</div>
-                    <div class="stat-row"><span class="stat-label">主城</span><span class="stat-val" style="color:var(--accent)">王都·天启城</span></div>
-                    <div class="stat-row"><span class="stat-label">精灵森林</span><span class="stat-val" style="color:var(--success)">迷雾林地</span></div>
-                    <div class="stat-row"><span class="stat-label">遗迹</span><span class="stat-val" style="color:var(--error)">远古神殿</span></div>
-                    <div class="stat-row"><span class="stat-label">山脉</span><span class="stat-val" style="color:#8b8b8b">断龙山脉</span></div>
+                    <div class="row">
+                        <input id="locName" placeholder="地点名">
+                        <button class="btn btn-primary" onclick="addLocation()">➕ 添加</button>
+                    </div>
+                    <div id="locList"></div>
                 </div>
                 <div class="card">
-                    <div class="card-title">📊 地图统计</div>
-                    <div class="stat-row"><span class="stat-label">已探索区域</span><span class="stat-val">68%</span></div>
-                    <div class="stat-row"><span class="stat-label">地点总数</span><span class="stat-val">24</span></div>
-                    <div class="stat-row"><span class="stat-label">未探索区域</span><span class="stat-val">32%</span></div>
-                    <div class="stat-row"><span class="stat-label">危险区域</span><span class="stat-val" style="color:var(--error)">5</span></div>
+                    <div class="card-title">📊 地图统计（实时）</div>
+                    <div id="mapStats"></div>
                 </div>
             </div>
         </div>
+
         <!-- 时间线 -->
         <div id="tab-timeline" class="tab-content">
-            <div class="btn-group">
-                <button class="btn btn-primary">➕ 添加事件</button>
-                <button class="btn">🔍 冲突检测</button>
-                <button class="btn">📊 统计</button>
+            <div class="card">
+                <div class="card-title">➕ 添加事件</div>
+                <div class="row">
+                    <input id="tlChapter" placeholder="章节/时间点" style="min-width:160px">
+                    <textarea id="tlContent" placeholder="事件描述"></textarea>
+                    <select id="tlStatus">
+                        <option value="normal">普通</option>
+                        <option value="conflict">冲突</option>
+                        <option value="resolved">已解决</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addEvent()">添加</button>
+                </div>
             </div>
             <div class="card">
                 <div class="card-title">📅 故事时间线</div>
-                <div class="timeline">
-                    <div class="tl-item resolve"><div class="tl-date">第 1 章 - 序章</div><div class="tl-content">主角出生在天启城，平民家庭</div></div>
-                    <div class="tl-item"><div class="tl-date">第 3 章 - 觉醒</div><div class="tl-content">主角觉醒灵根，被宗门招收</div></div>
-                    <div class="tl-item"><div class="tl-date">第 7 章 - 师父失踪</div><div class="tl-content">师父在秘境探索中离奇消失</div></div>
-                    <div class="tl-item conflict"><div class="tl-date">⚠️ 第 12 章 - 时间冲突</div><div class="tl-content">主角已在第10章"去世"，但第12章仍有对话</div></div>
-                    <div class="tl-item"><div class="tl-date">第 15 章 - 秘境突围</div><div class="tl-content">主角找到师父遗留的线索</div></div>
-                    <div class="tl-item resolve"><div class="tl-date">第 20 章 - 真相</div><div class="tl-content">师父被魔教绑架，戒指身世之谜揭晓</div></div>
-                    <div class="tl-item"><div class="tl-date">第 25 章 - 双月之夜（预告）</div><div class="tl-content">预言石碑记载的"暗影吞噬光明"之夜</div></div>
-                    <div class="tl-item"><div class="tl-date">第 30 章 - 终章预告</div><div class="tl-content">最终决战：光明 vs 暗影</div></div>
-                </div>
+                <div class="timeline" id="tlList"></div>
             </div>
         </div>
+
         <!-- 势力系统 -->
         <div id="tab-factions" class="tab-content">
-            <div class="btn-group">
-                <button class="btn btn-primary">➕ 新建势力</button>
-                <button class="btn">🔗 关系图</button>
-                <button class="btn">📊 影响力分析</button>
+            <div class="card">
+                <div class="card-title">➕ 新建势力</div>
+                <div class="row">
+                    <input id="facName" placeholder="势力名">
+                    <input id="facDesc" placeholder="简介">
+                    <select id="facPower">
+                        <option value="1">★</option><option value="2">★★</option><option value="3">★★★</option><option value="4">★★★★</option><option value="5">★★★★★</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addFaction()">添加</button>
+                </div>
             </div>
-            <div class="faction-list">
-                <div class="faction-item"><div class="faction-icon">🏯</div><div class="faction-info"><div class="faction-name">天启王朝</div><div class="faction-desc">人类帝国，统治中央大陆，兵力最强</div></div><span class="power-level">★★★★★</span></div>
-                <div class="faction-item"><div class="faction-icon">⚔️</div><div class="faction-info"><div class="faction-name">青云宗</div><div class="faction-desc">正道第一宗门，主角所在宗门</div></div><span class="power-level">★★★★</span></div>
-                <div class="faction-item"><div class="faction-icon">🌑</div><div class="faction-info"><div class="faction-name">魔教</div><div class="faction-desc">邪恶组织，暗中操控多国政局</div></div><span class="power-level">★★★★</span></div>
-                <div class="faction-item"><div class="faction-icon">🌲</div><div class="faction-info"><div class="faction-name">精灵族</div><div class="faction-desc">隐居迷雾森林，不问世事</div></div><span class="power-level">★★★</span></div>
-                <div class="faction-item"><div class="faction-icon">🐉</div><div class="faction-info"><div class="faction-name">龙族遗族</div><div class="faction-desc">神秘种族，隐居断龙山脉</div></div><span class="power-level">★★★★★</span></div>
-                <div class="faction-item"><div class="faction-icon">🏴</div><div class="faction-info"><div class="faction-name">暗影商会</div><div class="faction-desc">地下情报网，操控黑市交易</div></div><span class="power-level">★★★</span></div>
-            </div>
-            <div class="card" style="margin-top:16px">
-                <div class="card-title">🔗 势力关系</div>
-                <div class="stat-row"><span class="stat-label">天启王朝 ↔ 青云宗</span><span class="stat-val" style="color:var(--success)">同盟</span></div>
-                <div class="stat-row"><span class="stat-label">青云宗 ↔ 魔教</span><span class="stat-val" style="color:var(--error)">敌对</span></div>
-                <div class="stat-row"><span class="stat-label">魔教 ↔ 暗影商会</span><span class="stat-val" style="color:var(--warning)">暗盟</span></div>
-                <div class="stat-row"><span class="stat-label">精灵族 ↔ 天启王朝</span><span class="stat-val">中立</span></div>
-            </div>
+            <div class="faction-list" id="facList"></div>
         </div>
+
         <!-- 力量体系 -->
         <div id="tab-power" class="tab-content">
             <div class="card">
-                <div class="card-title">💪 修炼等级体系</div>
-                <div class="stat-row"><span class="stat-label">1. 炼气期</span><span class="stat-val">入门阶段，感应灵气</span></div>
-                <div class="stat-row"><span class="stat-label">2. 筑基期</span><span class="stat-val">打牢根基，灵力稳固</span></div>
-                <div class="stat-row"><span class="stat-label">3. 凝丹期</span><span class="stat-val">凝结金丹，实力大增</span></div>
-                <div class="stat-row"><span class="stat-label">4. 元婴期</span><span class="stat-val">元婴出窍，可御空飞行</span></div>
-                <div class="stat-row"><span class="stat-label">5. 化神期</span><span class="stat-val">化神入虚，触摸法则</span></div>
-                <div class="stat-row"><span class="stat-label">6. 渡劫期</span><span class="stat-val">渡九重天劫，飞升仙界</span></div>
-                <div class="stat-row"><span class="stat-label" style="color:var(--accent)">?. 神境</span><span class="stat-val" style="color:var(--accent)">传说级别，主角最终目标</span></div>
+                <div class="card-title">➕ 添加等级</div>
+                <div class="row">
+                    <input id="lvName" placeholder="等级名，如 炼气期">
+                    <input id="lvDesc" placeholder="描述">
+                    <button class="btn btn-primary" onclick="addLevel()">添加</button>
+                </div>
             </div>
-            <div class="card" style="margin-top:16px">
-                <div class="card-title">📊 战力平衡检查</div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">主角升级节奏合理（每3-5章一次突破）</div></div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">反派实力递进正常</div></div>
-                <div class="rule-item"><div class="rule-status warn"></div><div class="rule-text">第18章主角实力提升过快（从凝丹到元婴仅1章）</div></div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">技能冷却时间设置合理</div></div>
+            <div class="card">
+                <div class="card-title">💪 修炼等级体系</div>
+                <div id="lvList"></div>
             </div>
         </div>
+
         <!-- 规则引擎 -->
         <div id="tab-rules" class="tab-content">
-            <div class="btn-group">
-                <button class="btn btn-primary">➕ 添加规则</button>
-                <button class="btn">🔍 全面检测</button>
-                <button class="btn">📊 统计</button>
+            <div class="card">
+                <div class="card-title">➕ 添加规则</div>
+                <div class="row">
+                    <input id="ruleText" placeholder="规则描述，如 主角不可同时出现在两地">
+                    <select id="ruleStatus">
+                        <option value="pass">通过</option><option value="warn">警告</option><option value="fail">违规</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="addRule()">添加</button>
+                </div>
             </div>
             <div class="card">
                 <div class="card-title">📜 全局规则</div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">魔法冷却时间不少于3天</div><div class="rule-count">命中 12 次</div></div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">主角不可同时出现在两个地点</div><div class="rule-count">命中 8 次</div></div>
-                <div class="rule-item"><div class="rule-status fail"></div><div class="rule-text">已死角色不可出现对话</div><div class="rule-count">⚠️ 检测到 2 处违规</div></div>
-                <div class="rule-item"><div class="rule-status warn"></div><div class="rule-text">同一武器不可同时存在于两处</div><div class="rule-count">⚠️ 1 处疑似</div></div>
-                <div class="rule-item"><div class="rule-status pass"></div><div class="rule-text">修炼等级不可跨级提升</div><div class="rule-count">命中 0 次</div></div>
+                <div id="ruleList"></div>
             </div>
         </div>
+
         <!-- 设定百科 -->
         <div id="tab-encyclopedia" class="tab-content">
-            <div class="btn-group">
-                <button class="btn btn-primary">➕ 新建词条</button>
-                <button class="btn">🔍 搜索</button>
-                <button class="btn">📊 热度分析</button>
+            <div class="card">
+                <div class="card-title">➕ 新建词条</div>
+                <div class="row">
+                    <input id="encTitle" placeholder="词条名">
+                    <select id="encHeat">
+                        <option value="高热度">🔥 高热度</option><option value="中热度">🟡 中热度</option><option value="低热度">🟢 低热度</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <textarea id="encContent" placeholder="词条内容 / 设定说明"></textarea>
+                    <button class="btn btn-primary" onclick="addEntry()">添加</button>
+                </div>
             </div>
-            <div class="encyclopedia-grid">
-                <div class="encyclopedia-item"><div class="encyclopedia-title">📍 天启城</div><div class="encyclopedia-preview">人类帝国首都，人口百万，城墙高三十丈...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 42 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">⚔️ 青云剑诀</div><div class="encyclopedia-preview">青云宗招牌剑法，共十二式，以"青云直上"...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 38 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">🏔️ 断龙山脉</div><div class="encyclopedia-preview">位于大陆西北，终年积雪，龙族遗迹所在地...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 31 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">🌲 迷雾森林</div><div class="encyclopedia-preview">精灵族居住地，常年被魔法迷雾笼罩...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 18 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">💍 神秘戒指</div><div class="encyclopedia-preview">主角在第三章节获得，内藏远古灵魂...</div><div class="encyclopedia-meta"><span>🔥 高热度</span><span>引用 25 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">📜 预言石碑</div><div class="encyclopedia-preview">第十二章节发现，记载着关于世界末日的预言...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 15 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">🧪 回春丹</div><div class="encyclopedia-preview">三品丹药，可恢复灵力损伤...</div><div class="encyclopedia-meta"><span>🟢 低热度</span><span>引用 3 次</span></div></div>
-                <div class="encyclopedia-item"><div class="encyclopedia-title">🗡️ 断渊刀</div><div class="encyclopedia-preview">上古神器，曾属于龙族的战神...</div><div class="encyclopedia-meta"><span>🟡 中热度</span><span>引用 9 次</span></div></div>
-            </div>
+            <div class="encyclopedia-grid" id="encGrid"></div>
         </div>
-        <div class="btn-group">
-            <button class="btn" onclick="exportWorld()">📤 导出世界观</button>
-            <button class="btn" onclick="aiComplete()">🤖 AI 补全建议</button>
-        </div>
+
         <div class="footer">
             <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06</p>
             <p style="margin-top:6px">Powered by Ollama · OpenAI · Claude · Qwen</p>
         </div>
     </div>
+
     <script>
+        const LS_MAP='sagebook_wb_map', LS_LOC='sagebook_wb_loc', LS_TL='sagebook_wb_timeline',
+              LS_FAC='sagebook_wb_factions', LS_LV='sagebook_wb_levels', LS_RULE='sagebook_wb_rules', LS_ENC='sagebook_wb_enc';
+        const TERRAINS=['empty','water','forest','mountain','city','dungeon'];
+        const TERRAIN_META={empty:{n:'空地',c:'var(--bg-primary)'},water:{n:'水域',c:'#3b82f6'},forest:{n:'森林',c:'#22c55e'},mountain:{n:'山地',c:'#8b8b8b'},city:{n:'城市',c:'var(--accent)'},dungeon:{n:'遗迹',c:'#f87171'}};
+        let drawTerrain='city';
+
         function setTheme(t){const h=document.documentElement,b=document.querySelectorAll('.theme-btn');
         if(t==='system'){const d=window.matchMedia('(prefers-color-scheme:dark)').matches;h.setAttribute('data-theme',d?'dark':'light')}
         else h.setAttribute('data-theme',t);b.forEach(x=>x.classList.remove('active'));
@@ -281,95 +274,139 @@
         event.target.classList.add('active')}
         function toggleMobileMenu(){const n=document.querySelector('.nav');
         n.style.display=n.style.display==='flex'?'none':'flex';n.style.flexDirection='column';n.style.alignItems='center'}
+
+        const get=(k,d)=>{ try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;} };
+        const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+        // ===== 地图 =====
+        function getMap(){ const m=get(LS_MAP,null); if(Array.isArray(m)&&m.length===60) return m; return new Array(60).fill('empty'); }
+        function renderTerrainPicker(){
+            document.getElementById('terrainPicker').innerHTML=TERRAINS.map(t=>`
+                <div class="terrain-opt ${t===drawTerrain?'active':''}" onclick="setDraw('${t}')">
+                    <span class="swatch" style="background:${TERRAIN_META[t].c}"></span>${TERRAIN_META[t].n}
+                </div>`).join('');
+        }
+        function setDraw(t){ drawTerrain=t; renderTerrainPicker(); }
+        function renderMap(){
+            const map=getMap(); const g=document.getElementById('mapGrid'); g.innerHTML='';
+            map.forEach((t,i)=>{ const c=document.createElement('div'); c.className='map-cell '+t; c.title=TERRAIN_META[t].n;
+                c.onclick=()=>{ const m=getMap(); m[i]=drawTerrain; save(LS_MAP,m); renderMap(); renderMapStats(); };
+                g.appendChild(c); });
+        }
+        function clearMap(){ save(LS_MAP,new Array(60).fill('empty')); renderMap(); renderMapStats(); }
+        function renderMapStats(){
+            const map=getMap(); const counts={}; TERRAINS.forEach(t=>counts[t]=0); map.forEach(t=>counts[t]++);
+            document.getElementById('mapStats').innerHTML=Object.entries(TERRAIN_META).map(([k,m])=>
+                `<div class="stat-row"><span class="stat-label">${m.n}</span><span class="stat-val">${counts[k]} 格</span></div>`).join('')+
+                `<div class="stat-row"><span class="stat-label">已绘制</span><span class="stat-val">${60-counts.empty} / 60</span></div>`;
+        }
+        // 地点
+        function renderLocations(){
+            const locs=get(LS_LOC,[]); const el=document.getElementById('locList');
+            if(!locs.length){ el.innerHTML='<div class="empty-hint">还没有地点。在上方添加，例如「王都·天启城」。</div>'; return; }
+            el.innerHTML=locs.map((l,i)=>`<div class="stat-row"><span class="stat-label">${l.replace(/</g,'&lt;')}</span><button class="btn btn-danger" onclick="delLocation(${i})">删除</button></div>`).join('');
+        }
+        function addLocation(){ const v=document.getElementById('locName').value.trim(); if(!v){alert('请填写地点名');return;} const l=get(LS_LOC,[]); l.push(v); save(LS_LOC,l); document.getElementById('locName').value=''; renderLocations(); }
+        function delLocation(i){ const l=get(LS_LOC,[]); l.splice(i,1); save(LS_LOC,l); renderLocations(); }
+
+        // ===== 时间线 =====
+        function renderTimeline(){
+            const list=get(LS_TL,[]); const el=document.getElementById('tlList');
+            if(!list.length){ el.innerHTML='<div class="empty-hint">还没有事件。在上方添加时间线节点。</div>'; return; }
+            el.innerHTML=list.map((e,i)=>`
+                <div class="tl-item ${e.status}">
+                    <div class="tl-date">${e.chapter} ${e.status==='conflict'?'⚠️ 冲突':e.status==='resolved'?'✅ 已解决':''}</div>
+                    <div class="tl-content">${e.content.replace(/</g,'&lt;')}</div>
+                    <div class="btn-group" style="margin:6px 0 0"><button class="btn btn-danger" onclick="delEvent(${i})">🗑️ 删除</button></div>
+                </div>`).join('');
+        }
+        function addEvent(){ const ch=document.getElementById('tlChapter').value.trim(); const c=document.getElementById('tlContent').value.trim(); const s=document.getElementById('tlStatus').value;
+            if(!c){alert('请填写事件描述');return;} const l=get(LS_TL,[]); l.push({chapter:ch||'未注明',content:c,status:s}); save(LS_TL,l);
+            document.getElementById('tlChapter').value=''; document.getElementById('tlContent').value=''; renderTimeline(); }
+        function delEvent(i){ const l=get(LS_TL,[]); l.splice(i,1); save(LS_TL,l); renderTimeline(); }
+
+        // ===== 势力 =====
+        function renderFactions(){
+            const list=get(LS_FAC,[]); const el=document.getElementById('facList');
+            if(!list.length){ el.innerHTML='<div class="empty-hint">还没有势力。在上方新建，例如「天启王朝」。</div>'; return; }
+            el.innerHTML=list.map((f,i)=>`
+                <div class="faction-item">
+                    <div class="faction-icon">⚔️</div>
+                    <div class="faction-info"><div class="faction-name">${f.name.replace(/</g,'&lt;')}</div><div class="faction-desc">${f.desc.replace(/</g,'&lt;')}</div></div>
+                    <span class="power-level">${'★'.repeat(f.power)}</span>
+                    <button class="btn btn-danger" onclick="delFaction(${i})">删除</button>
+                </div>`).join('');
+        }
+        function addFaction(){ const n=document.getElementById('facName').value.trim(); const d=document.getElementById('facDesc').value.trim(); const p=parseInt(document.getElementById('facPower').value)||1;
+            if(!n){alert('请填写势力名');return;} const l=get(LS_FAC,[]); l.push({name:n,desc:d,power:p}); save(LS_FAC,l);
+            document.getElementById('facName').value=''; document.getElementById('facDesc').value=''; renderFactions(); }
+        function delFaction(i){ const l=get(LS_FAC,[]); l.splice(i,1); save(LS_FAC,l); renderFactions(); }
+
+        // ===== 力量体系 =====
+        function renderLevels(){
+            const list=get(LS_LV,[]); const el=document.getElementById('lvList');
+            if(!list.length){ el.innerHTML='<div class="empty-hint">还没有等级。在上方添加修炼/战力等级。</div>'; return; }
+            el.innerHTML=list.map((lv,i)=>`<div class="stat-row"><span class="stat-label">${lv.name.replace(/</g,'&lt;')}</span><span class="stat-val">${lv.desc.replace(/</g,'&lt;')}</span><button class="btn btn-danger" onclick="delLevel(${i})">删除</button></div>`).join('');
+        }
+        function addLevel(){ const n=document.getElementById('lvName').value.trim(); const d=document.getElementById('lvDesc').value.trim();
+            if(!n){alert('请填写等级名');return;} const l=get(LS_LV,[]); l.push({name:n,desc:d}); save(LS_LV,l);
+            document.getElementById('lvName').value=''; document.getElementById('lvDesc').value=''; renderLevels(); }
+        function delLevel(i){ const l=get(LS_LV,[]); l.splice(i,1); save(LS_LV,l); renderLevels(); }
+
+        // ===== 规则引擎 =====
+        function renderRules(){
+            const list=get(LS_RULE,[]); const el=document.getElementById('ruleList');
+            if(!list.length){ el.innerHTML='<div class="empty-hint">还没有规则。添加一致性约束，例如「已死角色不可出现对话」。</div>'; return; }
+            el.innerHTML=list.map((r,i)=>`
+                <div class="rule-item"><div class="rule-status ${r.status}"></div><div class="rule-text">${r.text.replace(/</g,'&lt;')}</div>
+                <button class="btn btn-danger" onclick="delRule(${i})">删除</button></div>`).join('');
+        }
+        function addRule(){ const t=document.getElementById('ruleText').value.trim(); const s=document.getElementById('ruleStatus').value;
+            if(!t){alert('请填写规则');return;} const l=get(LS_RULE,[]); l.push({text:t,status:s}); save(LS_RULE,l);
+            document.getElementById('ruleText').value=''; renderRules(); }
+        function delRule(i){ const l=get(LS_RULE,[]); l.splice(i,1); save(LS_RULE,l); renderRules(); }
+
+        // ===== 设定百科 =====
+        function renderEntries(){
+            const list=get(LS_ENC,[]); const el=document.getElementById('encGrid');
+            if(!list.length){ el.innerHTML='<div class="empty-hint">还没有词条。在上方新建设定百科条目。</div>'; return; }
+            el.innerHTML=list.map((e,i)=>`
+                <div class="encyclopedia-item">
+                    <div class="encyclopedia-title">📍 ${e.title.replace(/</g,'&lt;')}</div>
+                    <div class="encyclopedia-preview">${e.content.replace(/</g,'&lt;').slice(0,80)}</div>
+                    <div class="encyclopedia-meta"><span>${e.heat}</span><button class="btn btn-danger" onclick="delEntry(${i})">删除</button></div>
+                </div>`).join('');
+        }
+        function addEntry(){ const t=document.getElementById('encTitle').value.trim(); const c=document.getElementById('encContent').value.trim(); const h=document.getElementById('encHeat').value;
+            if(!t){alert('请填写词条名');return;} const l=get(LS_ENC,[]); l.push({title:t,content:c,heat:h}); save(LS_ENC,l);
+            document.getElementById('encTitle').value=''; document.getElementById('encContent').value=''; renderEntries(); }
+        function delEntry(i){ const l=get(LS_ENC,[]); l.splice(i,1); save(LS_ENC,l); renderEntries(); }
+
+        // ===== 导出 / AI（真实数据）=====
         function exportWorld(){
-            const worldData = {
-                title: '世界观设定',
-                exportTime: new Date().toLocaleString(),
-                geography: [
-                    {name:'天启城',desc:'人类帝国首都，人口百万'},
-                    {name:'迷雾森林',desc:'精灵族居住地'},
-                    {name:'断龙山脉',desc:'龙族遗迹所在地'}
-                ],
-                powerSystem: [
-                    {name:'炼气境',desc:'入门修为，共九层'}
-                ],
-                factions: [
-                    {name:'青云宗',desc:'三大长老，外门弟子千余'}
-                ]
-            };
-            const json = JSON.stringify(worldData, null, 2);
-            const blob = new Blob([json], {type:'application/json;charset=utf-8'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = '世界观设定_' + new Date().toISOString().slice(0,10) + '.json';
-            a.click();
+            const data={ map:getMap(), locations:get(LS_LOC,[]), timeline:get(LS_TL,[]), factions:get(LS_FAC,[]), levels:get(LS_LV,[]), rules:get(LS_RULE,[]), encyclopedia:get(LS_ENC,[]) };
+            const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+            const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+            a.download='世界观设定_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
         }
-        function aiComplete(){
-            const worldData = loadWorldData();
-            const local = localStorage.getItem('sagebook_world_data');
-            const factions = JSON.parse(local || '[]');
-            const geoCount = worldData.geography.length;
-            const factionCount = factions.length;
-            const hasRules = worldData.rules.length > 0;
-            const suggestions = [];
-            if (geoCount < 5) suggestions.push('补充更多地理地点（建议至少 5 个）');
-            if (factionCount < 2) suggestions.push('添加更多势力组织');
-            if (!hasRules) suggestions.push('配置规则引擎以确保世界观一致性');
-            suggestions.push('建议补充：经济系统、宗教体系、历史事件');
-            const prompt = `请基于以下世界观信息，提供补充建议：\n\n地理系统 (${geoCount} 个地点)：${worldData.geography.map(g=>g.name).join('、')}\n势力系统 (${factionCount} 个)：${factions.map(f=>f.name).join('、')}\n\n请提供 5 条具体的补充建议。`;
-            callAIComplete(prompt, suggestions);
+        const OLLAMA_BASE=localStorage.getItem('ollamaEndpoint')||'http://localhost:11434';
+        async function aiComplete(){
+            const model=localStorage.getItem('localModel');
+            const out=document.getElementById('aiCompleteOutput'); out.style.display='block';
+            if(!model){ out.innerHTML='<div style="color:var(--warning)">⚠️ 请先在设置中配置本地 AI 模型</div>'; return; }
+            const facs=get(LS_FAC,[]), locs=get(LS_LOC,[]), rules=get(LS_RULE,[]), lvls=get(LS_LV,[]), enc=get(LS_ENC,[]);
+            const prompt=`请基于以下世界观信息，提供补充与完善建议（5 条具体可操作）：\n\n势力(${facs.length}): ${facs.map(f=>f.name).join('、')||'无'}\n地点(${locs.length}): ${locs.join('、')||'无'}\n等级(${lvls.length}): ${lvls.map(l=>l.name).join('、')||'无'}\n规则(${rules.length}): ${rules.map(r=>r.text).join('；')||'无'}\n词条(${enc.length}): ${enc.map(e=>e.title).join('、')||'无'}\n\n请指出缺失的子系统（经济/宗教/历史/语言等）并给出补充建议。`;
+            out.innerHTML='🔄 AI 正在分析世界观并生成补充建议...';
+            try{
+                const res=await fetch(OLLAMA_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.7}})});
+                if(!res.ok) throw new Error('Ollama API error: '+res.status);
+                const data=await res.json(); out.textContent=data.response;
+            }catch(e){ out.innerHTML='<div style="color:var(--error)">⚠️ AI 调用失败：'+e.message+'</div>'; }
         }
 
-        function callAIComplete(prompt, defaultSuggestions) {
-            const output = document.getElementById('aiCompleteOutput');
-            if (!output) {
-                // 如果没有输出区域，创建一个
-                const btnGroup = document.querySelector('.btn-group:last-child');
-                if (btnGroup) {
-                    const div = document.createElement('div');
-                    div.id = 'aiCompleteOutput';
-                    div.className = 'card';
-                    div.style.marginTop = '16px';
-                    div.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-loading">🔄 生成中...</div>';
-                    btnGroup.parentNode.insertBefore(div, btnGroup.nextSibling);
-                }
-                return;
-            }
-            output.innerHTML = '<div class="ai-loading">🔄 AI 正在分析世界观并生成补充建议...</div>';
-
-            const localModel = localStorage.getItem('localModel');
-            if (!localModel) {
-                output.innerHTML = '<div style="color:var(--warning)">⚠️ 请先在设置中配置本地 AI 模型</div>';
-                return;
-            }
-
-            const OLLAMA_BASE = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
-            fetch(OLLAMA_BASE + '/api/generate', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ model: localModel, prompt: prompt, stream: false, options: { temperature: 0.7 } })
-            }).then(async res => {
-                if (!res.ok) throw new Error('Ollama API error: ' + res.status);
-                const data = await res.json();
-                output.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-result">' + data.response.replace(/\n/g, '<br>') + '</div>';
-            }).catch(err => {
-                output.innerHTML = '<div class="card-title">🤖 AI 补全建议</div><div class="ai-fallback">' +
-                    '<div>⚠️ AI 服务暂不可用，以下基于本地数据自动分析：</div><br>' +
-                    defaultSuggestions.map(s => '<div style="padding:4px 0">💡 ' + s + '</div>').join('') +
-                    '</div>';
-            });
-        }
-
-        function loadWorldData() {
-            return {
-                geography: [
-                    {name:'天启城', desc:'人类帝国首都，人口百万'},
-                    {name:'迷雾森林', desc:'精灵族居住地'},
-                    {name:'断龙山脉', desc:'龙族遗迹所在地'}
-                ],
-                rules: []
-            };
-        }
+        // 初始化
+        renderTerrainPicker(); renderMap(); renderMapStats(); renderLocations();
+        renderTimeline(); renderFactions(); renderLevels(); renderRules(); renderEntries();
     </script>
 </body>
 </html>

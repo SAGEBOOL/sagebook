@@ -46,10 +46,10 @@
         .stat-label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
         .analysis-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 16px 0; }
         .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; margin: 16px 0; padding: 0 10px; }
-        .bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; margin: 16px 0; padding: 0 10px; overflow-x: auto; }
+        .bar-item { flex: 1; min-width: 22px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.3s; min-height: 4px; }
-        .bar-label { font-size: 10px; color: var(--text-secondary); writing-mode: vertical-lr; text-orientation: mixed; max-height: 60px; overflow: hidden; }
+        .bar-label { font-size: 10px; color: var(--text-secondary); }
         .bar-value { font-size: 11px; font-weight: 600; }
         .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
         .tag { padding: 4px 12px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border); background: var(--bg-hover); }
@@ -58,40 +58,40 @@
         .tag.cool { border-color: var(--success); color: var(--success); background: rgba(74,222,128,0.1); }
         .progress-bar { height: 8px; background: var(--bg-hover); border-radius: 4px; overflow: hidden; margin: 8px 0; }
         .progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
-        .score-ring { width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; }
-        .score-ring svg { position: absolute; top: 0; left: 0; transform: rotate(-90deg); }
-        .score-text { font-size: 24px; font-weight: 800; }
-        .hint-item { padding: 12px; border-left: 3px solid var(--accent); background: var(--bg-hover); border-radius: 0 8px 8px 0; margin: 8px 0; }
-        .hint-item.good { border-left-color: var(--success); }
-        .hint-item.warn { border-left-color: var(--warning); }
-        .hint-item.bad { border-left-color: var(--error); }
-        .hint-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-        .hint-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
         .timeline { position: relative; padding-left: 24px; }
         .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border); }
-        .timeline-item { position: relative; margin: 16px 0; }
-        .timeline-item::before { content: ''; position: absolute; left: -20px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-primary); }
-        .timeline-item.milestone::before { background: var(--warning); }
+        .timeline-item { position: relative; margin: 16px 0; background: var(--bg-hover); border-radius: 8px; padding: 12px; }
+        .timeline-item::before { content: ''; position: absolute; left: -20px; top: 18px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-primary); }
+        .timeline-item.resolved::before { background: var(--success); }
         .timeline-date { font-size: 12px; color: var(--text-secondary); }
         .timeline-content { font-size: 14px; margin-top: 4px; }
         .btn { padding: 8px 16px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); border-radius: 8px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
         .btn:hover { border-color: var(--accent); }
         .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
         .btn-primary:hover { background: var(--accent-hover); }
+        .btn-danger { color: var(--error); }
         .btn-group { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
-        .chart-placeholder { height: 200px; background: var(--bg-hover); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 14px; margin: 16px 0; }
+        .empty-hint { text-align: center; padding: 40px 20px; color: var(--text-secondary); font-size: 14px; line-height: 2; }
+        .empty-hint a { color: var(--accent); }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 10px 0; }
+        .row input, .row select, .row textarea { background: var(--bg-hover); border: 1px solid var(--border); border-radius: 8px; color: var(--text-primary); padding: 8px 10px; font-size: 13px; font-family: inherit; }
+        .row input { min-width: 160px; }
+        .row textarea { flex: 1; min-width: 240px; min-height: 38px; resize: vertical; }
+        .hint-item { padding: 12px; border-left: 3px solid var(--accent); background: var(--bg-hover); border-radius: 0 8px 8px 0; margin: 8px 0; }
+        .hint-item.good { border-left-color: var(--success); }
+        .hint-item.warn { border-left-color: var(--warning); }
+        .hint-item.bad { border-left-color: var(--error); }
+        .hint-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .hint-body { font-size: 13px; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; }
         .footer { text-align: center; padding: 30px 20px; font-size: 13px; color: var(--text-secondary); border-top: 1px solid var(--border); margin-top: 40px; }
         .footer a { color: var(--accent); text-decoration: none; }
+        #aiAnalyzeOutput { margin-top: 16px; white-space: pre-wrap; line-height: 1.8; }
         @media (max-width: 768px) {
             .header { padding: 50px 15px 15px; } .title { font-size: 24px; }
             .nav { gap: 10px; } .nav-link { font-size: 13px; padding: 5px 10px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .analysis-section { padding: 16px; } .section-title { font-size: 16px; }
             .mobile-menu-btn { display: block; }
-        }
-        @media (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr; } .theme-switcher { top: 10px; right: 10px; }
-            .theme-btn { padding: 4px 8px; font-size: 12px; }
         }
     </style>
 </head>
@@ -106,7 +106,7 @@
         <div class="header">
             <div class="logo">📊</div>
             <div class="title">写作分析</div>
-            <div class="subtitle">节奏分析 · 伏笔追踪 · 章节评分 · 风格洞察</div>
+            <div class="subtitle">基于你真实文稿的节奏 · 伏笔 · 评分 · 风格分析</div>
             <nav class="nav">
                 <a href="index.html" class="nav-link">🏠 首页</a>
                 <a href="main-editor.html" class="nav-link">编辑器</a>
@@ -127,210 +127,77 @@
             <button class="tab-btn" onclick="switchTab('scoring')">⭐ 章节评分</button>
             <button class="tab-btn" onclick="switchTab('style')">🎨 风格洞察</button>
         </div>
+
         <!-- 节奏分析 -->
         <div id="tab-rhythm" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value">72</div><div class="stat-label">平均节奏分</div></div>
-                <div class="stat-card"><div class="stat-value">3</div><div class="stat-label">单调段落</div></div>
-                <div class="stat-card"><div class="stat-value">6:1</div><div class="stat-label">紧张/舒缓比</div></div>
-                <div class="stat-card"><div class="stat-value">A-</div><div class="stat-label">节奏评级</div></div>
-            </div>
+            <div class="stats-grid" id="rhythmStats"></div>
             <div class="analysis-section">
-                <div class="section-title">📈 章节节奏曲线</div>
+                <div class="section-title">📈 段落节奏曲线（基于真实文稿）</div>
                 <div class="bar-chart" id="rhythmChart"></div>
                 <div class="tag-list" id="rhythmTags"></div>
             </div>
             <div class="analysis-section">
                 <div class="section-title">💡 节奏建议</div>
-                <div class="hint-item warn">
-                    <div class="hint-title">第 12 章节奏过于平缓</div>
-                    <div class="hint-body">连续 3 段均为舒缓节奏，建议在第 3 节加入突发事件或转折，打破单调感。</div>
-                </div>
-                <div class="hint-item good">
-                    <div class="hint-title">第 18 章节奏优秀</div>
-                    <div class="hint-body">紧张-舒缓-紧张的交替模式很好，读者反馈"欲罢不能"。</div>
-                </div>
-                <div class="hint-item bad">
-                    <div class="hint-title">第 25 章节奏断裂</div>
-                    <div class="hint-body">从激烈战斗突然切换到日常描写，缺乏过渡。建议在两者之间增加一段缓冲描写。</div>
-                </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">🎯 番茄钟写作统计</div>
-                <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-value">156</div><div class="stat-label">今日写作时长(分钟)</div></div>
-                    <div class="stat-card"><div class="stat-value">4,280</div><div class="stat-label">今日字数</div></div>
-                    <div class="stat-card"><div class="stat-value">42</div><div class="stat-label">平均打字速度(字/分)</div></div>
-                    <div class="stat-card"><div class="stat-value">78%</div><div class="stat-label">目标完成率</div></div>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width:78%;background:var(--warning)"></div></div>
-                <div style="text-align:center;font-size:13px;color:var(--text-secondary)">目标: 5,000 字/日</div>
+                <div id="rhythmHints"></div>
             </div>
         </div>
+
         <!-- 伏笔追踪 -->
         <div id="tab-foreshadow" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value">23</div><div class="stat-label">已埋伏笔</div></div>
-                <div class="stat-card"><div class="stat-value">15</div><div class="stat-label">已回收</div></div>
-                <div class="stat-card"><div class="stat-value">8</div><div class="stat-label">待回收</div></div>
-                <div class="stat-card"><div class="stat-value">65%</div><div class="stat-label">回收率</div></div>
-            </div>
+            <div class="stats-grid" id="fsStats"></div>
             <div class="analysis-section">
-                <div class="section-title">🔮 活跃伏笔列表</div>
-                <div class="timeline">
-                    <div class="timeline-item">
-                        <div class="timeline-date">第 3 章 - 神秘戒指</div>
-                        <div class="timeline-content">主角获得一枚刻有古老纹路的戒指，暗示身世之谜</div>
-                        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:30%;background:var(--warning)"></div></div>
-                        <div style="font-size:11px;color:var(--text-secondary)">预计回收: 第 20-25 章</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-date">第 7 章 - 师父失踪</div>
-                        <div class="timeline-content">师父在秘境中离奇消失，留下半张地图</div>
-                        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:55%;background:var(--accent)"></div></div>
-                        <div style="font-size:11px;color:var(--text-secondary)">预计回收: 第 15-18 章</div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-date">第 12 章 - 预言石碑</div>
-                        <div class="timeline-content">石碑记载"当双月交汇之时，暗影将吞噬光明"</div>
-                        <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:15%;background:var(--error)"></div></div>
-                        <div style="font-size:11px;color:var(--text-secondary)">预计回收: 第 30+ 章</div>
-                    </div>
+                <div class="section-title">🔮 伏笔管理（点击回收 / 删除）</div>
+                <div class="row">
+                    <input id="fsChapter" placeholder="所在章节，如 第3章">
+                    <input id="fsDesc" placeholder="伏笔内容描述">
+                    <button class="btn btn-primary" onclick="addForeshadow()">➕ 添加伏笔</button>
                 </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">✅ 已回收伏笔</div>
-                <div class="timeline">
-                    <div class="timeline-item milestone">
-                        <div class="timeline-date">第 1 章 → 第 8 章: 血狼追杀</div>
-                        <div class="timeline-content">第 1 章出现的神秘黑衣人，在第 8 章揭示为魔教卧底</div>
-                    </div>
-                    <div class="timeline-item milestone">
-                        <div class="timeline-date">第 5 章 → 第 14 章: 上古残卷</div>
-                        <div class="timeline-content">残卷中的功法在第 14 章被主角领悟，突破瓶颈</div>
-                    </div>
-                </div>
+                <div id="fsList" style="margin-top:12px"></div>
             </div>
         </div>
+
         <!-- 章节评分 -->
         <div id="tab-scoring" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value">8.2</div><div class="stat-label">平均评分</div></div>
-                <div class="stat-card"><div class="stat-value">9.1</div><div class="stat-label">最佳章节</div></div>
-                <div class="stat-card"><div class="stat-value">6.5</div><div class="stat-label">最低评分</div></div>
-                <div class="stat-card"><div class="stat-value">↑ 0.3</div><div class="stat-label">近期趋势</div></div>
+            <div class="stats-grid" id="scoreStats"></div>
+            <div class="analysis-section">
+                <div class="section-title">📊 各维度评分（实时计算）</div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0" id="scoreDims"></div>
             </div>
             <div class="analysis-section">
-                <div class="section-title">📊 各维度评分雷达</div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0">
-                    <div style="text-align:center">
-                        <div style="font-size:36px;font-weight:800;color:var(--success)">9.2</div>
-                        <div style="font-size:13px;color:var(--text-secondary)">情节推进</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:92%;background:var(--success)"></div></div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="font-size:36px;font-weight:800;color:var(--accent)">8.5</div>
-                        <div style="font-size:13px;color:var(--text-secondary)">角色发展</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:85%;background:var(--accent)"></div></div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="font-size:36px;font-weight:800;color:var(--warning)">7.8</div>
-                        <div style="font-size:13px;color:var(--text-secondary)">悬念设置</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:78%;background:var(--warning)"></div></div>
-                    </div>
-                    <div style="text-align:center">
-                        <div style="font-size:36px;font-weight:800;color:var(--error)">7.2</div>
-                        <div style="font-size:13px;color:var(--text-secondary)">文笔质量</div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:72%;background:var(--error)"></div></div>
-                    </div>
-                </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">🏆 章节排名 TOP 5</div>
-                <div class="hint-item good">
-                    <div class="hint-title">🥇 第 18 章 - 秘境突围 (9.1)</div>
-                    <div class="hint-body">情节紧凑、角色高光、悬念完美收尾</div>
-                </div>
-                <div class="hint-item good">
-                    <div class="hint-title">🥈 第 22 章 - 真相大白 (8.9)</div>
-                    <div class="hint-body">伏笔回收出色，情感冲击力强</div>
-                </div>
-                <div class="hint-item good">
-                    <div class="hint-title">🥉 第 12 章 - 背叛 (8.7)</div>
-                    <div class="hint-body">角色关系转折处理得当</div>
-                </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">📝 AI 改进建议</div>
-                <div class="hint-item warn">
-                    <div class="hint-title">第 25 章 - 文笔偏弱</div>
-                    <div class="hint-body">场景描写过于简略，建议增加环境氛围描写和感官细节（气味、温度、声音）。</div>
-                </div>
-                <div class="hint-item warn">
-                    <div class="hint-title">第 28 章 - 悬念不足</div>
-                    <div class="hint-body">章节结尾平铺直叙，建议在末尾增加一个反转或悬念钩子。</div>
-                </div>
+                <div class="section-title">🏆 章节排名（按检测到章节）</div>
+                <div id="scoreRank"></div>
             </div>
         </div>
+
         <!-- 风格洞察 -->
         <div id="tab-style" class="tab-content">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value">68%</div><div class="stat-label">叙述占比</div></div>
-                <div class="stat-card"><div class="stat-value">22%</div><div class="stat-label">对话占比</div></div>
-                <div class="stat-card"><div class="stat-value">10%</div><div class="stat-label">描写占比</div></div>
-                <div class="stat-card"><div class="stat-value">B+</div><div class="stat-label">风格多样性</div></div>
+            <div class="stats-grid" id="styleStats"></div>
+            <div class="analysis-section">
+                <div class="section-title">📝 词频 TOP 20（真实文稿）</div>
+                <div class="tag-list" id="wordFreq"></div>
             </div>
             <div class="analysis-section">
-                <div class="section-title">📝 词频 TOP 20</div>
-                <div class="tag-list">
-                    <span class="tag hot">他 234次</span>
-                    <span class="tag hot">她 189次</span>
-                    <span class="tag warm">剑 156次</span>
-                    <span class="tag warm">灵力 142次</span>
-                    <span class="tag">战斗 128次</span>
-                    <span class="tag">转身 98次</span>
-                    <span class="tag">点头 87次</span>
-                    <span class="tag cool">沉默 76次</span>
-                    <span class="tag cool">微笑 72次</span>
-                    <span class="tag">远处 68次</span>
-                </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">🎭 角色对话风格分析</div>
-                <div class="hint-item good">
-                    <div class="hint-title">主角 - 口吻一致性好</div>
-                    <div class="hint-body">语气坚定、用词简洁，符合"冷面天才"人设。建议减少"嗯"、"哦"等语气词的使用频率。</div>
-                </div>
-                <div class="hint-item warn">
-                    <div class="hint-title">反派B - 口吻偏差</div>
-                    <div class="hint-body">第 22-25 章中反派B的用词过于文雅，与前文"粗犷豪放"设定不一致。建议检查。</div>
-                </div>
-                <div class="hint-item">
-                    <div class="hint-title">配角C - 特色鲜明</div>
-                    <div class="hint-body">口头禅"这事儿不简单"使用频率恰当，角色辨识度很高。</div>
-                </div>
-            </div>
-            <div class="analysis-section">
-                <div class="section-title">📐 段落长度分布</div>
+                <div class="section-title">📐 段落长度分布（真实文稿）</div>
                 <div class="bar-chart" id="paraLengthChart"></div>
-                <div style="text-align:center;font-size:12px;color:var(--text-secondary);margin-top:8px">
-                    <span style="color:var(--success)">● 适中(1-3段)</span> &nbsp;
-                    <span style="color:var(--warning)">● 较长(4-6段)</span> &nbsp;
-                    <span style="color:var(--error)">● 过长(7+段)</span>
-                </div>
             </div>
         </div>
+
         <div class="btn-group">
             <button class="btn btn-primary" onclick="runFullAnalysis()">🔍 全篇分析</button>
             <button class="btn" onclick="exportAnalysis()">📤 导出分析报告</button>
             <button class="btn" onclick="aiAnalyze()">🤖 AI 深度分析</button>
         </div>
+        <div id="aiAnalyzeOutput" class="analysis-section" style="display:none"></div>
         <div class="footer">
             <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06</p>
             <p style="margin-top:6px">Powered by Ollama · OpenAI · Claude · Qwen</p>
         </div>
     </div>
+
     <script>
+        const LS_CONTENT = 'sagebook_editor_content';
+        const LS_FS = 'sagebook_foreshadows';
+
         function setTheme(t){const h=document.documentElement,b=document.querySelectorAll('.theme-btn');
         if(t==='system'){const d=window.matchMedia('(prefers-color-scheme:dark)').matches;h.setAttribute('data-theme',d?'dark':'light')}
         else h.setAttribute('data-theme',t);b.forEach(x=>x.classList.remove('active'));
@@ -343,116 +210,288 @@
         event.target.classList.add('active')}
         function toggleMobileMenu(){const n=document.querySelector('.nav');
         n.style.display=n.style.display==='flex'?'none':'flex';n.style.flexDirection='column';n.style.alignItems='center'}
-        // Rhythm chart
-        const rhythmData=[{ch:'1',v:75,t:'紧张'},{ch:'2',v:60,t:'舒缓'},{ch:'3',v:45,t:'平缓'},{ch:'4',v:80,t:'紧张'},{ch:'5',v:55,t:'舒缓'},
-        {ch:'6',v:90,t:'激烈'},{ch:'7',v:40,t:'平缓'},{ch:'8',v:85,t:'紧张'},{ch:'9',v:50,t:'舒缓'},{ch:'10',v:70,t:'中等'},
-        {ch:'11',v:65,t:'中等'},{ch:'12',v:35,t:'平淡'},{ch:'13',v:75,t:'紧张'},{ch:'14',v:88,t:'高潮'},{ch:'15',v:55,t:'舒缓'}];
-        const rc=document.getElementById('rhythmChart');
-        rhythmData.forEach(d=>{const c=document.createElement('div');c.className='bar-item';
-        const colors={紧张:'#7c5cbf',舒缓:'#4ade80',平缓:'#666',激烈:'#f87171',中等:'#fbbf24',高潮:'#a78bfa',平淡:'#666'};
-        c.innerHTML=`<div class="bar-value">${d.v}</div><div class="bar" style="height:${d.v}%;background:${colors[d.t]||'#7c5cbf'}"></div><div class="bar-label">${d.ch}</div>`;
-        rc.appendChild(c)});
-        // Para length chart
-        const plData=[{l:'1-3段',v:45,c:'#4ade80'},{l:'4-6段',v:30,c:'#fbbf24'},{l:'7-10段',v:15,c:'#f87171'},{l:'10+段',v:10,c:'#ef4444'}];
-        const plc=document.getElementById('paraLengthChart');
-        plData.forEach(d=>{const c=document.createElement('div');c.className='bar-item';
-        c.innerHTML=`<div class="bar-value">${d.v}%</div><div class="bar" style="height:${d.v*2}%;background:${d.c}"></div><div class="bar-label">${d.l}</div>`;
-        plc.appendChild(c)});
+
+        // ===== 真实文稿读取 =====
+        // 主编辑器真实存储键为 sagebook_novel（JSON: {chapters:{fileId:{content:html}}}），聚合所有章节正文
+        function getContent(){
+            try {
+                const raw = localStorage.getItem('sagebook_novel');
+                if(raw){
+                    const novel = JSON.parse(raw);
+                    if(novel && novel.chapters){
+                        const parts = [];
+                        for(const k in novel.chapters){
+                            const ch = novel.chapters[k];
+                            if(ch && ch.content) parts.push(String(ch.content).replace(/<[^>]*>/g,''));
+                        }
+                        const merged = parts.join('\n\n').trim();
+                        if(merged) return merged;
+                    }
+                }
+            } catch(e){ /* 兼容损坏数据 */ }
+            // 回退：旧版扁平存储
+            return localStorage.getItem(LS_CONTENT) || '';
+        }
+        function getParagraphs(){
+            const c = getContent().trim();
+            if(!c) return [];
+            return c.split(/\n\s*\n/).map(p=>p.trim()).filter(p=>p.length>0);
+        }
+        function getChapters(){
+            const c = getContent();
+            if(!c) return [];
+            // 按「第X章/第X回」或空行分段
+            const parts = c.split(/(?=第[一二三四五六七八九十百千0-9]+[章回卷节])/).map(s=>s.trim()).filter(s=>s.length>0);
+            return parts.length>1 ? parts : getParagraphs();
+        }
+        function emptyState(el){ el.innerHTML = '<div class="empty-hint">暂无数据。<br>请先到 <a href="main-editor.html">主编辑器</a> 写入你的小说内容，本页所有分析都会基于真实文稿实时计算。</div>'; }
+
+        // ===== 节奏分析（真实）=====
+        function tensionOf(text){
+            const t = text.trim();
+            if(!t) return 0;
+            let score = 40;
+            const last = t.slice(-1);
+            if(/[！!?？]/.test(last)) score += 35;
+            const excl = (t.match(/[！!]/g)||[]).length;
+            const q = (t.match(/[？?]/g)||[]).length;
+            score += Math.min(20, excl*6 + q*5);
+            const action = (t.match(/(冲|杀|战|逃|爆|轰|猛|突|扑|挡|挥|劈|吼|颤|裂)/g)||[]).length;
+            score += Math.min(20, action*3);
+            if(t.length > 260) score -= 12;        // 过长偏舒缓
+            if(t.length < 60) score -= 8;
+            return Math.max(5, Math.min(100, score));
+        }
+        function renderRhythm(){
+            const statsEl = document.getElementById('rhythmStats');
+            const chart = document.getElementById('rhythmChart');
+            const tags = document.getElementById('rhythmTags');
+            const hints = document.getElementById('rhythmHints');
+            const paras = getParagraphs();
+            if(!paras.length){ emptyState(statsEl); chart.innerHTML=''; tags.innerHTML=''; hints.innerHTML=''; return; }
+            const scores = paras.map(tensionOf);
+            const avg = Math.round(scores.reduce((a,b)=>a+b,0)/scores.length);
+            const monotone = scores.filter((s,i)=> i>0 && Math.abs(s-scores[i-1])<12).length;
+            const tense = scores.filter(s=>s>=66).length;
+            const calm = scores.filter(s=>s<45).length;
+            const ratio = calm>0 ? (tense/calm).toFixed(1) : (tense>0?'∞':'0');
+            const grade = avg>=75?'A':avg>=65?'B+':avg>=55?'B':avg>=45?'C':'D';
+            statsEl.innerHTML = `
+                <div class="stat-card"><div class="stat-value">${avg}</div><div class="stat-label">平均节奏分</div></div>
+                <div class="stat-card"><div class="stat-value">${monotone}</div><div class="stat-label">相邻单调段落</div></div>
+                <div class="stat-card"><div class="stat-value">${ratio}</div><div class="stat-label">紧张/舒缓比</div></div>
+                <div class="stat-card"><div class="stat-value">${grade}</div><div class="stat-label">节奏评级</div></div>`;
+            const colors={紧张:'#f87171',中等:'#fbbf24',舒缓:'#4ade80'};
+            chart.innerHTML = scores.map((s,i)=>{
+                const lv = s>=66?'紧张':s<45?'舒缓':'中等';
+                return `<div class="bar-item"><div class="bar-value">${s}</div><div class="bar" style="height:${s}%;background:${colors[lv]}"></div><div class="bar-label">${i+1}</div></div>`;
+            }).join('');
+            tags.innerHTML = `<span class="tag">紧张段落 ${tense}</span><span class="tag cool">舒缓段落 ${calm}</span><span class="tag warm">段落总数 ${paras.length}</span>`;
+            // 建议
+            let h='';
+            if(monotone>=3) h+=`<div class="hint-item warn"><div class="hint-title">存在连续单调段落</div><div class="hint-body">有 ${monotone} 处相邻段落节奏接近，建议在其中插入转折、动作或悬念以提升张力。</div></div>`;
+            if(calm>tense) h+=`<div class="hint-item warn"><div class="hint-title">整体偏舒缓</div><div class="hint-body">舒缓段落多于紧张段落，可考虑加快关键章节节奏。</div></div>`;
+            if(!h) h=`<div class="hint-item good"><div class="hint-title">节奏分布健康</div><div class="hint-body">紧张与舒缓段落比例均衡，继续保持。</div></div>`;
+            hints.innerHTML = h;
+        }
+
+        // ===== 伏笔追踪（真实 CRUD）=====
+        function getFS(){ try { return JSON.parse(localStorage.getItem(LS_FS)||'[]'); } catch { return []; } }
+        function saveFS(list){ localStorage.setItem(LS_FS, JSON.stringify(list)); renderFS(); }
+        function addForeshadow(){
+            const ch = document.getElementById('fsChapter').value.trim();
+            const desc = document.getElementById('fsDesc').value.trim();
+            if(!desc){ alert('请填写伏笔内容'); return; }
+            const list = getFS();
+            list.push({ id: Date.now(), chapter: ch||'未注明', desc, resolved:false });
+            saveFS(list);
+            document.getElementById('fsChapter').value='';
+            document.getElementById('fsDesc').value='';
+        }
+        function toggleFS(id){
+            const list = getFS().map(f=> f.id===id ? {...f, resolved:!f.resolved} : f);
+            saveFS(list);
+        }
+        function delFS(id){ saveFS(getFS().filter(f=>f.id!==id)); }
+        function renderFS(){
+            const statsEl = document.getElementById('fsStats');
+            const listEl = document.getElementById('fsList');
+            const list = getFS();
+            const total = list.length, resolved = list.filter(f=>f.resolved).length, pending = total-resolved;
+            const rate = total? Math.round(resolved/total*100):0;
+            statsEl.innerHTML = `
+                <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">已埋伏笔</div></div>
+                <div class="stat-card"><div class="stat-value">${resolved}</div><div class="stat-label">已回收</div></div>
+                <div class="stat-card"><div class="stat-value">${pending}</div><div class="stat-label">待回收</div></div>
+                <div class="stat-card"><div class="stat-value">${rate}%</div><div class="stat-label">回收率</div></div>`;
+            if(!list.length){ listEl.innerHTML='<div class="empty-hint">还没有伏笔。在上方填写章节与描述，随时记录并标记回收。</div>'; return; }
+            listEl.innerHTML = list.map(f=>`
+                <div class="timeline-item ${f.resolved?'resolved':''}">
+                    <div class="timeline-date">${f.chapter} ${f.resolved?'· ✅已回收':''}</div>
+                    <div class="timeline-content">${f.desc.replace(/</g,'&lt;')}</div>
+                    <div class="btn-group" style="margin:8px 0 0">
+                        <button class="btn" onclick="toggleFS(${f.id})">${f.resolved?'↩️ 撤销回收':'✅ 标记回收'}</button>
+                        <button class="btn btn-danger" onclick="delFS(${f.id})">🗑️ 删除</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        // ===== 章节评分（真实）=====
+        function scoreChapter(text){
+            const t = text.trim();
+            if(!t) return 0;
+            let s = 60;
+            const dialogue = (t.match(/[“"「『]/g)||[]).length;
+            const dRatio = dialogue/Math.max(1, t.length/50);
+            if(dRatio>0.4) s+=8; if(dRatio<0.05) s-=8;
+            if(t.length>400 && t.length<2500) s+=10;
+            if(t.length>3000) s-=10;
+            if(/[？?！!]/.test(t.slice(-1))) s+=8;
+            const vocab = new Set(t.replace(/[^一-龥]/g,'').split('')).size;
+            if(vocab>40) s+=6;
+            return Math.max(1, Math.min(100, Math.round(s)));
+        }
+        function renderScoring(){
+            const statsEl=document.getElementById('scoreStats');
+            const dimsEl=document.getElementById('scoreDims');
+            const rankEl=document.getElementById('scoreRank');
+            const chapters=getChapters();
+            if(!chapters.length){ emptyState(statsEl); dimsEl.innerHTML=''; rankEl.innerHTML=''; return; }
+            // 分维度（整篇统计）
+            const all=getContent();
+            const dialogue=(all.match(/[“"「『]/g)||[]).length;
+            const totalChars=all.replace(/\s/g,'').length;
+            const dRatio=Math.min(100, Math.round(dialogue/Math.max(1,totalChars/60)*100));
+            const paraLens=getParagraphs().map(p=>p.length);
+            const avgLen=paraLens.length?Math.round(paraLens.reduce((a,b)=>a+b,0)/paraLens.length):0;
+            const variance=paraLens.length?Math.round(paraLens.reduce((a,b)=>a+Math.abs(b-avgLen),0)/paraLens.length):0;
+            const plotScore=Math.min(100, 50+Math.min(40, (all.match(/[！!?？]/g)||[]).length*4));
+            const charScore=Math.min(100, 50+Math.min(40, dialogue*3));
+            const dims=[
+                {n:'情节推进',v:plotScore,c:'var(--success)'},
+                {n:'角色发展',v:charScore,c:'var(--accent)'},
+                {n:'对话占比',v:dRatio,c:'var(--warning)'},
+                {n:'段落均衡',v:Math.max(20,100-Math.min(80,variance/30)),c:'var(--error)'}
+            ];
+            const avgScore=Math.round(dims.reduce((a,d)=>a+d.v,0)/dims.length);
+            const chapterScores=chapters.map((c,i)=>({i, title: c.slice(0,18), score: scoreChapter(c) }));
+            const best=chapterScores.reduce((a,b)=>b.score>a.score?b:a, chapterScores[0]);
+            const worst=chapterScores.reduce((a,b)=>b.score<a.score?b:a, chapterScores[0]);
+            statsEl.innerHTML=`
+                <div class="stat-card"><div class="stat-value">${avgScore}</div><div class="stat-label">综合评分</div></div>
+                <div class="stat-card"><div class="stat-value">${best.score}</div><div class="stat-label">最佳章节</div></div>
+                <div class="stat-card"><div class="stat-value">${worst.score}</div><div class="stat-label">最低评分</div></div>
+                <div class="stat-card"><div class="stat-value">${chapters.length}</div><div class="stat-label">章节数</div></div>`;
+            dimsEl.innerHTML=dims.map(d=>`
+                <div style="text-align:center">
+                    <div style="font-size:36px;font-weight:800;color:${d.c}">${d.v}</div>
+                    <div style="font-size:13px;color:var(--text-secondary)">${d.n}</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${d.v}%;background:${d.c}"></div></div>
+                </div>`).join('');
+            const sorted=[...chapterScores].sort((a,b)=>b.score-a.score).slice(0,5);
+            rankEl.innerHTML=sorted.map((c,idx)=>`
+                <div class="hint-item ${c.score>=75?'good':c.score>=55?'':'bad'}">
+                    <div class="hint-title">${'🥇🥈🥉'[idx]||'🏅'} 第${c.i+1}段/章 (${c.score})</div>
+                    <div class="hint-body">${c.title.replace(/</g,'&lt;')}…</div>
+                </div>`).join('');
+        }
+
+        // ===== 风格洞察（真实）=====
+        function renderStyle(){
+            const statsEl=document.getElementById('styleStats');
+            const freqEl=document.getElementById('wordFreq');
+            const plc=document.getElementById('paraLengthChart');
+            const c=getContent();
+            if(!c.trim()){ emptyState(statsEl); freqEl.innerHTML=''; plc.innerHTML=''; return; }
+            const paras=getParagraphs();
+            const dialogue=(c.match(/[“"「『]/g)||[]).length;
+            const narr=c.length-dialogue*2;
+            const dRatio=Math.round(dialogue/Math.max(1,(dialogue+narr/40)));
+            const descRatio=Math.round(Math.min(100,(c.match(/(的|了|着|般|如|似|仿佛|像)/g)||[]).length/ Math.max(1,c.length/200)*20));
+            statsEl.innerHTML=`
+                <div class="stat-card"><div class="stat-value">${100-dRatio-descRatio>0?100-dRatio-descRatio:20}%</div><div class="stat-label">叙述占比</div></div>
+                <div class="stat-card"><div class="stat-value">${dRatio}%</div><div class="stat-label">对话占比</div></div>
+                <div class="stat-card"><div class="stat-value">${descRatio}%</div><div class="stat-label">描写占比</div></div>
+                <div class="stat-card"><div class="stat-value">${paras.length}</div><div class="stat-label">段落总数</div></div>`;
+            // 词频
+            const stop='的了吗呢吧啊和在是与及把被让给和就也都还最这那一';
+            const words=c.replace(/[^一-龥]/g,'').split('').filter(ch=>!stop.includes(ch));
+            const freq={}; words.forEach(w=>freq[w]=(freq[w]||0)+1);
+            const top=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20);
+            freqEl.innerHTML=top.map(([w,n],i)=>`<span class="tag ${i<6?'hot':i<13?'warm':'cool'}">${w} ${n}次</span>`).join('')||'<span class="tag">暂无足够文本</span>';
+            // 段落长度分布
+            const lens=paras.map(p=>p.length);
+            const buckets={'1-3段(短)':0,'4-6段(中)':0,'7-10段(长)':0,'10+段(过长)':0};
+            lens.forEach(l=>{ if(l<120)buckets['1-3段(短)']++; else if(l<300)buckets['4-6段(中)']++; else if(l<600)buckets['7-10段(长)']++; else buckets['10+段(过长)']++; });
+            const max=Math.max(1,...Object.values(buckets));
+            const cols={'1-3段(短)':'#4ade80','4-6段(中)':'#fbbf24','7-10段(长)':'#f87171','10+段(过长)':'#ef4444'};
+            plc.innerHTML=Object.entries(buckets).map(([k,v])=>`
+                <div class="bar-item"><div class="bar-value">${v}</div><div class="bar" style="height:${v/max*100}%;background:${cols[k]}"></div><div class="bar-label">${k}</div></div>`).join('');
+        }
+
+        // ===== 按钮功能（真实）=====
         function runFullAnalysis(){
-            const editorContent = localStorage.getItem('sagebook_editor_content') || '';
-            if (!editorContent) {
-                alert('请先在主编辑器中写入内容后再进行分析');
-                return;
-            }
-            const paragraphs = editorContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-            const avgParaLen = paragraphs.length > 0 ? Math.round(paragraphs.reduce((sum, p) => sum + p.trim().length, 0) / paragraphs.length) : 0;
-            const tensionLevels = ['紧张', '舒缓', '平缓', '激烈', '高潮'];
-            let summary = `📊 全文分析完成\n\n总字数：${editorContent.length}\n段落数：${paragraphs.length}\n平均每段字数：${avgParaLen}\n\n章节节奏分析：\n`;
-            paragraphs.forEach((p, i) => {
-                const randLevel = tensionLevels[Math.floor(Math.random() * tensionLevels.length)];
-                summary += `第${i+1}段：${randLevel} (${p.trim().length}字)\n`;
-            });
+            const c=getContent();
+            if(!c.trim()){ alert('请先在主编辑器中写入内容后再进行分析'); return; }
+            const paras=getParagraphs();
+            const avgLen=Math.round(paras.reduce((a,p)=>a+p.length,0)/Math.max(1,paras.length));
+            let summary=`📊 全文分析完成（基于真实文稿）\n\n总字数：${c.length}\n段落数：${paras.length}\n平均每段字数：${avgLen}\n章节数：${getChapters().length}\n伏笔记录：${getFS().length} 条\n\n节奏评分（逐段）：\n`;
+            paras.slice(0,20).forEach((p,i)=>{ summary+=`第${i+1}段：${tensionOf(p)} 分\n`; });
             alert(summary);
         }
         function exportAnalysis(){
-            const editorContent = localStorage.getItem('sagebook_editor_content') || '';
-            if (!editorContent) {
-                alert('请先在主编辑器中写入内容');
-                return;
-            }
-            const paragraphs = editorContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-            const avgParaLen = paragraphs.length > 0 ? Math.round(paragraphs.reduce((sum, p) => sum + p.trim().length, 0) / paragraphs.length) : 0;
-            const text = `SAGE BOOK 写作分析报告
+            const c=getContent();
+            if(!c.trim()){ alert('请先在主编辑器中写入内容'); return; }
+            const paras=getParagraphs();
+            const avgLen=Math.round(paras.reduce((a,p)=>a+p.length,0)/Math.max(1,paras.length));
+            const fs=getFS();
+            const text=`SAGE BOOK 写作分析报告（真实数据）
 ========================================
 
 📄 基本信息：
-总字数：${editorContent.length}
-段落数：${paragraphs.length}
-平均每段字数：${avgParaLen}
+总字数：${c.length}
+段落数：${paras.length}
+平均每段字数：${avgLen}
+章节数：${getChapters().length}
 
-📈 节奏分布：
-紧张 ${Math.floor(paragraphs.length * 0.25)} 章
-舒缓 ${Math.floor(paragraphs.length * 0.2)} 章
-平缓 ${Math.floor(paragraphs.length * 0.2)} 章
-激烈 ${Math.floor(paragraphs.length * 0.15)} 章
-高潮 ${Math.floor(paragraphs.length * 0.1)} 章
+🔮 伏笔记录（${fs.length} 条）：
+${fs.map(f=>`${f.resolved?'[已回收]':'[待回收]'} ${f.chapter}：${f.desc}`).join('\n')||'（无）'}
 
-💡 AI 评分：${(7 + Math.random() * 2).toFixed(1)}/10
-
-🔖 改进建议：
-1. 部分段落过长，建议拆分以增强可读性
-2. 可增加环境描写和情感冲突
-3. 注意段落间的过渡衔接
+📈 节奏评分（逐段）：
+${paras.map((p,i)=>`第${i+1}段：${tensionOf(p)} 分`).join('\n')}
 
 生成时间：${new Date().toLocaleString()}
 `;
-            const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = '写作分析报告_' + new Date().toISOString().slice(0,10) + '.txt';
-            a.click();
+            const blob=new Blob([text],{type:'text/plain;charset=utf-8'});
+            const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+            a.download='写作分析报告_'+new Date().toISOString().slice(0,10)+'.txt'; a.click();
         }
-        
-        // AI 深度分析 - 连接 Ollama（优先使用用户自定义地址）
+        // AI 深度分析 - 真实连接 Ollama
         const OLLAMA_BASE = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
         async function aiAnalyze(){
             const model = localStorage.getItem('localModel');
-            if(!model){alert('请先到设置页面选择 AI 模型');return;}
-            const editorContent = localStorage.getItem('sagebook_editor_content') || '';
-            if (!editorContent) {
-                alert('请先在主编辑器中写入内容');
-                return;
-            }
-            const outputDiv = document.getElementById('aiAnalyzeOutput');
-            if (outputDiv) {
-                outputDiv.textContent = '🔄 AI 正在分析文本...';
-            }
+            if(!model){ alert('请先到设置页面选择 AI 模型'); return; }
+            const c=getContent();
+            if(!c.trim()){ alert('请先在主编辑器中写入内容'); return; }
+            const out=document.getElementById('aiAnalyzeOutput');
+            out.style.display='block';
+            out.textContent='🔄 AI 正在分析文本...';
             try {
-                const res = await fetch(OLLAMA_BASE+'/api/tags');
-                const data = await res.json();
-                if(!data.models.find(m=>m.name===model)){
-                    if (outputDiv) outputDiv.textContent = '❌ 所选模型不存在';
-                    return;
-                }
-            } catch(e){
-                if (outputDiv) outputDiv.textContent = '⚠️ 无法连接 Ollama，使用本地分析';
-                return;
-            }
-            
-            const prompt = `请对以下小说文本进行深度写作分析：\n\n${editorContent.substring(0, 2000)}\n\n请从以下几个维度分析：\n1. 写作风格\n2. 节奏把控\n3. 人物刻画\n4. 情节张力\n5. 改进建议`;
+                const res=await fetch(OLLAMA_BASE+'/api/tags');
+                const data=await res.json();
+                if(!data.models.find(m=>m.name===model)){ out.textContent='❌ 所选模型不存在'; return; }
+            } catch(e){ out.textContent='⚠️ 无法连接 Ollama，请确认已启动并配置跨域'; return; }
+            const prompt=`请对以下小说文本进行深度写作分析：\n\n${c.substring(0,2000)}\n\n请从以下几个维度分析：\n1. 写作风格\n2. 节奏把控\n3. 人物刻画\n4. 情节张力\n5. 改进建议`;
             try {
-                const res = await fetch(OLLAMA_BASE + '/api/generate', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ model: model, prompt: prompt, stream: false, options: { temperature: 0.7 } })
-                });
-                if (!res.ok) throw new Error('Ollama API error: ' + res.status);
-                const data = await res.json();
-                if (outputDiv) outputDiv.textContent = data.response;
-            } catch(e) {
-                if (outputDiv) outputDiv.textContent = '⚠️ AI 分析失败：' + e.message + '\n请使用"运行完整分析"功能查看本地分析结果';
-            }
+                const res=await fetch(OLLAMA_BASE+'/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model,prompt,stream:false,options:{temperature:0.7}})});
+                if(!res.ok) throw new Error('Ollama API error: '+res.status);
+                const data=await res.json();
+                out.textContent=data.response;
+            } catch(e){ out.textContent='⚠️ AI 分析失败：'+e.message; }
         }
+
+        // 初始化渲染
+        renderRhythm(); renderFS(); renderScoring(); renderStyle();
     </script>
 </body>
 </html>
