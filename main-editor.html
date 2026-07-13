@@ -1493,9 +1493,9 @@
                     // 使用云端 API
                     result = await callCloudAI(action, selectedText || fullText, cloudModel, apiKey);
                 } else {
-                    // 降级到模拟
-                    result = generateMockResult(action, selectedText || fullText);
-                    showToast('⚠️ 未配置 AI，显示模拟结果', 'warning');
+                    // 未配置 AI，引导用户去设置页配置模型
+                    result = '⚠️ 尚未配置 AI 模型。\n\n请打开「设置」页面，配置本地 Ollama（运行 ollama serve）或填写云端 API Key 后重试。';
+                    showToast('⚠️ 未配置 AI，请在设置中配置模型', 'warning');
                 }
             } catch (error) {
                 result = `❌ AI 调用失败: ${error.message}\n\n请检查：\n1. 本地 Ollama 是否运行\n2. API Key 是否正确\n3. 网络是否畅通`;
@@ -1608,192 +1608,6 @@
             };
             
             return prompts[action] || prompts.continue;
-        }
-
-        // 模拟结果（降级方案）
-        function generateMockResult(action, text) {
-            switch(action) {
-                case 'continue': return generateContinue(text);
-                case 'polish': return generatePolish(text);
-                case 'expand': return generateExpand(text);
-                case 'analyze': return generateAnalyze(text);
-                case 'suggest': return generateSuggest(text);
-                case 'dialogue': return generateDialogue();
-                case 'scene': return generateScene();
-                case 'summarize': return generateSummary(text);
-                default: return generateContinue(text);
-            }
-        }
-
-        function generateContinue(text) {
-            return `【AI 续写建议】
-
-就在他准备放下手机的瞬间，一道陌生的声音在他脑海中响起：
-
-"欢迎来到系统空间，张三。"
-
-张三猛地坐起身，环顾四周，房间里空无一人。
-
-"谁？谁在说话？"
-
-"我是你的系统助手，你可以叫我小统。从今天起，你将开始一段全新的人生旅程。"
-
-金色的光芒在他视野中汇聚，形成了一个半透明的界面：
-
-━━━━━━━━━━━━━━━━━━
-【系统面板】
-宿主：张三
-等级：LV.1
-任务：无
-状态：觉醒中...
-━━━━━━━━━━━━━━━━━━
-
-张三揉了揉眼睛，界面依然存在。
-
-"这不是幻觉..."`;
-        }
-
-        function generatePolish(text) {
-            return `【润色建议】
-
-原文：${text.substring(0, 50)}...
-
-润色后：
-凌晨三点，张三怔怔地望着电脑屏幕，倦意如潮水般袭来。
-
-作为一名刚完成期末论文的大三学生，他此刻本该沉沉睡去，却总觉得心底有些不安。窗外，城市的灯火依旧闪烁，远处的车鸣声若有若无地传来。
-
-建议：
-1. 增加环境描写，营造氛围
-2. 强化主角心理活动
-3. 使用更生动的比喻`;
-        }
-
-        function generateAnalyze(text) {
-            return `【情节分析】
-
-📊 字数统计：${getWordCount(text)} 字
-
-✅ 优点：
-• 开篇节奏适中，能够吸引读者
-• 系统觉醒的悬念设置合理
-• 主角形象较为鲜明
-
-⚠️ 需要改进：
-• 环境描写可以更加细腻
-• 可以增加一些伏笔
-• 建议强化主角的情绪变化
-
-📈 情节曲线：
-开篇 → 日常铺垫 → 突发事件 → 悬念收尾
-
-💡 建议：
-下一章可以引入第一个任务，推动剧情发展`;
-        }
-
-        function generateSuggest(text) {
-            return `【写作建议】
-
-📝 结构建议：
-当前章节结构完整，建议：
-1. 开头：可以增加一些感官描写
-2. 中段：强化悬念感
-3. 结尾：可以加入一个小的转折
-
-🎭 角色塑造：
-张三的性格可以更加立体：
-• 添加一些小习惯或口头禅
-• 展现更多内心独白
-• 通过细节展现性格
-
-🌊 节奏把控：
-当前节奏适中，建议在觉醒时刻加快节奏，增强紧张感。
-
-🔗 伏笔建议：
-可以暗示系统的来源，或者主角的特殊之处`;
-        }
-
-        function generateDialogue() {
-            return `【对话模板】
-
-张三："这...这是什么东西？"
-
-【系统提示】：检测到宿主产生疑问，启动新手引导模式。
-
-张三："新手引导？这是什么游戏吗？"
-
-【系统提示】：本系统非游戏产物，而是真实存在的超维度辅助工具。
-
-张三："超维度？你是说...平行宇宙？"
-
-【系统提示】：信息等级不足，无法解答此问题。请完成新手任务解锁更多功能。
-
-张三深吸一口气，强迫自己冷静下来。
-
-张三："好吧，我需要做什么？"
-
-【系统提示】：新手任务已发布——
-任务目标：在24小时内完成第一次冥想
-任务奖励：解锁基础属性面板
-失败惩罚：强制休眠3天`;
-        }
-
-        function generateScene() {
-            return `【场景描写】
-
-🌙 凌晨的卧室
-
-时间：凌晨 3:17
-
-【视觉】
-窗帘的缝隙间透进城市微弱的光，在天花板上投下淡淡的光斑。电脑屏幕的蓝光是房间里最亮的存在，照亮了张三疲惫的脸庞。
-
-【听觉】
-街道上偶尔传来车辆的鸣笛声，空调运转的嗡嗡声，以及自己略显急促的呼吸声。
-
-【触觉】
-夏夜的空气有些闷热，额头上还残留着细密的汗珠。
-
-【嗅觉】
-房间里弥漫着一股陈旧的书本味道，混合着外卖盒残留的油腻气息。
-
-【氛围】
-一种说不清道不明的紧张感在空气中流动，仿佛暴风雨前的宁静。`;
-        }
-
-        function generateSummary(text) {
-            return `【章节摘要】
-
-📍 本章要点：
-1. 主角张三在凌晨三点完成论文
-2. 神秘系统突然觉醒
-3. 出现5分钟倒计时
-
-🎯 核心冲突：
-普通大学生与神秘系统的初次接触
-
-📌 关键词：
-系统觉醒、倒计时、悬念
-
-📊 情节推进度：15%
-
-💡 后续建议：
-下一章应解释系统的基本设定，并发布第一个任务`;
-        }
-
-        function generateExpand(text) {
-            return `【扩写内容】
-
-原文片段：张三盯着电脑屏幕发呆。
-
-扩写版本：
-张三怔怔地盯着电脑屏幕，光标在一行行文字间闪烁，仿佛在嘲笑他此刻的疲惫。文档的标题《论现代社会的信息传播机制》此刻看起来格外刺眼。
-
-他揉了揉酸痛的眼睛，窗外城市的灯火依旧明亮。凌晨三点的校园早已安静下来，只有他的房间里还亮着灯。
-
-桌上的咖啡杯已经空了，杯底残留着早已凉透的咖啡渍。手机屏幕亮了一下，是社交软件的推送通知，但他连看一眼的力气都没有。
-
-"终于...写完了。"他长出一口气，合上了笔记本电脑。`;
         }
 
         function showAIModal() {
@@ -2025,7 +1839,7 @@ ESC - 退出专注模式`);
         }
 
         function showAbout() {
-            alert(`SAGEBOOK v1.0
+            alert(`SAGEBOOK v1.5
 专业的长篇小说创作平台
 
 功能特点：
