@@ -743,6 +743,43 @@
         .mobile-menu-btn:active {
             background: var(--accent);
         }
+
+        /* ===== 写作工具抽屉（内联 AI 技能 + 导出）===== */
+        .drawer-toggle {
+            position: fixed; right: 20px; bottom: 24px; z-index: 200;
+            width: 54px; height: 54px; border-radius: 50%;
+            background: var(--accent); color: #fff; border: none; font-size: 22px;
+            cursor: pointer; box-shadow: 0 6px 22px var(--accent-glow);
+            display: flex; align-items: center; justify-content: center;
+            transition: background .2s, transform .2s;
+        }
+        .drawer-toggle:hover { background: var(--accent-hover); transform: scale(1.05); }
+
+        #toolDrawer {
+            position: fixed; top: 0; right: 0; width: 384px; max-width: 92vw; height: 100vh;
+            background: var(--bg-secondary); border-left: 1px solid var(--border);
+            box-shadow: -8px 0 30px rgba(0,0,0,.35);
+            transform: translateX(100%); transition: transform .25s ease;
+            z-index: 300; display: flex; flex-direction: column;
+        }
+        #toolDrawer.open { transform: translateX(0); }
+        .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid var(--border); }
+        .drawer-head h3 { font-size: 16px; margin: 0; }
+        .drawer-close { background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer; line-height: 1; }
+        .drawer-tabs { display: flex; gap: 6px; padding: 12px 16px 0; }
+        .drawer-tab { flex: 1; padding: 8px; text-align: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text-secondary); transition: all .2s; }
+        .drawer-tab.active { color: #fff; background: var(--accent); border-color: var(--accent); }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 16px; }
+        .drawer-hint { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.6; }
+        .drawer-input { width: 100%; min-height: 56px; resize: vertical; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 13px; margin-bottom: 12px; font-family: inherit; }
+        .skill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .skill-btn { padding: 10px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; color: var(--text-primary); text-align: left; transition: all .2s; }
+        .skill-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .skill-btn .em { display: block; font-size: 16px; margin-bottom: 2px; }
+        .drawer-output { margin-top: 14px; background: var(--bg-primary); border: 1px solid var(--border); border-radius: 8px; padding: 12px; min-height: 90px; white-space: pre-wrap; line-height: 1.6; font-size: 13px; }
+        .drawer-output.empty { color: var(--text-secondary); }
+        .drawer-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .export-btn { width: 100%; margin-bottom: 10px; text-align: center; text-decoration: none; display: block; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -795,14 +832,16 @@
             </div>
         </div>
         <div class="menu-item">
-            AI 助手
+            AI 写作
             <div class="dropdown">
-                <div class="dropdown-item" onclick="aiAction('continue')">智能续写 <span class="shortcut">⌘⇧C</span></div>
-                <div class="dropdown-item" onclick="aiAction('polish')">文本润色 <span class="shortcut">⌘⇧P</span></div>
-                <div class="dropdown-item" onclick="aiAction('expand')">扩写段落 <span class="shortcut">⌘⇧E</span></div>
+                <div class="dropdown-item" onclick="runSkillInline('continue')">智能续写 <span class="shortcut">⌘⇧C</span></div>
+                <div class="dropdown-item" onclick="runSkillInline('polish')">文本润色 <span class="shortcut">⌘⇧P</span></div>
+                <div class="dropdown-item" onclick="runSkillInline('expand')">扩写段落 <span class="shortcut">⌘⇧E</span></div>
                 <div class="dropdown-divider"></div>
-                <div class="dropdown-item" onclick="aiAction('analyze')">情节分析</div>
-                <div class="dropdown-item" onclick="aiAction('suggest')">写作建议</div>
+                <div class="dropdown-item" onclick="runSkillInline('analyze')">情节分析</div>
+                <div class="dropdown-item" onclick="runSkillInline('suggest')">写作建议</div>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" onclick="toggleToolDrawer();switchToolTab('ai')">全部 12 项技能 →</div>
             </div>
         </div>
         <div class="menu-item">
@@ -964,14 +1003,14 @@
         <!-- 右侧栏 -->
         <div class="sidebar-right" id="sidebarRight">
             <div class="panel">
-                <div class="panel-title">🔗 反向链接</div>
-                <div class="backlink-item" onclick="loadFile('characters')">
-                    <div class="backlink-source">📄 角色设定.md</div>
-                    <div class="backlink-preview">主角是[[张三]]，一个普通的大学生...</div>
-                </div>
-                <div class="backlink-item" onclick="loadFile('chapter2')">
-                    <div class="backlink-source">📄 第005章.md</div>
-                    <div class="backlink-preview">张三回想起第一[[第001章|觉醒]]那天的情景...</div>
+                <div class="panel-title">📊 本章统计</div>
+                <div style="font-size:13px; color:var(--text-secondary);">
+                    <div style="margin-bottom:8px;">字数: <strong style="color:var(--text-primary);" id="wordCount">2,345</strong> / 3,000</div>
+                    <div style="background:var(--bg-primary); height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
+                        <div style="background:var(--accent); height:100%; width:78%;" id="progressBar"></div>
+                    </div>
+                    <div style="margin-bottom:8px;">预计阅读时间: <strong style="color:var(--text-primary);">约8分钟</strong></div>
+                    <div>最后修改: <strong style="color:var(--text-primary);" id="lastModified">刚刚</strong></div>
                 </div>
             </div>
 
@@ -984,41 +1023,9 @@
             </div>
 
             <div class="panel">
-                <div class="panel-title">📊 章节统计</div>
-                <div style="font-size:13px; color:var(--text-secondary);">
-                    <div style="margin-bottom:8px;">字数: <strong style="color:var(--text-primary);" id="wordCount">2,345</strong> / 3,000</div>
-                    <div style="background:var(--bg-primary); height:6px; border-radius:3px; overflow:hidden; margin-bottom:8px;">
-                        <div style="background:var(--accent); height:100%; width:78%;" id="progressBar"></div>
-                    </div>
-                    <div style="margin-bottom:8px;">预计阅读时间: <strong style="color:var(--text-primary);">约8分钟</strong></div>
-                    <div>最后修改: <strong style="color:var(--text-primary);" id="lastModified">刚刚</strong></div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">🤖 AI 助手</div>
-                <button class="btn" style="width:100%; margin-bottom:8px;" onclick="aiAction('continue')">✍️ 续写</button>
-                <button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="aiAction('polish')">💅 润色</button>
-                <button class="btn btn-secondary" style="width:100%; margin-bottom:8px;" onclick="aiAction('analyze')">📊 分析情节</button>
-                <button class="btn btn-secondary" style="width:100%;" onclick="showAIModal()">⚙️ 更多功能</button>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title">📝 大纲</div>
-                <div style="font-size:13px;">
-                    <div style="padding:8px; background:var(--bg-tertiary); border-radius:6px; margin-bottom:8px;">
-                        <strong style="color:var(--accent-light);">本章目标</strong>
-                        <p style="margin-top:6px; color:var(--text-secondary);">主角张三在熬夜后意外觉醒系统，开启非凡人生。</p>
-                    </div>
-                    <div style="padding:8px; background:var(--bg-tertiary); border-radius:6px;">
-                        <strong style="color:var(--accent-light);">关键事件</strong>
-                        <ul style="margin-top:6px; padding-left:20px; color:var(--text-secondary);">
-                            <li>凌晨三点，张三完成论文</li>
-                            <li>系统意外激活</li>
-                            <li>倒计时开始</li>
-                        </ul>
-                    </div>
-                </div>
+                <div class="panel-title">🛠️ 写作工具</div>
+                <p style="font-size:12px; color:var(--text-secondary); margin-bottom:10px; line-height:1.6;">选中正文里的文字，再从右侧抽屉调用 AI 技能，全程不离开写作页。</p>
+                <button class="btn" style="width:100%;" onclick="toggleToolDrawer()">✨ 打开 AI 技能 / 导出</button>
             </div>
         </div>
     </div>
@@ -1118,6 +1125,51 @@
         <span id="toastIcon">✓</span>
         <span id="toastMessage">操作成功</span>
     </div>
+
+    <!-- 写作工具抽屉（内联 AI 技能 + 导出）-->
+    <div id="toolDrawer">
+        <div class="drawer-head">
+            <h3>🛠️ 写作工具</h3>
+            <button class="drawer-close" onclick="closeToolDrawer()">×</button>
+        </div>
+        <div class="drawer-tabs">
+            <div class="drawer-tab active" data-tab="ai" onclick="switchToolTab('ai')">✨ AI 技能</div>
+            <div class="drawer-tab" data-tab="export" onclick="switchToolTab('export')">📤 导出</div>
+        </div>
+        <div class="drawer-body">
+            <div id="toolTabAI">
+                <div class="drawer-hint">选中正文里的文字后点击下方技能；或先在下方输入素材/主题。结果可「替换选中」或「插入光标」。</div>
+                <textarea class="drawer-input" id="toolMaterial" placeholder="素材 / 主题（可选，留空则用选中的正文）"></textarea>
+                <div class="skill-grid">
+                    <button class="skill-btn" onclick="inlineSkill('continue')"><span class="em">✍️</span>续写</button>
+                    <button class="skill-btn" onclick="inlineSkill('polish')"><span class="em">💅</span>润色</button>
+                    <button class="skill-btn" onclick="inlineSkill('expand')"><span class="em">📖</span>扩写</button>
+                    <button class="skill-btn" onclick="inlineSkill('deai')"><span class="em">🧹</span>去AI味</button>
+                    <button class="skill-btn" onclick="inlineSkill('outline')"><span class="em">📋</span>大纲</button>
+                    <button class="skill-btn" onclick="inlineSkill('conflict')"><span class="em">⚔️</span>矛盾冲突</button>
+                    <button class="skill-btn" onclick="inlineSkill('setting')"><span class="em">🌍</span>设定生成</button>
+                    <button class="skill-btn" onclick="inlineSkill('dialogue')"><span class="em">💬</span>对话</button>
+                    <button class="skill-btn" onclick="inlineSkill('brainstorm')"><span class="em">💡</span>脑暴</button>
+                    <button class="skill-btn" onclick="inlineSkill('charprofile')"><span class="em">👤</span>人物小传</button>
+                    <button class="skill-btn" onclick="inlineSkill('review')"><span class="em">🔍</span>点点评</button>
+                    <button class="skill-btn" onclick="inlineSkill('golden')"><span class="em">✨</span>金句</button>
+                </div>
+                <div class="drawer-output empty" id="toolOutput">AI 结果将显示在这里…</div>
+                <div class="drawer-actions">
+                    <button class="btn" onclick="applySkillReplace()">替换选中</button>
+                    <button class="btn btn-secondary" onclick="applySkillInsert()">插入光标</button>
+                    <button class="btn btn-secondary" onclick="copySkillResult()">复制</button>
+                </div>
+            </div>
+            <div id="toolTabExport" style="display:none;">
+                <div class="drawer-hint">将当前文稿导出为纯文本，或前往平台工具适配各小说平台格式。</div>
+                <button class="btn export-btn" onclick="exportChapterTxt()">📄 导出当前章节 (.txt)</button>
+                <button class="btn export-btn" onclick="exportNovelTxt()">📚 导出全书 (.txt)</button>
+                <a class="btn btn-secondary export-btn" href="platform-tools.html">📱 在平台工具中适配格式 →</a>
+            </div>
+        </div>
+    </div>
+    <button class="drawer-toggle" onclick="toggleToolDrawer()" title="写作工具">🛠️</button>
 
     <script>
         // ===== 数据存储 =====
@@ -1604,10 +1656,137 @@
                 suggest: `基于以下文本，提供5个可能的情节发展方向：\n\n${text}`,
                 dialogue: `请根据以下情境创作一段对话，要求对话自然、有冲突、推动情节：\n\n${text}`,
                 scene: `请描写一个${text || '夜晚的城市'}场景，要求300字左右，有画面感和氛围感。`,
-                summarize: `请用100字概括以下内容的核心要点：\n\n${text}`
+                summarize: `请用100字概括以下内容的核心要点：\n\n${text}`,
+                deai: `你是一位资深编辑。请去除下面文字中的"AI 味"——去掉空洞套话、过度工整的排比、机械的连接词和鸡汤式表达，让它读起来像真人写的小说，保持原意与情绪：\n\n${text}`,
+                outline: `请基于以下素材/主题，生成一份小说章节大纲（含 3-5 个情节点、起承转合、可埋的钩子）：\n\n${text}`,
+                conflict: `请基于以下素材，设计 2-3 个可落地的矛盾冲突（人物内心 / 人物之间 / 人与环境），并说明如何推动情节：\n\n${text}`,
+                setting: `请基于以下线索，生成一段世界观或场景设定（地理、势力、规则或氛围，200-300 字，有画面感）：\n\n${text}`,
+                brainstorm: `请围绕以下主题，提供 5 个有创意的小说点子或情节方向，并简要说明亮点：\n\n${text}`,
+                charprofile: `请基于以下素材，写一份人物小传（外貌、性格、动机、秘密、人物弧光）：\n\n${text}`,
+                review: `请以主编视角点评以下文字：先说优点，再指出毛病（节奏/逻辑/视角），最后给具体修改建议，控制在 200 字内：\n\n${text}`,
+                golden: `请从以下文字中提取或改写 3 句适合做书签/封底/章首的金句，独立成句、有余味：\n\n${text}`
             };
             
             return prompts[action] || prompts.continue;
+        }
+
+        // ===== 写作工具抽屉：内联 AI 技能 + 导出（核心能力，不离开写作页）=====
+        let savedRange = null, savedSelText = '';
+
+        function toggleToolDrawer() { document.getElementById('toolDrawer').classList.toggle('open'); }
+        function closeToolDrawer() { document.getElementById('toolDrawer').classList.remove('open'); }
+        function switchToolTab(id) {
+            document.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`.drawer-tab[data-tab="${id}"]`).classList.add('active');
+            document.getElementById('toolTabAI').style.display = id === 'ai' ? 'block' : 'none';
+            document.getElementById('toolTabExport').style.display = id === 'export' ? 'block' : 'none';
+        }
+        function captureSelection() {
+            const sel = window.getSelection();
+            if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
+                savedRange = sel.getRangeAt(0).cloneRange();
+                savedSelText = sel.toString();
+            } else { savedRange = null; savedSelText = ''; }
+        }
+        const SKILL_NAMES = { continue:'续写', polish:'润色', expand:'扩写', deai:'去AI味', outline:'大纲', conflict:'矛盾冲突', setting:'设定生成', dialogue:'对话', brainstorm:'脑暴', charprofile:'人物小传', review:'点评', golden:'金句', summarize:'摘要', analyze:'分析', suggest:'建议', scene:'场景' };
+
+        async function runSkillInline(key) {
+            captureSelection();
+            switchToolTab('ai');
+            document.getElementById('toolDrawer').classList.add('open');
+            await inlineSkill(key);
+        }
+
+        async function inlineSkill(key) {
+            const out = document.getElementById('toolOutput');
+            const matEl = document.getElementById('toolMaterial');
+            const material = matEl ? matEl.value.trim() : '';
+            const editor = document.getElementById('editorPane');
+            const src = material || savedSelText || (editor.innerText || '').trim();
+            if (!src) { out.textContent = '请先选中正文中的文字，或在上方输入素材。'; out.classList.add('empty'); return; }
+            out.classList.remove('empty');
+            out.textContent = '🤔 ' + (SKILL_NAMES[key] || 'AI') + ' 思考中…';
+
+            const useLocal = localStorage.getItem('useLocalAI') === 'true';
+            const localModel = localStorage.getItem('localModel');
+            const cloudModel = localStorage.getItem('cloudModel');
+            const apiKey = localStorage.getItem('cloudApiKey');
+            let result = '';
+            try {
+                if (useLocal && localModel) {
+                    const base = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
+                    result = await callLocalAI(key, src, localModel, base);
+                } else if (apiKey) {
+                    result = await callCloudAI(key, src, cloudModel, apiKey);
+                } else {
+                    result = '⚠️ 尚未配置 AI 模型。\n请打开「设置」页面配置本地 Ollama（运行 ollama serve）或填写云端 API Key 后重试。';
+                }
+            } catch (e) {
+                result = '❌ AI 调用失败: ' + e.message + '\n\n请检查：\n1. 本地 Ollama 是否运行\n2. API Key 是否正确\n3. 网络是否畅通';
+            }
+            out.textContent = result;
+        }
+
+        function applySkillReplace() {
+            const out = document.getElementById('toolOutput');
+            const text = out.textContent;
+            if (!text || out.classList.contains('empty')) return;
+            const editor = document.getElementById('editorPane');
+            if (savedRange) {
+                savedRange.deleteContents();
+                savedRange.insertNode(document.createTextNode(text));
+            } else {
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0) sel.getRangeAt(0).insertNode(document.createTextNode('\n' + text + '\n'));
+                else editor.appendChild(document.createTextNode('\n' + text + '\n'));
+            }
+            saveToStorage();
+            showToast('已应用 AI 结果', 'success');
+        }
+        function applySkillInsert() {
+            const out = document.getElementById('toolOutput');
+            const text = out.textContent;
+            if (!text || out.classList.contains('empty')) return;
+            const sel = window.getSelection();
+            if (sel.rangeCount > 0) sel.getRangeAt(0).insertNode(document.createTextNode('\n' + text + '\n'));
+            else document.getElementById('editorPane').appendChild(document.createTextNode('\n' + text + '\n'));
+            saveToStorage();
+            showToast('已插入到光标处', 'success');
+        }
+        function copySkillResult() {
+            const out = document.getElementById('toolOutput');
+            const text = out.textContent;
+            if (!text) return;
+            navigator.clipboard.writeText(text);
+            showToast('已复制到剪贴板', 'success');
+        }
+
+        // ===== 导出 =====
+        function downloadText(filename, text) {
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+        function exportChapterTxt() {
+            const editor = document.getElementById('editorPane');
+            const meta = novelData.chapters[currentFile] || novelData[currentFile] || {};
+            const title = meta.title || '章节';
+            downloadText(title + '.txt', editor.innerText);
+            showToast('已导出当前章节', 'success');
+        }
+        function exportNovelTxt() {
+            const parts = [];
+            for (const k in novelData.chapters) {
+                const c = novelData.chapters[k];
+                parts.push((c.title || k) + '\n\n' + (c.content ? c.content.replace(/<[^>]*>/g, '') : ''));
+            }
+            if (novelData.characters) parts.push('角色设定\n\n' + novelData.characters.content.replace(/<[^>]*>/g, ''));
+            if (novelData.world) parts.push('世界观\n\n' + novelData.world.content.replace(/<[^>]*>/g, ''));
+            downloadText((novelData.title || '我的小说') + '.txt', parts.join('\n\n---\n\n'));
+            showToast('已导出全书', 'success');
         }
 
         function showAIModal() {

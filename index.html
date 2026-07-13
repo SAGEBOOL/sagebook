@@ -223,6 +223,37 @@
             .theme-switcher { top: 10px; right: 10px; }
             .theme-btn { padding: 4px 8px; font-size: 12px; }
         }
+
+        /* 简化版首页 */
+        .cta-card {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            color: #fff; text-decoration: none;
+            padding: 28px 52px; border-radius: 18px;
+            box-shadow: 0 10px 30px var(--accent-glow);
+            transition: transform .2s, box-shadow .2s;
+        }
+        .cta-card:hover { transform: translateY(-3px); box-shadow: 0 14px 40px var(--accent-glow); }
+        .cta-icon { font-size: 42px; }
+        .cta-title { font-size: 24px; font-weight: 800; margin-top: 6px; }
+        .cta-sub { font-size: 13px; opacity: .92; margin-top: 6px; }
+        .more-tools {
+            max-width: 920px; margin: 12px auto;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 14px 18px;
+        }
+        .more-tools summary { cursor: pointer; font-weight: 700; font-size: 15px; user-select: none; }
+        .more-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px; margin-top: 14px;
+        }
+        .more-card {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 14px; color: var(--text-primary);
+            text-decoration: none; font-size: 14px; transition: all .2s;
+        }
+        .more-card:hover { border-color: var(--accent); color: var(--accent); }
+        @media (max-width: 768px) { .cta-card { padding: 22px 30px; } }
     </style>
 </head>
 <body>
@@ -244,108 +275,58 @@
         <!-- 状态栏 -->
         <div class="status-bar">
             <div class="status-item">
-                <div class="status-value">10</div>
-                <div class="status-label">创作工具</div>
+                <div class="status-value">✍️</div>
+                <div class="status-label">沉浸写作</div>
             </div>
             <div class="status-item">
-                <div class="status-value">本地</div>
-                <div class="status-label">AI 模式</div>
+                <div class="status-value">🤖</div>
+                <div class="status-label">内联 AI 技能</div>
             </div>
             <div class="status-item">
-                <div class="status-value">实时</div>
-                <div class="status-label">自动保存</div>
+                <div class="status-value">💾</div>
+                <div class="status-label">实时保存</div>
             </div>
         </div>
 
-        <!-- 模块网格 -->
-        <div class="module-grid">
-            <a class="module-card" href="main-editor.html">
-                <div class="module-icon">📝</div>
-                <div class="module-name">主编辑器</div>
-                <div class="module-desc">全功能写作编辑器，支持格式化、AI 续写、自动保存、字数统计和快捷键</div>
-                <div class="module-badge">AI 续写 · 润色 · 扩写</div>
-            </a>
-
-            <a class="module-card" href="character-management.html">
-                <div class="module-icon">👥</div>
-                <div class="module-name">角色管理</div>
-                <div class="module-desc">创建和管理小说角色，支持属性设定、标签分类和关系关联</div>
-                <div class="module-badge">属性面板 · 标签系统 · 关系图</div>
-            </a>
-
-            <a class="module-card" href="world-builder.html">
-                <div class="module-icon">🌍</div>
-                <div class="module-name">世界观管理</div>
-                <div class="module-desc">地理地图、时间线、势力系统、力量体系、规则引擎、设定百科</div>
-                <div class="module-badge">6 大子系统 · 规则校验</div>
-            </a>
-
-            <a class="module-card" href="writing-analysis.html">
-                <div class="module-icon">📊</div>
-                <div class="module-name">写作分析</div>
-                <div class="module-desc">节奏分析、伏笔追踪、章节评分、风格洞察、写作目标</div>
-                <div class="module-badge">4 大维度 · AI 评分</div>
-            </a>
-
-            <a class="module-card" href="platform-tools.html">
-                <div class="module-icon">📱</div>
-                <div class="module-name">网文平台工具</div>
-                <div class="module-desc">格式导出、章节钩子分析、更新规划、读者反馈、系列管理</div>
-                <div class="module-badge">6 平台适配 · 数据驱动</div>
-            </a>
-
-            <a class="module-card" href="ai-suite.html">
-                <div class="module-icon">🤖</div>
-                <div class="module-name">AI 深度集成</div>
-                <div class="module-desc">AI 辅助写作、设定管理、写作教练、三模型对比写作</div>
-                <div class="module-badge">4 大功能 · 多模型</div>
-            </a>
-
-            <a class="module-card" href="writing-skills.html">
-                <div class="module-icon">✍️</div>
-                <div class="module-name">写作技能</div>
-                <div class="module-desc">12 项即点即用的写作技能：去AI味、润色、扩写、续写、大纲、矛盾冲突、设定生成、对话、脑暴、人物小传、点评、金句</div>
-                <div class="module-badge">12 技能 · 基于已配置 AI</div>
-            </a>
-
-            <a class="module-card" href="knowledge-graph.html">
-                <div class="module-icon">🕸️</div>
-                <div class="module-name">知识图谱</div>
-                <div class="module-desc">可视化故事结构，管理角色关系、事件脉络和世界观节点</div>
-                <div class="module-badge">力导向图 · 节点管理 · 导出</div>
-            </a>
-
-
-            <a class="module-card" href="outline-editor.html">
-                <div class="module-icon">📋</div>
-                <div class="module-name">大纲编辑器</div>
-                <div class="module-desc">树形大纲结构，支持章节拖拽排序、字数追踪和进度管理</div>
-                <div class="module-badge">树形结构 · 进度追踪 · 拖拽排序</div>
-            </a>
-
-
-            <a class="module-card" href="settings.html">
-                <div class="module-icon">⚙️</div>
-                <div class="module-name">设置</div>
-                <div class="module-desc">配置 AI 模型（本地 Ollama / 云端 API），主题切换，写作偏好</div>
-                <div class="module-badge">Ollama 集成 · 云端 API · 主题</div>
+        <!-- 主入口：打开即写 -->
+        <div style="text-align:center; padding: 24px 0 6px;">
+            <a href="main-editor.html" class="cta-card">
+                <div class="cta-icon">✍️</div>
+                <div class="cta-title">开始写作</div>
+                <div class="cta-sub">打开即写 · AI 技能与导出都在右侧抽屉里，不离开页面</div>
             </a>
         </div>
+
+        <!-- 更多创作工具（折叠，默认收起）-->
+        <details class="more-tools">
+            <summary>🧰 更多创作工具（构思 / 分析 / 发布）</summary>
+            <div class="more-grid">
+                <a class="more-card" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
+                <a class="more-card" href="outline-editor.html">📋 大纲编辑器</a>
+                <a class="more-card" href="character-management.html">👥 角色管理</a>
+                <a class="more-card" href="world-builder.html">🌍 世界观管理</a>
+                <a class="more-card" href="knowledge-graph.html">🕸️ 知识图谱</a>
+                <a class="more-card" href="writing-analysis.html">📊 写作分析</a>
+                <a class="more-card" href="platform-tools.html">📱 网文平台工具</a>
+                <a class="more-card" href="ai-suite.html">🤖 AI 深度集成</a>
+                <a class="more-card" href="template-gallery.html">📚 模板库</a>
+                <a class="more-card" href="settings.html">⚙️ 设置</a>
+            </div>
+        </details>
 
         <!-- 快速开始 -->
-        <div style="text-align: center; margin: 40px 0 20px;">
-            <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">🚀 快速开始</div>
-            <div style="max-width: 600px; margin: 0 auto; text-align: left; font-size: 14px; color: var(--text-secondary); line-height: 2;">
-                <div>1️⃣ 打开 <a href="settings.html" style="color: var(--accent);">设置页面</a> 配置 AI 模型（推荐本地 Ollama）</div>
-                <div>2️⃣ 在 <a href="outline-editor.html" style="color: var(--accent);">大纲编辑器</a> 中规划章节结构</div>
-                <div>3️⃣ 在 <a href="main-editor.html" style="color: var(--accent);">主编辑器</a> 中开始创作，使用 AI 辅助写作</div>
-                <div>4️⃣ 需要针对性加工时，打开 <a href="writing-skills.html" style="color: var(--accent);">写作技能</a> 一键调用去AI味 / 润色 / 扩写等</div>
+        <div style="text-align: center; margin: 30px 0 10px;">
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">🚀 三步开始</div>
+            <div style="max-width: 560px; margin: 0 auto; text-align: left; font-size: 14px; color: var(--text-secondary); line-height: 2;">
+                <div>1️⃣ 在 <a href="settings.html" style="color: var(--accent);">设置</a> 里配置 AI（推荐本地 Ollama）</div>
+                <div>2️⃣ 点「开始写作」进入编辑器，直接动笔</div>
+                <div>3️⃣ 选中文字 → 点右下角 🛠️ → 调 AI 技能 / 导出</div>
             </div>
         </div>
 
         <!-- 底部 -->
         <div class="footer">
-            <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06 | 10 大功能模块</p>
+            <p>SAGE BOOK v1.5 | Created by DSArt-Design | 2026-06 | 1 个写作主场 · 侧边工具</p>
             <p style="margin-top: 6px;">Powered by Ollama · OpenAI · Claude · Qwen</p>
         </div>
     </div>
