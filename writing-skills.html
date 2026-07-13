@@ -319,7 +319,8 @@
             const cloudModel = localStorage.getItem('cloudModel');
             const apiKey = localStorage.getItem('cloudApiKey');
             const ollamaBase = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
-            return { useLocal, localModel, cloudModel, apiKey, ollamaBase };
+            const cloudBaseUrl = localStorage.getItem('cloudBaseUrl') || 'https://api.openai.com/v1';
+            return { useLocal, localModel, cloudModel, apiKey, ollamaBase, cloudBaseUrl };
         }
 
         async function callLocalAI(prompt, model, baseurl) {
@@ -338,25 +339,18 @@
             return data.response;
         }
 
-        async function callCloudAI(prompt, model, apiKey) {
-            let endpoint, requestBody;
-            if (model.startsWith('gpt')) {
-                endpoint = 'https://api.openai.com/v1/chat/completions';
-                requestBody = { model: model === 'gpt-4' ? 'gpt-4-turbo-preview' : 'gpt-3.5-turbo', messages: [{ role: 'user', content: prompt }], temperature: 0.8 };
-            } else if (model.startsWith('claude')) {
-                endpoint = 'https://api.anthropic.com/v1/messages';
-                requestBody = { model: model, max_tokens: 2048, messages: [{ role: 'user', content: prompt }] };
-            } else if (model.startsWith('qwen')) {
-                endpoint = 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
-                requestBody = { model: model, input: { prompt: prompt } };
-            } else {
-                endpoint = localStorage.getItem('customEndpoint') || 'https://api.openai.com/v1/chat/completions';
-                requestBody = { model: model, messages: [{ role: 'user', content: prompt }], temperature: 0.8 };
-            }
+        async function callCloudAI(prompt, model, apiKey, baseUrl) {
+            // 通用 OpenAI 兼容调用：POST {baseUrl}/chat/completions
+            let base = (baseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
+            const endpoint = base.endsWith('/chat/completions') ? base : base + '/chat/completions';
+            const requestBody = {
+                model: model || 'gpt-4o',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.8
+            };
             const response = await fetch(endpoint, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`,
-                    ...(model.startsWith('claude') ? { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' } : {}) },
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
                 body: JSON.stringify(requestBody)
             });
             if (!response.ok) {
@@ -365,7 +359,6 @@
             }
             const data = await response.json();
             if (data.choices) return data.choices[0].message.content;
-            if (data.content) return data.content[0].text;
             if (data.output) return data.output.text;
             return JSON.stringify(data);
         }
@@ -385,7 +378,7 @@
                 if (cfg.useLocal && cfg.localModel) {
                     result = await callLocalAI(prompt, cfg.localModel, cfg.ollamaBase);
                 } else if (cfg.apiKey && cfg.cloudModel) {
-                    result = await callCloudAI(prompt, cfg.cloudModel, cfg.apiKey);
+                    result = await callCloudAI(prompt, cfg.cloudModel, cfg.apiKey, cfg.cloudBaseUrl);
                 } else {
                     result = '⚠️ 尚未配置 AI 模型。\n\n请打开「设置」页面，配置本地 Ollama（运行 ollama serve）或填写云端 API Key 后重试。';
                     showToast('⚠️ 未配置 AI，请先到设置页配置模型', 'warning');

@@ -613,24 +613,17 @@ body {
               <label>模型</label>
               <input type="text" id="modelNameInput" value="qwen2.5:14b" placeholder="模型名称">
             </div>
-            <div class="settings-row" id="cloudSettings" style="display:none;">
-              <label>服务商</label>
-              <select id="cloudModelSel">
-                <option value="gpt-4">OpenAI GPT-4</option>
-                <option value="claude-3-opus">Claude 3 Opus</option>
-                <option value="qwen-max">通义千问 Qwen Max</option>
-                <option value="glm-4">智谱 GLM-4</option>
-                <option value="gemini-pro">Google Gemini</option>
-                <option value="custom">自定义 API</option>
-              </select>
+            <div class="settings-row" id="cloudBaseRow" style="display:none;">
+              <label>API 地址</label>
+              <input type="text" id="cloudBaseUrl" placeholder="https://api.openai.com/v1">
+            </div>
+            <div class="settings-row" id="cloudModelRow" style="display:none;">
+              <label>模型名称</label>
+              <input type="text" id="cloudModelInput" placeholder="gpt-4o / claude-3-7-sonnet / deepseek-chat">
             </div>
             <div class="settings-row" id="cloudKeyRow" style="display:none;">
               <label>API Key</label>
               <input type="password" id="cloudKey" placeholder="sk-...">
-            </div>
-            <div class="settings-row" id="customEndpointRow" style="display:none;">
-              <label>端点</label>
-              <input type="text" id="customEndpointInput" placeholder="https://.../v1/chat/completions">
             </div>
           </div>
           <div class="settings-group">
@@ -688,9 +681,9 @@ function getAIConfig() {
     mode: useLocal ? 'ollama' : 'cloud',
     ollamaUrl: localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434',
     ollamaModel: localStorage.getItem('localModel') || 'qwen2.5:14b',
-    cloudModel: localStorage.getItem('cloudModel') || 'gpt-4',
-    cloudApiKey: localStorage.getItem('cloudApiKey') || '',
-    customEndpoint: localStorage.getItem('customEndpoint') || ''
+    cloudBaseUrl: localStorage.getItem('cloudBaseUrl') || 'https://api.openai.com/v1',
+    cloudModel: localStorage.getItem('cloudModel') || 'gpt-4o',
+    cloudApiKey: localStorage.getItem('cloudApiKey') || ''
   };
 }
 
@@ -702,11 +695,10 @@ function saveAIConfigFromUI() {
     localStorage.setItem('localModel', document.getElementById('modelNameInput').value.trim());
   } else {
     localStorage.setItem('useLocalAI', 'false');
-    localStorage.setItem('cloudModel', document.getElementById('cloudModelSel').value);
+    localStorage.setItem('cloudBaseUrl', document.getElementById('cloudBaseUrl').value.trim());
+    localStorage.setItem('cloudModel', document.getElementById('cloudModelInput').value.trim() || 'gpt-4o');
     localStorage.setItem('cloudApiKey', document.getElementById('cloudKey').value.trim());
-    if (document.getElementById('cloudModelSel').value === 'custom') {
-      localStorage.setItem('customEndpoint', document.getElementById('customEndpointInput').value.trim());
-    }
+    localStorage.removeItem('customEndpoint');
   }
   updateAIStatus();
   toast('AI 配置已保存', 'success');
@@ -744,8 +736,7 @@ async function updateAIStatus() {
 
 function getModelDisplayName(config) {
   if (config.mode === 'ollama') return config.ollamaModel || '本地模型';
-  if (config.cloudModel === 'custom') return '自定义 API';
-  return config.cloudModel;
+  return config.cloudModel || '云端模型';
 }
 
 async function testAIConnection(config) {
@@ -785,46 +776,18 @@ async function callOllama(config, messages, onChunk) {
 }
 
 async function callCloud(config, messages, onChunk) {
-  const model = config.cloudModel;
   const key = config.cloudApiKey;
   if (!key) throw new Error('云端 API Key 未配置');
 
-  let url, headers, body, parser;
-
-  if (model.startsWith('gpt') || model === 'custom') {
-    url = model === 'custom' ? config.customEndpoint : 'https://api.openai.com/v1/chat/completions';
-    headers = { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
-    body = { model: model === 'custom' ? 'gpt-4o' : model, messages, temperature: 0.7 };
-    parser = d => d.choices?.[0]?.message?.content || '';
-  } else if (model.startsWith('claude')) {
-    url = 'https://api.anthropic.com/v1/messages';
-    headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' };
-    const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n');
-    const msgs = messages.filter(m => m.role !== 'system').map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
-    body = { model: model.includes('opus') ? 'claude-3-opus-20240229' : 'claude-3-sonnet-20240229', max_tokens: 2000, system: sys, messages: msgs };
-    parser = d => d.content?.[0]?.text || '';
-  } else if (model.startsWith('qwen')) {
-    url = 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    headers = { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
-    body = { model: 'qwen-max', messages, temperature: 0.7 };
-    parser = d => d.choices?.[0]?.message?.content || '';
-  } else if (model.startsWith('glm')) {
-    url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
-    headers = { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
-    body = { model: 'glm-4-flash', messages, temperature: 0.7 };
-    parser = d => d.choices?.[0]?.message?.content || '';
-  } else if (model.startsWith('gemini')) {
-    url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${key}`;
-    headers = { 'Content-Type': 'application/json' };
-    const sys = messages.filter(m => m.role === 'system').map(m => m.content).join('\n');
-    const parts = (sys ? [{ text: sys + '\n\n' }] : []).concat(
-      messages.filter(m => m.role !== 'system').map(m => ({ text: (m.role === 'user' ? '用户：' : '助手：') + m.content + '\n' }))
-    );
-    body = { contents: [{ role: 'user', parts }] };
-    parser = d => d.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-  } else {
-    throw new Error('不支持的云端模型：' + model);
-  }
+  // 通用 OpenAI 兼容调用：POST {baseUrl}/chat/completions
+  let base = (config.cloudBaseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
+  const url = base.endsWith('/chat/completions') ? base : base + '/chat/completions';
+  const headers = { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
+  const body = {
+    model: config.cloudModel || 'gpt-4o',
+    messages: messages,
+    temperature: 0.7
+  };
 
   const res = await fetch(url, {
     method: 'POST',
@@ -838,7 +801,7 @@ async function callCloud(config, messages, onChunk) {
     throw new Error(msg);
   }
   const data = await res.json();
-  const text = parser(data);
+  const text = data.choices?.[0]?.message?.content || '';
   if (text) onChunk(text);
 }
 
@@ -1165,9 +1128,9 @@ function onAiModeChange() {
   const mode = document.getElementById('aiMode').value;
   document.getElementById('ollamaSettings').style.display = mode === 'ollama' ? 'flex' : 'none';
   document.getElementById('ollamaModel').style.display = mode === 'ollama' ? 'flex' : 'none';
-  document.getElementById('cloudSettings').style.display = mode === 'cloud' ? 'flex' : 'none';
+  document.getElementById('cloudBaseRow').style.display = mode === 'cloud' ? 'flex' : 'none';
+  document.getElementById('cloudModelRow').style.display = mode === 'cloud' ? 'flex' : 'none';
   document.getElementById('cloudKeyRow').style.display = mode === 'cloud' ? 'flex' : 'none';
-  document.getElementById('customEndpointRow').style.display = (mode === 'cloud' && document.getElementById('cloudModelSel').value === 'custom') ? 'flex' : 'none';
   saveAIConfigFromUI();
 }
 
@@ -1373,9 +1336,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('aiMode').value = cfg.mode;
   document.getElementById('ollamaUrl').value = cfg.ollamaUrl;
   document.getElementById('modelNameInput').value = cfg.ollamaModel;
-  document.getElementById('cloudModelSel').value = cfg.cloudModel;
+  document.getElementById('cloudBaseUrl').value = cfg.cloudBaseUrl;
+  document.getElementById('cloudModelInput').value = cfg.cloudModel;
   document.getElementById('cloudKey').value = cfg.cloudApiKey;
-  document.getElementById('customEndpointInput').value = cfg.customEndpoint;
   onAiModeChange();
 
   // 自动测试 AI 连接
