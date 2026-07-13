@@ -845,8 +845,18 @@
                     method = 'POST';
                     headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
                     body = JSON.stringify({ model: 'test', messages: [{ role: 'user', content: 'ping' }], max_tokens: 8 });
+                } else if (model === 'glm-4') {
+                    // 智谱 AI — OpenAI 兼容接口
+                    endpoint = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+                    method = 'POST';
+                    headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+                    body = JSON.stringify({ model: 'glm-4-flash', messages: [{ role: 'user', content: 'ping' }], max_tokens: 5 });
+                } else if (model === 'gemini' || model === 'gemini-pro') {
+                    // Google Gemini — list models
+                    endpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+                    headers = {};
                 } else {
-                    // Gemini / 智谱 GLM / 讯飞星火等无统一测试端点
+                    // 讯飞星火等无简易测试端点
                     alert('ℹ️ 该服务商没有通用的「测试连接」接口。\n\n已按你选择的模型保存配置，请直接到编辑器里用 AI 功能（续写/润色等）验证是否可用。');
                     return;
                 }
