@@ -28,11 +28,12 @@
         /* 状态栏 */
         .status-bar {
             display: flex; justify-content: center; gap: 16px;
+            max-width: 920px; margin: 0 auto;
             padding: 28px 0; flex-wrap: wrap;
         }
         .status-item {
             text-align: center; padding: 16px 24px;
-            flex: 1; max-width: 200px; min-width: 120px;
+            flex: 1; min-width: 120px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-lg);
@@ -121,11 +122,15 @@
             </div>
             <div class="status-item">
                 <div class="status-value">🤖</div>
-                <div class="status-label">内联 AI 技能</div>
+                <div class="status-label">内嵌AI写作技能</div>
             </div>
             <div class="status-item">
                 <div class="status-value">💾</div>
                 <div class="status-label">实时保存</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">🔒</div>
+                <div class="status-label">本地隐私保存</div>
             </div>
         </div>
 
