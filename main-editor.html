@@ -93,6 +93,15 @@ body {
   color: var(--fg-primary);
   letter-spacing: 0.02em;
 }
+.brand-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--transition-fast);
+}
+.brand-link:hover { opacity: 0.78; }
 .sidebar-header .actions { display:flex; gap:4px; }
 .sidebar-header .actions button {
   background: none; border: none; color: var(--fg-tertiary);
@@ -435,7 +444,7 @@ body {
   <!-- 左侧边栏：文件树（真实数据，来自 sagebook_novel） -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <h2>📘 SageBook</h2>
+      <a href="index.html" class="brand-link"><h2>📘 SageBook</h2></a>
       <div class="actions">
         <button title="新建章节" onclick="newFile()">＋</button>
         <button title="搜索" onclick="document.getElementById('fileSearch').focus()">🔍</button>
