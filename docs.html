@@ -78,6 +78,15 @@
   .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);margin-right:6px;}
   .kbd{font-family:var(--font-mono);font-size:12px;background:var(--bg-tertiary);border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--text-primary);}
 
+  /* 举例块 */
+  .example{background:var(--bg-secondary);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:var(--radius);padding:14px 16px;margin:14px 0;}
+  .example .ex-lbl{font-weight:700;color:var(--accent);font-size:12.5px;letter-spacing:.03em;display:flex;align-items:center;gap:6px;margin:2px 0 8px;}
+  .example .ex-row{margin:10px 0;}
+  .example .ex-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--text-tertiary);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:5px;padding:1px 7px;margin-right:6px;vertical-align:middle;}
+  .example pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.7;background:var(--bg-primary);border:1px solid var(--border-2);border-radius:8px;padding:10px 12px;margin:6px 0 0;white-space:pre-wrap;word-break:break-word;color:var(--text-secondary);overflow:auto;}
+  .example .after pre{color:var(--accent-hover);}
+  .example .ex-note{font-size:13px;color:var(--text-tertiary);margin-top:8px;}
+
   .footer{max-width:1180px;margin:40px auto 0;padding:24px;border-top:1px solid var(--border-2);text-align:center;color:var(--text-muted);font-size:13px;}
   a.link{color:var(--accent);text-decoration:none;} a.link:hover{color:var(--accent-hover);}
 </style>
@@ -132,6 +141,16 @@
         <li><b>动手写 + 调 AI</b>：直接在中间写作区动笔；选中文字 → 右侧面板切到「💬 AI 助手」或「⚡ 技能」→ 让 AI 续写、润色或审查。</li>
       </ol>
       <div class="card note"><span class="lbl info">提示</span>首次使用请务必先到设置页配置模型，否则 AI 相关按钮会提示「未配置 AI」。</div>
+
+      <h3>举例：从零到第一段 AI 续写</h3>
+      <div class="example">
+        <div class="ex-lbl">📌 场景</div>
+        <div class="ex-row">你刚装好本机 Ollama，模型名 <code>qwen2.5:14b</code>，想在「第1章」写一段开头。</div>
+        <div class="ex-row"><span class="ex-tag">操作</span>首页「开始写作」→ 在写作区输入「林默推开祠堂的门，灰尘簌簌落下来。」→ 光标停句末 → 点顶部「AI 续写」。</div>
+        <div class="ex-row"><span class="ex-tag">结果浮层</span><pre>黑暗里没有预想中的供桌，只有一道裂隙，像被人从地底撕开。
+低语声贴着耳根爬上来，喊的都是他早已忘了的名字。</pre></div>
+        <div class="ex-row ex-note">点「✓ 接受」即写入正文；不满意可「🔄 重新生成」换一版，或「✗ 拒绝」不动原稿。</div>
+      </div>
     </section>
 
     <!-- 三 -->
@@ -152,6 +171,9 @@
 
       <h3>「更多创作工具」可展开板块</h3>
       <p>与「开始写作」同款玻璃容器，点击后向下展开 10 个工具入口（写作技能、大纲、角色、世界观、知识图谱、写作分析、平台工具、AI 集成、模板库、设置）。再点一次收起。</p>
+
+      <h3>「官方使用帮助说明」容器</h3>
+      <p>「三步开始」下方的同款玻璃容器，点击直达本说明文档（<code>docs.html</code>），随时回看功能用法。</p>
     </section>
 
     <!-- 四 -->
@@ -178,6 +200,12 @@
           <li><b>🗑 删除</b>：二次确认后删除；仅剩一章时禁止删除。</li>
         </ul>
       </ul>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 章节操作</div>
+        <div class="ex-row"><span class="ex-tag">重命名</span>原文件「第3章.md」→ 悬停点 ✏️ → 输入「第3章 裂隙惊醒」→ 回车 → 自动存为「第3章 裂隙惊醒.md」。</div>
+        <div class="ex-row"><span class="ex-tag">副本</span>选中「第3章 裂隙惊醒.md」点 📋 → 生成「第3章 裂隙惊醒(副本).md」，内容与原文完全一致，可独立改写。</div>
+        <div class="ex-row"><span class="ex-tag">删除</span>点 🗑 → 弹窗「确定删除？此操作不可恢复」→ 确认后移除；若全书仅剩一章，按钮点击会被拦截并提示「至少保留一章」。</div>
+      </div>
 
       <h3>中间 · 写作区</h3>
       <ul>
@@ -185,6 +213,12 @@
         <li>续写结果以浮层出现，可 <b>✓ 接受 / ✗ 拒绝 / 🔄 重新生成</b>。</li>
         <li>输入实时自动保存，无需手动存盘。</li>
       </ul>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · AI 续写浮层</div>
+        <div class="ex-row"><span class="ex-tag">选中</span><pre>他握紧剑柄，裂隙在脚下蔓延成河。</pre></div>
+        <div class="ex-row"><span class="ex-tag">续写</span><pre>河水是冷的，却映出成千上万张脸——每一张都在喊同一个字：归。</pre></div>
+        <div class="ex-row ex-note">浮层出现后：点「✓ 接受」则整段接在光标后；点「🔄 重新生成」换内容；「✗ 拒绝」关闭浮层、原稿不动。</div>
+      </div>
 
       <h3>右侧 · AI 面板（5 个标签页）</h3>
       <table>
@@ -196,6 +230,31 @@
         <tr><td>⚙ 设置</td><td>快速切换 AI 引擎（本地 Ollama / 云端）、地址、模型、API Key，与全局设置联动。</td></tr>
       </table>
 
+      <h3>💬 AI 助手 · 对话举例</h3>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 让 AI 当剧情顾问</div>
+        <div class="ex-row"><span class="ex-tag">你输入</span><pre>我的反派「灰雾」总在关键节点出现又消失，读者觉得机械降神。怎么改得更有因果？</pre></div>
+        <div class="ex-row"><span class="ex-tag">AI 回复</span><pre>把灰雾的每次现身都挂到主角一个"未完成的抉择"上：
+· 第2章他犹豫是否救陌生人 → 灰雾在救下的人眼里一闪
+· 第5章他隐瞒真相 → 灰雾从被隐瞒者身后渗出
+这样出场=代价兑现，读者能回溯因果，不再是天降。</pre></div>
+      </div>
+
+      <h3>📋 模板 · 插入举例</h3>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 角色卡模板</div>
+        <div class="ex-row"><span class="ex-tag">点「角色卡模板」后插入写作区</span><pre>【角色卡】
+姓名：
+年龄：
+身份 / 阵营：
+外在目标：
+深层欲望：
+最大恐惧：
+核心矛盾：
+一句话人设：</pre></div>
+        <div class="ex-row ex-note">填好后可整段剪切进「👤 角色管理」页长期维护，编辑器与工具页各司其职。</div>
+      </div>
+
       <h3>⚡ 技能面板内置 5 项</h3>
       <table>
         <tr><th>技能</th><th>说明</th></tr>
@@ -205,6 +264,12 @@
         <tr><td>🧹 去 AI 味</td><td>去除机器腔与套路表达，回归自然笔触。</td></tr>
         <tr><td>🗺 大纲生成器</td><td>基于当前内容自动生成/更新章节大纲。</td></tr>
       </table>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 去 AI 味（编辑器内）</div>
+        <div class="ex-row after"><span class="ex-tag">原文</span><pre>在这个充满神秘与未知的世界里，他感到十分震撼，内心涌起一种难以言喻的复杂情绪。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">去 AI 味后</span><pre>异界压顶，他脊背一凉。说不清是怕，还是终于等到。</pre></div>
+        <div class="ex-row ex-note">运行后结果进「✅ 审查」面板，可对照决定是否采纳。</div>
+      </div>
     </section>
 
     <!-- 五 -->
@@ -227,9 +292,33 @@
         </ul>
       </div>
 
+      <h3>📌 举例 · 配置本地 Ollama</h3>
+      <div class="example">
+        <div class="ex-row"><span class="ex-tag">填写</span><pre>引擎：本地 Ollama
+地址：http://localhost:11434
+模型：qwen2.5:14b</pre></div>
+        <div class="ex-row"><span class="ex-tag">操作</span>点「🔄 扫描本地模型」→ 下拉出现 <code>qwen2.5:14b</code> / <code>llama3.1:8b</code> → 选中 → 点「测试」→ 提示「✅ 连接成功」。</div>
+        <div class="ex-row ex-note">若页面是通过 <code>https://sagebool.github.io</code> 打开，扫描会提示改用本地模式（见下方启动器）。用本地启动器以 <code>http://localhost</code> 访问即可正常扫描。</div>
+      </div>
+
+      <h3>📌 举例 · 配置云端模型</h3>
+      <div class="example">
+        <div class="ex-row"><span class="ex-tag">填写</span><pre>引擎：云端大模型
+API 地址：https://api.openai.com/v1
+API Key：sk-xxxxxxxxxxxxxxxx
+模型：gpt-4o-mini</pre></div>
+        <div class="ex-row"><span class="ex-tag">操作</span>点「测试连接」→ 返回「✅ 连通」即可回到编辑器使用。若填了 <code>http://</code> 开头的地址，会收到「混合内容被浏览器拦截」的友好提示，改为 <code>https://</code> 即可。</div>
+      </div>
+
       <h3>2. 一键本地启动器（解决混合内容限制）</h3>
       <div class="card warn"><span class="lbl warn">重要</span>当你通过公网地址（<code>https://sagebool.github.io</code>）访问时，浏览器出于安全策略<strong>禁止</strong>网页连接本地 <code>http://localhost</code> 的 Ollama（混合内容限制）。此时「扫描本地模型」会提示改用本地模式。</div>
       <p>解决：双击项目里的 <code>start-local.command</code>（macOS）/ <code>start-local.bat</code>（Windows），它会自动起一个本地服务器并打开浏览器，让你以 <code>http://localhost</code> 访问本站，从而正常使用本地 Ollama。无需安装任何额外软件。</p>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 启动器流程</div>
+        <div class="ex-row"><span class="ex-tag">macOS</span>Finder 进入项目目录 → 双击 <code>start-local.command</code> → 终端闪现「Serving on http://localhost:8000」→ 浏览器自动打开 <code>http://localhost:8000/index.html</code>。</div>
+        <div class="ex-row"><span class="ex-tag">Windows</span>双击 <code>start-local.bat</code> → 命令提示符起服务器 → 浏览器打开本地地址。关闭窗口即停止服务。</div>
+        <div class="ex-row ex-note">此后在 <code>http://localhost</code> 下访问设置页，「🔄 扫描本地模型」可正常列出本机 Ollama 模型。</div>
+      </div>
 
       <h3>3. 云同步（手机 / 电脑互通）</h3>
       <p>见 <a class="link" href="#sync">第八节</a> 详解。</p>
@@ -255,6 +344,115 @@
         <tr><td>📊</td><td><b>章节点评</b></td><td>从风格/节奏/人物/悬念四维点评，给 3 条修改建议。</td></tr>
         <tr><td>🌟</td><td><b>金句提炼</b></td><td>提炼或创作 3–5 句金句，并注明适用场景。</td></tr>
       </table>
+
+      <h3>逐项举例（输入 → 输出）</h3>
+
+      <div class="example">
+        <div class="ex-lbl">🧹 去 AI 味</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>在这个充满神秘与未知的世界里，他感到十分震撼，内心涌起一种难以言喻的复杂情绪。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>异界压顶，他脊背一凉。说不清是怕，还是终于等到。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">✨ 润色</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>她很快地跑过了长长的走廊，心里很着急。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>她提裙掠过长廊，足音敲得心跳一样急。廊灯一盏盏退到身后，像被她甩开的呼吸。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">🔍 扩写</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>雨下了一整夜，他没睡。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>雨下了一整夜，敲在瓦上像谁在门外数着他的罪。他靠墙坐着，听水从檐角淌成线，把窗纸洇出一片模糊的亮。枕头是干的，被褥是干的，只有眼角那点湿，他不肯擦。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">➡️ 续写</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>剑光落下的前一刻，他忽然听见师父的声音。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>「收手。」两个字很轻，却压得满室风声一滞。他手腕一颤，剑尖偏了三寸，削落的不是敌首，而是自己束发的带子——黑发泼下来，遮住了他骤然红了的眼。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">📋 大纲生成</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>林默在祠堂发现裂隙，灰雾低语，归尘之力初醒。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>第一卷 · 裂隙初醒
+  · 第1章 祠堂的门：林默返乡，推开尘封祠堂
+  · 第2章 地底的裂缝：裂隙现身，灰雾第一次低语
+  · 第3章 归尘之力：本能觉醒，救下陌生人反埋隐患
+支线：被救者身世的真相（可于第5章回收）</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">⚔️ 矛盾冲突</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>主角救了反派伪装的无辜者，与之同行。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>1. 让被救者"无意"透露假情报，把主角引向陷阱——信任与背叛的张力。
+2. 同行中反派暗中替主角挡一次险，主角开始怀疑"恶"的界定。
+3. 暴露临界点：主角发现对方手上的旧伤与自己师父同源。
+4. 反转：所谓"拯救世界"的任务，恰恰需要先毁掉主角守护的人。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">🌍 设定生成</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>裂隙撕裂大地，灰雾低语，归尘之力能重塑万物。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>世界观 · 九界
+· 地理：地表被九道裂隙切成浮岛，岛间靠"归尘桥"相连。
+· 势力：守界人（维持裂隙）、灰雾（裂隙溢出的意识集合）、归尘族（能操控归尘之力）。
+· 力量体系：归尘之力以"记忆"为燃料——忘得越多，力量越强，代价是自我消散。
+· 核心规则：裂隙每百年扩张一次，称为"归尘之潮"。
+· 历史：上一次潮汛毁了一整界，残魂化为灰雾的低语。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">💬 对话生成</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>场景：林默与守界人长老初次对峙，长老质疑他的身份。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>长老：「归尘族的血，会在月光下泛青。你伸手。」
+林默：「若我伸了，您是要验明正身，还是借机取我性命？」
+长老：「（笑）小孩子，活到现在，我取过的人命，比你走过的路还多。」
+林默：「那您该认得——杀我的人，从没有活着回去过。」</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">💡 情节脑暴</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>主角卡在"要不要打开祠堂裂隙"的抉择。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>方向1【开】：放出的灰雾附身村民，主角被迫屠村——极致虐点，但需铺垫村民羁绊。
+方向2【不开】：裂隙自行扩张，全村沉陷，主角背负见死不救的愧——更易共情。
+方向3【假开真封】：主角佯装开启，实则逆向封印，引灰雾入体——埋"人形裂隙"伏笔。
+方向4【第三方抢开】：宿敌抢先开启，主角从阻止变收拾烂摊——转移冲突对象。
+方向5【开一半】：只裂开指缝大小，漏出的低语逐渐替换村民记忆——细思极恐的日常侵蚀。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">👤 人物小传</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>林默，归尘族遗孤，在祠堂醒来。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>姓名：林默
+身份：归尘族最后的血脉，被守界人秘密送出九界
+性格：外冷内执，习惯把情绪切成小块慢慢咽
+欲望：找回被裂隙吞掉的妹妹
+恐惧：怕自己打开裂隙的瞬间，会变成下一个灰雾
+核心矛盾：救世需借归尘之力，借力即靠近消散
+弧光：从"想关掉裂隙"到"学会与裂隙共存"</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">📊 章节点评</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>第3章 归尘之力（约 1200 字，动作戏为主）。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>【风格】短句利落，动作戏节奏好；但环境描写偏少，画面偏"空"。
+【节奏】中段打斗拖了 400 字，建议砍掉两个重复的格挡回合。
+【人物】主角动机（救妹妹）本章没呼应，读者易丢失牵挂。
+【悬念】结尾停在"裂隙闭眼"，钩子够；建议多留一句灰雾的余音。
+修改建议：
+1. 打斗中插一句妹妹的旧物特写，锚定动机。
+2. 用一处环境变化（如烛火变青）替代一段招式说明。
+3. 结尾补半句低语，让悬念有"声音"。</pre></div>
+      </div>
+
+      <div class="example">
+        <div class="ex-lbl">🌟 金句提炼</div>
+        <div class="ex-row after"><span class="ex-tag">输入</span><pre>关于"记忆与力量"的段落。</pre></div>
+        <div class="ex-row after"><span class="ex-tag">输出</span><pre>1. 「归尘族最锋利的刀，是忘了自己是谁。」——适用：主角初次全力觉醒
+2. 「他们叫它力量，我们叫它告别。」——适用：长老解释归尘之力的代价
+3. 「裂隙不吞人，它只是把人，还成本来的样子。」——适用：揭示灰雾本质是残魂
+4. 「记住一切的人，最先死在回忆里。」——适用：主角面对抉择的低谷</pre></div>
+      </div>
     </section>
 
     <!-- 七 -->
@@ -270,6 +468,40 @@
         <div class="tile"><div class="t">📱 网文平台工具</div><div class="d">面向发布平台的辅助工具（格式、章节管理等）。</div></div>
         <div class="tile"><div class="t">🤖 AI 深度集成</div><div class="d">更高级的 AI 调用与编排能力。</div></div>
         <div class="tile"><div class="t">📚 模板库</div><div class="d">可复用的写作模板集合，一键调用。</div></div>
+      </div>
+
+      <h3>📌 各工具使用示例</h3>
+      <div class="example">
+        <div class="ex-lbl">📋 大纲编辑器</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>新建「第一卷 · 裂隙初醒」→ 加章「第1章 祠堂的门 / 第2章 地底的裂缝」→ 每章填「目标 / 冲突 / 钩子」三栏。例如第2章：目标=裂隙现身，冲突=灰雾低语诱主角靠近，钩子=归尘之力误触觉醒。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">👤 角色管理</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>新建角色「林默」→ 填身份「归尘族遗孤」、欲望「找回妹妹」、恐惧「变成灰雾」→ 在「关系」栏连到「妹妹 / 长老 / 宿敌」，系统自动生成关系网。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">🌍 世界观管理</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>建「九界」词条 → 下设「地理/势力/力量体系」子页 → 力量体系写「归尘之力以记忆为燃料」→ 后续写作技能页「设定生成」可反向引用这里，保持不矛盾。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">🕸️ 知识图谱</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>把「林默—妹妹—长老—宿敌」四个节点拖入画布，连线标「血亲 / 师承 / 敌对」，一眼看清谁和谁有因果，避免写到第 8 章忘了宿敌是长老的弟子。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">📊 写作分析</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>粘贴「第3章」全文 → 看「长句占比 / 形容词密度 / 对话比」曲线 → 若对话比长期低于 15%，提示"人物靠独白推进，建议加对手戏"。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">📱 网文平台工具</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>选目标平台 → 把本地章节按平台要求的「标题格式 + 分卷标签」批量重排 → 导出待发布文本，省去手动改格式。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">🤖 AI 深度集成</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>在这里编排多步提示（如"先去AI味 → 再章节点评 → 按点评改一版"），一次串起技能页的多个单步，适合固定自己的工作流。</div>
+      </div>
+      <div class="example">
+        <div class="ex-lbl">📚 模板库</div>
+        <div class="ex-row after"><span class="ex-tag">操作</span>挑「章节开头模板」→ 一键插入写作区 → 模板含「场景锚点 / 冲突切入点 / 本章钩子」占位 → 填好即是一章骨架，再交给 AI 续写 flesh out。</div>
       </div>
       <div class="card tip"><span class="lbl tip">小建议</span>先在「大纲编辑器 / 角色管理 / 世界观管理」打底，再用主编辑器成稿，最后用「写作技能页」统一润色与审查，工作流最顺。</div>
     </section>
@@ -293,6 +525,24 @@
         <li>可选开启「自动定时同步」，设定间隔（默认 10 分钟，后台静默上传）。</li>
       </ol>
 
+      <h3>📌 举例 · GitHub Gist 配置</h3>
+      <div class="example">
+        <div class="ex-row"><span class="ex-tag">获取 Token</span>登录 GitHub → Settings → Developer settings → Personal access tokens → Generate new token → 勾选 <code>gist</code> → 复制形如 <code>ghp_AbCdEf1234567890</code> 的串。</div>
+        <div class="ex-row"><span class="ex-tag">填写</span><pre>平台：GitHub Gist
+Token：ghp_AbCdEf1234567890
+Gist ID：（留空，首次同步自动建）</pre></div>
+        <div class="ex-row"><span class="ex-tag">同步</span>回主编辑器点「☁ 同步」→ 顶栏出现「上次同步 刚刚」→ 到 GitHub Gist 能看到一个名为 <code>sagebook_novel.json</code> 的私密 Gist，里面是整本书稿。</div>
+      </div>
+
+      <h3>📌 举例 · Gitee 仓库配置</h3>
+      <div class="example">
+        <div class="ex-row"><span class="ex-tag">填写</span><pre>平台：Gitee 仓库
+Token：你的 Gitee 私人令牌
+仓库：yourname/sagebook-sync
+路径：sagebook_novel.json</pre></div>
+        <div class="ex-row ex-note">Gitee 没有 Gist，载体用私有仓库的文件。首次「☁ 同步」会向该仓库路径写入书稿；之后更新。</div>
+      </div>
+
       <h3>第二步 · 同步使用</h3>
       <table>
         <tr><th>操作</th><th>在哪</th><th>效果</th></tr>
@@ -302,7 +552,18 @@
 
       <h3>第三步 · 在手机 / 另一台电脑</h3>
       <p>用同一浏览器打开本站 → 设置页填入<strong>相同的 Token</strong> → 点「⬇ 拉取」即可下载书稿继续写。之后各自「☁ 同步」即可互通。</p>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 手机续写电脑稿</div>
+        <div class="ex-row"><span class="ex-tag">电脑端</span>写完第 5 章 → 点「☁ 同步」→ 顶栏「上次同步 刚刚」。</div>
+        <div class="ex-row"><span class="ex-tag">手机端</span>手机浏览器开 <code>sagebool.github.io</code> → 设置填同一 Token → 主编辑器点「⬇ 拉取」→ 第 5 章出现 → 地铁上写完第 6 章 → 点「☁ 同步」。</div>
+        <div class="ex-row"><span class="ex-tag">回到电脑</span>电脑点「⬇ 拉取」→ 拿到第 6 章，两端一致。</div>
+      </div>
       <div class="card warn"><span class="lbl warn">注意</span>「⬇ 拉取」会<strong>覆盖本地</strong>当前书稿。多端同时写时，先「☁ 同步」再在另一端点「⬇ 拉取」，避免互相覆盖。</div>
+      <div class="example">
+        <div class="ex-lbl">📌 举例 · 冲突规避</div>
+        <div class="ex-row"><span class="ex-tag">错误</span>电脑改了第 5 章没同步 → 手机也改了第 5 章 → 手机先同步 → 电脑直接拉取 → 电脑的修改被手机版覆盖丢失。</div>
+        <div class="ex-row"><span class="ex-tag">正确</span>电脑改完先「☁ 同步」→ 手机点「⬇ 拉取」拿到最新 → 手机再改 → 手机「☁ 同步」→ 电脑「⬇ 拉取」。谁改谁先上传，对方再拉取。</div>
+      </div>
     </section>
 
     <!-- 九 -->
