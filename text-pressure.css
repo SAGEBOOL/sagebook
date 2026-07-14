@@ -1,0 +1,43 @@
+/* TextPressure — 由 React Bits <TextPressure /> 原生移植（vanilla JS）
+   依赖可变字体 Roboto Flex（见 index.html 的 Google Fonts <link>） */
+
+.text-pressure {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    margin: 6px auto 0;
+    min-height: 60px;
+    background: transparent;
+}
+
+.text-pressure h1 {
+    font-family: 'Roboto Flex', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    text-transform: uppercase;
+    font-size: 36px;
+    line-height: 1;
+    transform-origin: center top;
+    margin: 0;
+    text-align: center;
+    user-select: none;
+    white-space: nowrap;
+    font-weight: 100;
+    width: 100%;
+    letter-spacing: 0;
+}
+
+/* flex 模式：字符沿容器宽度均匀铺开（核心“压力”观感） */
+.text-pressure h1.flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.text-pressure h1 span {
+    display: inline-block;
+}
+
+/* 空格作为弹性间隔，吸收词间缝隙，让整体铺满宽度 */
+.text-pressure h1 span.space {
+    flex: 1 1 auto;
+    min-width: 0.12em;
+}
