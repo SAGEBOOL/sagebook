@@ -320,3 +320,47 @@ code, pre, kbd, .font-mono, .editor-toolbar button, .mono {
 .sb-grid-2 { grid-template-columns: repeat(2, 1fr); }
 .sb-grid-3 { grid-template-columns: repeat(3, 1fr); }
 .sb-grid-auto { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+/* ===================== 全站通用页脚（友情链接 + 三条条款） ===================== */
+.site-footer {
+    max-width: 1100px;
+    margin: 48px auto 0;
+    padding: 22px 20px 28px;
+    border-top: 1px solid var(--border-secondary);
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    line-height: 1.95;
+}
+.site-footer .sf-powered { color: var(--text-muted); margin-bottom: 4px; }
+.site-footer .sf-links { margin-top: 8px; }
+.site-footer .sf-links a,
+.site-footer .sf-friends a {
+    color: var(--accent);
+    text-decoration: none;
+    margin: 0 4px;
+    transition: color .15s ease;
+}
+.site-footer .sf-links a:hover,
+.site-footer .sf-friends a:hover { color: var(--accent-hover); text-decoration: underline; }
+.site-footer .sf-sep { color: var(--border); margin: 0 2px; }
+.site-footer .sf-friends { margin-top: 6px; color: var(--text-tertiary); }
+.site-footer .sf-home { margin-top: 10px; }
+.site-footer .sf-home a { color: var(--text-tertiary); text-decoration: none; }
+.site-footer .sf-home a:hover { color: var(--accent); }
+
+/* 移动端：页脚字号收缩、链接可换行、padding 收敛 */
+@media (max-width: 640px) {
+    .site-footer { margin-top: 32px; padding: 18px 14px 22px; font-size: 12px; line-height: 1.85; }
+    .site-footer .sf-links a,
+    .site-footer .sf-friends a { display: inline-block; margin: 2px 3px; }
+    .site-footer .sf-sep { display: none; }
+}
+
+/* ===================== 移动端全局安全网（引用本系统的页） ===================== */
+img, video, canvas, svg { max-width: 100%; height: auto; }
+@media (max-width: 768px) {
+    .sb-wrap { padding: 16px; }
+    .sb-page-head { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .sb-grid-2, .sb-grid-3, .sb-grid-auto { grid-template-columns: 1fr; }
+}
