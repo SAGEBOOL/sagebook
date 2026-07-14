@@ -24,17 +24,43 @@
         }
         .subtitle { font-size: 16px; color: var(--text-secondary); margin-top: 12px; }
 
-        /* Hero 艺术展示：整版等比例完整显示 */
+        /* Hero 艺术展示：液态玻璃容器（整版等比例完整显示） */
+        .hero-wrap { position: relative; padding: 4px 0; }
+        .hero-glow {
+            position: absolute; left: 50%; top: 50%;
+            width: 680px; height: 280px; transform: translate(-50%, -50%);
+            z-index: 0; pointer-events: none; opacity: .9; filter: blur(52px);
+            background:
+                radial-gradient(circle at 25% 50%, rgba(217,119,87,.45), transparent 62%),
+                radial-gradient(circle at 75% 50%, rgba(212,168,83,.38), transparent 62%),
+                radial-gradient(circle at 50% 20%, rgba(90,142,204,.28), transparent 64%);
+            animation: ctaFloat 9s ease-in-out infinite;
+        }
         .hero-artwork {
-            max-width: 920px; margin: 20px auto 0;
+            position: relative; z-index: 1;
+            max-width: 920px; margin: 0 auto;
             border-radius: var(--radius-xl);
             overflow: hidden;
-            border: 1px solid var(--border-primary);
-            background: var(--bg-tertiary);
+            border: 1px solid rgba(255,255,255,.18);
+            background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            box-shadow:
+                0 18px 52px rgba(0,0,0,.45),
+                inset 0 1px 0 rgba(255,255,255,.28),
+                inset 0 -1px 0 rgba(0,0,0,.15);
         }
         .hero-artwork img {
             display: block; width: 100%; height: auto;
             object-fit: contain; object-position: center;
+        }
+        /* 流动高光，强化液态玻璃感 */
+        .hero-artwork::after {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.16) 50%, transparent 65%);
+            transform: translateX(-120%);
+            animation: ctaSheen 7s ease-in-out infinite;
+            pointer-events: none;
         }
 
         /* 状态栏 */
@@ -112,8 +138,8 @@
             50%     { transform: translateX(120%); }
         }
         @media (prefers-reduced-motion: reduce) {
-            .cta-glow { animation: none; }
-            .cta-card::after { animation: none; display: none; }
+            .cta-glow, .hero-glow { animation: none; }
+            .cta-card::after, .hero-artwork::after { animation: none; display: none; }
         }
         .cta-icon { font-size: 42px; }
         .cta-title { font-size: 24px; font-weight: 800; margin-top: 6px; }
@@ -179,9 +205,12 @@
             <div class="subtitle">你的智能创作伙伴 · 爽剧、网文、剧本、长篇</div>
         </div>
 
-        <!-- Hero 艺术展示（等比例整版完整显示） -->
-        <div class="hero-artwork">
-            <img src="assets/hero-artwork.png" alt="The Creation of Adam" loading="lazy">
+        <!-- Hero 艺术展示（液态玻璃容器） -->
+        <div class="hero-wrap">
+            <div class="cta-glow hero-glow"></div>
+            <div class="hero-artwork">
+                <img src="assets/hero-artwork.png" alt="The Creation of Adam" loading="lazy">
+            </div>
         </div>
 
         <!-- 状态栏 -->
@@ -201,6 +230,10 @@
             <div class="status-item">
                 <div class="status-value">🔒</div>
                 <div class="status-label">本地隐私保存</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value">🔄</div>
+                <div class="status-label">电脑、手机同步</div>
             </div>
         </div>
 

@@ -25,6 +25,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
+            gap: 16px;
             padding: 0 20px;
             position: sticky;
             top: 0;
@@ -452,10 +453,10 @@
 </head>
 <body>
     <!-- 顶部工具栏 -->
-    <div class="toolbar">
-        <button class="back-btn" onclick="window.location.href='index.html'">← 返回</button>
-        <div class="toolbar-title">⚙️ 设置</div>
-    </div>
+        <div class="toolbar">
+            <a href="index.html" class="sb-brand"><span class="sb-brand-ico">📚</span><span>SAGEBOOK</span></a>
+            <div class="toolbar-title">⚙️ 设置</div>
+        </div>
 
     <!-- 主内容区 -->
     <div class="main-content">

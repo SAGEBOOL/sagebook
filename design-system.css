@@ -91,6 +91,37 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* 统一品牌链接：📚 SAGEBOOK（左上角，点击回首页） */
+.sb-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  color: var(--fg-primary);
+  transition: opacity var(--transition-fast);
+}
+.sb-brand:hover { opacity: 0.72; }
+.sb-brand .sb-brand-ico { font-size: 20px; line-height: 1; }
+
+/* 工具页顶部 logo 可点击回首页 */
+.logo-link {
+  text-decoration: none;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+.logo-link:hover { opacity: 0.72; }
+.logo-ico { font-size: 34px; line-height: 1; }
+.logo-txt { font-size: 24px; font-weight: 800; letter-spacing: 0.04em; color: var(--fg-primary); }
+
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-hover); }
 
