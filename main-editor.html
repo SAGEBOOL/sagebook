@@ -758,10 +758,24 @@ async function testAIConnection(config) {
     const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(3000) });
     return res.ok;
   }
+  // 云端模式：真正发一个轻量请求测试连通性
   if (!config.cloudBaseUrl || !config.cloudApiKey) {
     throw new Error('请先填写云端 API 地址与 Key');
   }
-  return !!config.cloudApiKey;
+  // 混合内容检测
+  if (location.protocol === 'https:' && config.cloudBaseUrl.startsWith('http://')) {
+    throw new Error('混合内容限制 — HTTPS 页面无法请求 HTTP API 地址。请将 API 地址改为 https:// 开头。');
+  }
+  try {
+    let base = (config.cloudBaseUrl || '').replace(/\/+$/, '');
+    const url = base.endsWith('/chat/completions') ? base : base + '/chat/completions';
+    const headers = { 'Authorization': `Bearer ${config.cloudApiKey}`, 'Content-Type': 'application/json' };
+    const body = JSON.stringify({ model: config.cloudModel || 'gpt-4o', messages: [{ role: 'user', content: 'ping' }], max_tokens: 4 });
+    const res = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(15000) });
+    return res.ok;
+  } catch (e) {
+    throw new Error('云端连接测试失败: ' + (e.message || e));
+  }
 }
 
 // ============================================
@@ -801,6 +815,10 @@ async function callCloud(config, messages, onChunk) {
 
   // 通用 OpenAI 兼容调用：POST {baseUrl}/chat/completions
   let base = (config.cloudBaseUrl || 'https://api.openai.com/v1').replace(/\/+$/, '');
+  // 混合内容检测：HTTPS 页面禁止请求 HTTP 地址
+  if (location.protocol === 'https:' && base.startsWith('http://')) {
+    throw new Error('混合内容限制 — HTTPS页面无法请求HTTP地址。请将云端API地址改为https://开头，或用本地http服务器运行本站。');
+  }
   const url = base.endsWith('/chat/completions') ? base : base + '/chat/completions';
   const headers = { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' };
   const body = {

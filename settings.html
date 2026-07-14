@@ -670,6 +670,18 @@
                 return;
             }
 
+            // ① 校验：HTTPS 页面禁止请求 HTTP 地址（混合内容限制）
+            if (location.protocol === 'https:' && baseUrl.startsWith('http://')) {
+                alert('❌ 混合内容限制\n\n你当前通过公网(HTTPS)访问本站，但填写的 API 地址是 HTTP。\n浏览器安全策略会阻止这种跨协议请求。\n\n解决方法：\n• 将 API 地址改为 https:// 开头（大多数服务商都支持）\n• 或在本地运行本站（python3 -m http.server）后用 http:// 访问');
+                return;
+            }
+
+            // ② 校验：URL 格式合法性
+            try { new URL(baseUrl); } catch {
+                alert('❌ API 地址格式不正确\n\n请填写完整的 URL，如：https://api.openai.com/v1');
+                return;
+            }
+
             testBtn.textContent = '🔄 测试中...';
             testBtn.disabled = true;
 
@@ -680,19 +692,28 @@
                 const body = JSON.stringify({ model, messages: [{ role: 'user', content: 'ping' }], max_tokens: 8 });
 
                 const ctrl = new AbortController();
-                const timer = setTimeout(() => ctrl.abort(), 15000);
+                const timer = setTimeout(() => ctrl.abort(), 20000);
                 const response = await fetch(endpoint, { method: 'POST', headers, body, signal: ctrl.signal });
                 clearTimeout(timer);
 
                 if (response.ok || response.status === 200) {
-                    alert(`✅ 连接成功！\n\n模型: ${model}\n状态码: ${response.status}`);
+                    alert(`✅ 连接成功！\n\n模型: ${model}\n状态码: ${response.status}\n端点: ${endpoint}`);
                 } else {
                     let msg = `HTTP ${response.status}`;
                     try { const err = await response.json(); msg = err.error?.message || err.message || msg; } catch {}
                     throw new Error(msg);
                 }
             } catch (error) {
-                alert(`❌ 连接失败: ${error.message}\n\n请检查 API 地址、Key 与网络。`);
+                // 友好化错误信息（DOMException / TypeError / network Error 统一翻译）
+                let msg = error.message || String(error);
+                if (msg.includes('aborted') || msg.includes('AbortError')) {
+                    msg = '请求超时或被浏览器中断（可能网络不通、CORS 被拒、或地址有误）';
+                } else if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Network request failed')) {
+                    msg = '无法连接到服务器。请检查：\n① 网络是否通畅\n② API 地址是否正确\n③ 该服务是否支持浏览器端跨域调用(CORS)';
+                } else if (msg.includes('CORS') || msg.includes('cross-origin')) {
+                    msg = '跨域(CORS)被拒。该 API 服务商不允许从网页直接调用。请确认该服务支持浏览器端访问。';
+                }
+                alert(`❌ 连接失败\n\n${msg}\n\nAPI 地址 / Key / 模型名 请逐一核对。`);
             } finally {
                 testBtn.textContent = origText;
                 testBtn.disabled = false;
