@@ -75,7 +75,7 @@
             0%,100% { transform: translate(-50%, -50%) scale(1); }
             50%     { transform: translate(-50%, -54%) scale(1.06); }
         }
-        .cta-card {
+        .cta-card, .quick {
             position: relative; z-index: 1;
             display: block; width: 100%; max-width: 920px; margin: 0 auto;
             text-align: center; color: var(--fg-primary);
@@ -137,13 +137,7 @@
             transform: translateY(-2px); box-shadow: var(--shadow-md);
         }
 
-        /* 快速开始：与「设置」卡片同款的容器形状 */
-        .quick {
-            max-width: 920px; margin: 24px auto 0;
-            background: var(--bg-secondary); border: 1px solid var(--border-primary);
-            border-radius: var(--radius-lg); padding: 20px 24px;
-            text-align: center;
-        }
+        /* 快速开始：严格复刻「开始写作」液态磨砂玻璃容器风格（共享 .cta-card 玻璃样式） */
         .quick h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--fg-primary); }
         .quick ol {
             max-width: 620px; margin: 0 auto; text-align: left;
@@ -235,14 +229,17 @@
             <a class="more-card cursor-target" href="settings.html">⚙️ 设置</a>
         </div>
 
-        <!-- 快速开始 -->
-        <div class="quick">
-            <h3>🚀 三步开始</h3>
-            <ol>
-                <li>在 <a href="settings.html">设置</a> 里配置 AI（推荐本地 Ollama）</li>
-                <li>点「开始写作」进入编辑器，直接动笔</li>
-                <li>选中文字 → 点右侧面板「⚡ 技能」→ 调 AI / 导出</li>
-            </ol>
+        <!-- 快速开始：严格复刻「开始写作」玻璃容器 -->
+        <div class="cta-wrap">
+            <div class="cta-glow"></div>
+            <div class="quick cta-card">
+                <h3>🚀 三步开始</h3>
+                <ol>
+                    <li>在 <a href="settings.html">设置</a> 里配置 AI（推荐本地 Ollama）</li>
+                    <li>点「开始写作」进入编辑器，直接动笔</li>
+                    <li>选中文字 → 点右侧面板「⚡ 技能」→ 调 AI / 导出</li>
+                </ol>
+            </div>
         </div>
 
         <!-- 底部 -->
