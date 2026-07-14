@@ -44,15 +44,65 @@
         .status-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
         /* 主入口 CTA（陶土强调色，无紫渐变）——与「更多创作工具」等宽 */
-        .cta-wrap { padding: 8px 0 16px; }
-        .cta-card {
-            display: block; width: 100%; max-width: 920px; margin: 0 auto;
-            text-align: center; background: var(--accent); color: #fff;
-            text-decoration: none; padding: 26px 54px; border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            transition: transform .2s, background .2s, box-shadow .2s;
+        /* 开始写作：液态磨砂玻璃（仿 iPhone glassmorphism） */
+        .cta-wrap { position: relative; padding: 28px 0 20px; }
+        /* 背后彩色光晕，给玻璃提供折射的液态底色 */
+        .cta-glow {
+            position: absolute; left: 50%; top: 50%;
+            width: 660px; height: 240px;
+            transform: translate(-50%, -50%);
+            z-index: 0; pointer-events: none; opacity: .92;
+            filter: blur(48px);
+            background:
+                radial-gradient(circle at 22% 50%, rgba(217,119,87,.55), transparent 60%),
+                radial-gradient(circle at 78% 50%, rgba(212,168,83,.42), transparent 60%),
+                radial-gradient(circle at 50% 18%, rgba(90,142,204,.30), transparent 62%);
+            animation: ctaFloat 9s ease-in-out infinite;
         }
-        .cta-card:hover { transform: translateY(-3px); background: var(--accent-hover); box-shadow: var(--shadow-lg); }
+        @keyframes ctaFloat {
+            0%,100% { transform: translate(-50%, -50%) scale(1); }
+            50%     { transform: translate(-50%, -54%) scale(1.06); }
+        }
+        .cta-card {
+            position: relative; z-index: 1;
+            display: block; width: 100%; max-width: 920px; margin: 0 auto;
+            text-align: center; color: var(--fg-primary);
+            text-decoration: none; padding: 30px 54px; border-radius: 22px;
+            overflow: hidden;
+            /* 玻璃主体 */
+            background: linear-gradient(135deg, rgba(255,255,255,.12), rgba(255,255,255,.04));
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            border: 1px solid rgba(255,255,255,.18);
+            box-shadow:
+                0 8px 32px rgba(0,0,0,.37),
+                inset 0 1px 0 rgba(255,255,255,.30),
+                inset 0 -1px 0 rgba(0,0,0,.12);
+            transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+        }
+        .cta-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,255,255,.32);
+            box-shadow:
+                0 14px 44px rgba(0,0,0,.45),
+                inset 0 1px 0 rgba(255,255,255,.42);
+        }
+        /* 流动高光，强化液态金属玻璃感 */
+        .cta-card::after {
+            content: ""; position: absolute; inset: 0; border-radius: inherit;
+            background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.14) 50%, transparent 68%);
+            transform: translateX(-120%);
+            animation: ctaSheen 6.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes ctaSheen {
+            0%,100% { transform: translateX(-120%); }
+            50%     { transform: translateX(120%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .cta-glow { animation: none; }
+            .cta-card::after { animation: none; display: none; }
+        }
         .cta-icon { font-size: 42px; }
         .cta-title { font-size: 24px; font-weight: 800; margin-top: 6px; }
         .cta-sub { font-size: 13px; opacity: .92; margin-top: 6px; }
@@ -141,6 +191,7 @@
 
         <!-- 主入口：打开即写 -->
         <div class="cta-wrap">
+            <div class="cta-glow"></div>
             <a href="main-editor.html" class="cta-card cursor-target">
                 <div class="cta-icon">✍️</div>
                 <div class="cta-title">开始写作</div>
