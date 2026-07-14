@@ -56,29 +56,23 @@
         .cta-title { font-size: 24px; font-weight: 800; margin-top: 6px; }
         .cta-sub { font-size: 13px; opacity: .92; margin-top: 6px; }
 
-        /* 更多创作工具 */
-        .more-tools {
-            max-width: 920px; margin: 16px auto;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-primary);
-            border-radius: var(--radius-lg); padding: 14px 18px;
-        }
-        .more-tools summary {
-            cursor: pointer; font-weight: 700; font-size: 15px;
-            user-select: none; color: var(--fg-primary); list-style: none;
-        }
-        .more-tools summary::-webkit-details-marker { display: none; }
-        .more-tools summary:hover { color: var(--accent); }
-        .more-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px; margin-top: 14px;
+        /* 更多创作工具：独立呈现，每块与「开始写作」等宽 */
+        .more-section { max-width: 920px; margin: 24px auto 0; display: flex; flex-direction: column; gap: 12px; }
+        .more-heading {
+            text-align: center; font-weight: 700; font-size: 16px;
+            color: var(--fg-primary); margin-bottom: 2px;
         }
         .more-card {
-            background: var(--bg-tertiary); border: 1px solid var(--border-primary);
-            border-radius: var(--radius-md); padding: 12px 14px; color: var(--fg-primary);
-            text-decoration: none; font-size: 14px; transition: all .2s;
+            display: block; width: 100%;
+            background: var(--bg-secondary); border: 1px solid var(--border-primary);
+            border-radius: var(--radius-lg); padding: 18px 22px; color: var(--fg-primary);
+            text-decoration: none; font-size: 15px; text-align: center;
+            transition: transform .2s, border-color .2s, color .2s, box-shadow .2s;
         }
-        .more-card:hover { border-color: var(--accent); color: var(--accent); }
+        .more-card:hover {
+            border-color: var(--accent); color: var(--accent);
+            transform: translateY(-2px); box-shadow: var(--shadow-md);
+        }
 
         /* 快速开始 */
         .quick { text-align: center; margin: 30px 0 10px; }
@@ -144,22 +138,20 @@
             </a>
         </div>
 
-        <!-- 更多创作工具（折叠，默认收起）-->
-        <details class="more-tools">
-            <summary class="cursor-target">🧰 更多创作工具（构思 / 分析 / 发布）</summary>
-            <div class="more-grid">
-                <a class="more-card cursor-target" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
-                <a class="more-card cursor-target" href="outline-editor.html">📋 大纲编辑器</a>
-                <a class="more-card cursor-target" href="character-management.html">👤 角色管理</a>
-                <a class="more-card cursor-target" href="world-builder.html">🌍 世界观管理</a>
-                <a class="more-card cursor-target" href="knowledge-graph.html">🕸️ 知识图谱</a>
-                <a class="more-card cursor-target" href="writing-analysis.html">📊 写作分析</a>
-                <a class="more-card cursor-target" href="platform-tools.html">📱 网文平台工具</a>
-                <a class="more-card cursor-target" href="ai-suite.html">🤖 AI 深度集成</a>
-                <a class="more-card cursor-target" href="template-gallery.html">📚 模板库</a>
-                <a class="more-card cursor-target" href="settings.html">⚙️ 设置</a>
-            </div>
-        </details>
+        <!-- 更多创作工具：独立呈现，每块与「开始写作」等宽 -->
+        <div class="more-section">
+            <div class="more-heading cursor-target">🧰 更多创作工具（构思 / 分析 / 发布）</div>
+            <a class="more-card cursor-target" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
+            <a class="more-card cursor-target" href="outline-editor.html">📋 大纲编辑器</a>
+            <a class="more-card cursor-target" href="character-management.html">👤 角色管理</a>
+            <a class="more-card cursor-target" href="world-builder.html">🌍 世界观管理</a>
+            <a class="more-card cursor-target" href="knowledge-graph.html">🕸️ 知识图谱</a>
+            <a class="more-card cursor-target" href="writing-analysis.html">📊 写作分析</a>
+            <a class="more-card cursor-target" href="platform-tools.html">📱 网文平台工具</a>
+            <a class="more-card cursor-target" href="ai-suite.html">🤖 AI 深度集成</a>
+            <a class="more-card cursor-target" href="template-gallery.html">📚 模板库</a>
+            <a class="more-card cursor-target" href="settings.html">⚙️ 设置</a>
+        </div>
 
         <!-- 快速开始 -->
         <div class="quick">
