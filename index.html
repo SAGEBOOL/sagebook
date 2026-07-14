@@ -42,10 +42,11 @@
         .status-value { font-size: 24px; font-weight: 700; color: var(--accent); }
         .status-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
 
-        /* 主入口 CTA（陶土强调色，无紫渐变） */
-        .cta-wrap { text-align: center; padding: 8px 0 16px; }
+        /* 主入口 CTA（陶土强调色，无紫渐变）——与「更多创作工具」等宽 */
+        .cta-wrap { padding: 8px 0 16px; }
         .cta-card {
-            display: inline-block; background: var(--accent); color: #fff;
+            display: block; width: 100%; max-width: 920px; margin: 0 auto;
+            text-align: center; background: var(--accent); color: #fff;
             text-decoration: none; padding: 26px 54px; border-radius: var(--radius-xl);
             box-shadow: var(--shadow-md);
             transition: transform .2s, background .2s, box-shadow .2s;
