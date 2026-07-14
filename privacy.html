@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>隐私条款 · SAGEBOOK</title>
+<style>
+  :root{
+    --bg:#0e0e0c; --bg-secondary:#1c1c1a; --border:#3d3d3a;
+    --accent:#d97757; --fg:#f2efe9; --text-secondary:#a8a39a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.78;padding:32px 20px 64px}
+  .brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--fg);font-weight:800;font-size:18px;margin-bottom:28px}
+  .brand .ico{font-size:20px}
+  .wrap{max-width:760px;margin:0 auto;background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;padding:36px 40px}
+  h1{font-size:26px;color:var(--accent);margin-bottom:6px}
+  .sub{color:var(--text-secondary);font-size:13px;margin-bottom:24px}
+  h2{font-size:17px;color:var(--fg);margin:24px 0 8px}
+  p{color:var(--text-secondary);font-size:14.5px;margin:8px 0}
+  strong{color:var(--fg)}
+  a.inline{color:var(--accent);text-decoration:none}
+  a.inline:hover{text-decoration:underline}
+  .foot{text-align:center;color:var(--text-secondary);font-size:12px;margin-top:28px}
+</style>
+</head>
+<body>
+  <a class="brand" href="index.html"><span class="ico">📚</span> SAGEBOOK</a>
+  <div class="wrap">
+    <h1>隐私条款</h1>
+    <div class="sub">最后更新：2026 年 7 月</div>
+
+    <h2>1. 我们不强收集</h2>
+    <p>本站点是一个纯静态、无后端的写作工具。我们不设置追踪 Cookie，不采集您的姓名、邮箱等个人信息，也不分析您的浏览或写作行为。</p>
+
+    <h2>2. 您的书稿存在哪里</h2>
+    <p>默认情况下，您撰写的所有内容仅保存在<strong>您当前浏览器本地的 localStorage</strong> 中，不会上传到任何站点服务器——因为本站点根本没有后端数据库。</p>
+
+    <h2>3. 云端同步是可选项</h2>
+    <p>只有当您在"设置"中主动填写 GitHub 或 Gitee 的访问令牌，并点击"同步"时，书稿才会写入<strong>您自己的</strong> Gist 或私有仓库。令牌仅存于您的浏览器本地，站点运营方无法读取，也不经手您的内容。</p>
+
+    <h2>4. 调用 AI 时的数据</h2>
+    <p>使用云端大模型（如 OpenAI / Claude / Qwen）时，您选中的文本会按对应服务商的隐私政策被发送至其服务器；选用本地模型（Ollama）时，数据完全在您本机内处理，不出设备。</p>
+
+    <h2>5. 您的控制权</h2>
+    <p>清除浏览器数据即可删除本地书稿；在设置中移除令牌即可断开云端同步。您可随时导出书稿，数据始终归您掌握。</p>
+
+    <div class="foot">© 2026 SAGEBOOK · <a class="inline" href="index.html">返回首页</a></div>
+  </div>
+</body>
+</html>
