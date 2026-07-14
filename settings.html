@@ -537,6 +537,7 @@
                 </select>
 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn btn-secondary" onclick="scanLocalModels()" id="scanLocalBtn">🔄 扫描本地模型</button>
                     <button class="btn btn-secondary" onclick="pullModel()">📥 拉取新模型</button>
                     <button class="btn" onclick="saveLocalModel()">💾 保存</button>
                 </div>
@@ -850,6 +851,62 @@
                 addLog('  2. 浏览器打开: http://localhost:8000/settings.html');
                 
                 console.error('Ollama 连接失败:', error);
+            }
+        }
+
+        // 扫描本地已装模型（仅刷新模型下拉框，不改变连通检测逻辑）
+        async function scanLocalModels() {
+            const modelSelect = document.getElementById('localModel');
+            const btn = document.getElementById('scanLocalBtn');
+            const origText = btn.textContent;
+            btn.textContent = '🔄 扫描中...';
+            btn.disabled = true;
+
+            // 读取自定义端点（与 debugCheckOllama 一致）
+            const base = (localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434').replace(/\/+$/, '');
+            const url = base + '/api/tags';
+
+            // 混合内容检测：HTTPS 页面无法请求 HTTP 本地地址
+            if (location.protocol === 'https:' && base.startsWith('http://')) {
+                alert('❌ 混合内容限制\n\n当前通过公网(HTTPS)访问，浏览器会阻止连接本地 HTTP 地址。\n请改用本地 http:// 方式打开本站（如终端运行 python3 -m http.server 8000，再访问 http://localhost:8000/settings.html），即可扫描本地模型。');
+                btn.textContent = origText; btn.disabled = false;
+                return;
+            }
+
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 6000);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const models = data.models || [];
+
+                if (models.length > 0) {
+                    modelSelect.innerHTML = models.map(m =>
+                        `<option value="${m.name}">${m.name} (${formatSize(m.size)})</option>`
+                    ).join('');
+                    // 恢复上次选中的模型
+                    const saved = localStorage.getItem('localModel');
+                    if (saved && modelSelect.querySelector(`option[value="${saved}"]`)) modelSelect.value = saved;
+                    showToast(`✅ 扫描到 ${models.length} 个本地模型`);
+                } else {
+                    modelSelect.innerHTML = '<option value="">暂无模型，请先拉取</option>';
+                    showToast('ℹ️ 本地暂无模型，请先用「拉取新模型」下载');
+                }
+                localStorage.setItem('ollamaModels', JSON.stringify(models));
+            } catch (error) {
+                let msg = error.message || String(error);
+                if (msg.includes('aborted') || msg.includes('AbortError')) msg = '连接超时，请确认 Ollama 已启动';
+                else if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) msg = '无法连接 Ollama，请确认已启动且允许跨域';
+                modelSelect.innerHTML = '<option value="">未检测到 Ollama</option>';
+                showToast('⚠️ 扫描失败：' + msg);
+            } finally {
+                btn.textContent = origText; btn.disabled = false;
             }
         }
 
