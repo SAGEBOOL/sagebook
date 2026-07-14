@@ -548,6 +548,9 @@
                     2. 启动 Ollama: 运行 <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">ollama serve</code><br>
                     3. 拉取模型: <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">ollama pull qwen2:7b</code><br>
                     4. 推荐模型: Qwen2 (中文能力强)、Llama 3 (英文能力强)
+                    <br><br>
+                    <strong style="color: var(--text-primary);">🖥️ 想免敲命令用本地模型？</strong><br>
+                    双击项目里的 <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">start-local.command</code>（Windows 用 <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">start-local.bat</code>），自动起本地服务器并打开浏览器，本地模型即可直接用。
                 </div>
             </div>
 
@@ -868,7 +871,7 @@
 
             // 混合内容检测：HTTPS 页面无法请求 HTTP 本地地址
             if (location.protocol === 'https:' && base.startsWith('http://')) {
-                alert('❌ 混合内容限制\n\n当前通过公网(HTTPS)访问，浏览器会阻止连接本地 HTTP 地址。\n请改用本地 http:// 方式打开本站（如终端运行 python3 -m http.server 8000，再访问 http://localhost:8000/settings.html），即可扫描本地模型。');
+                alert('❌ 混合内容限制\n\n当前通过公网(HTTPS)访问，浏览器会阻止连接本地 HTTP 地址。\n请改用本地模式：双击项目里的 start-local.command（Windows 用 start-local.bat）一键起本地服务器并打开浏览器，即可扫描本地模型。');
                 btn.textContent = origText; btn.disabled = false;
                 return;
             }
@@ -1039,9 +1042,11 @@
                 <strong>这不是 bug，是浏览器的安全策略。</strong><br><br>
                 <strong>方案 A（推荐）— 切换到「云端」模式：</strong><br>
                 在上方「云端大模型」区域填写 API 地址、模型名和 Key 即可使用 AI 功能（支持 OpenAI 兼容接口）。<br><br>
-                <strong>方案 B — 本地运行本站：</strong><br>
+                <strong>方案 B — 本地运行本站（免敲命令）：</strong><br>
+                直接双击项目里的 <code style="background:var(--bg-primary);padding:1px 6px;border-radius:4px;">start-local.command</code>（Windows 用 <code style="background:var(--bg-primary);padding:1px 6px;border-radius:4px;">start-local.bat</code>），会自动起本地服务器并打开浏览器。本地 Ollama 模型即可正常使用。<br>
+                手动方式（等效）：<br>
                 <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000');showToast('已复制')">cd /Volumes/D/WorkBuddy/sagebook网站/repo &amp;&amp; python3 -m http.server 8000</code>
-                然后访问 <a href="http://localhost:8000/settings.html" style="color:var(--accent-light)">http://localhost:8000/settings.html</a>（Ollama 本地模式即可正常使用）。`;
+                然后访问 <a href="http://localhost:8000/settings.html" style="color:var(--accent-light)">http://localhost:8000/settings.html</a>。`;
             } else if (isCloudStudio) {
                 hint.style.cssText = 'padding:15px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--warning)';
                 hint.innerHTML = `<strong>⚠️ 当前通过公网链接访问</strong><br>公网页面无法直接访问你电脑上的 <code>localhost:11434</code>。<br><br>
