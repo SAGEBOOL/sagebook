@@ -84,19 +84,6 @@
         /* 主入口 CTA（陶土强调色，无紫渐变）——与「更多创作工具」等宽 */
         /* 开始写作：液态磨砂玻璃（仿 iPhone glassmorphism） */
         .cta-wrap { position: relative; padding: 28px 0 20px; }
-        /* 背后彩色光晕，给玻璃提供折射的液态底色 */
-        .cta-glow {
-            position: absolute; left: 50%; top: 50%;
-            width: 660px; height: 240px;
-            transform: translate(-50%, -50%);
-            z-index: 0; pointer-events: none; opacity: .92;
-            filter: blur(48px);
-            background:
-                radial-gradient(circle at 22% 50%, rgba(217,119,87,.55), transparent 60%),
-                radial-gradient(circle at 78% 50%, rgba(212,168,83,.42), transparent 60%),
-                radial-gradient(circle at 50% 18%, rgba(90,142,204,.30), transparent 62%);
-            animation: ctaFloat 9s ease-in-out infinite;
-        }
         @keyframes ctaFloat {
             0%,100% { transform: translate(-50%, -50%) scale(1); }
             50%     { transform: translate(-50%, -54%) scale(1.06); }
@@ -105,41 +92,24 @@
             position: relative; z-index: 1;
             display: block; width: 100%; max-width: 920px; margin: 0 auto;
             text-align: center; color: var(--fg-primary);
-            text-decoration: none; padding: 30px 54px; border-radius: 22px;
-            overflow: hidden;
-            /* 玻璃主体 */
-            background: linear-gradient(135deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-            backdrop-filter: blur(22px) saturate(180%);
-            -webkit-backdrop-filter: blur(22px) saturate(180%);
-            border: 1px solid rgba(255,255,255,.08);
-            box-shadow:
-                0 8px 32px rgba(0,0,0,.37),
-                inset 0 1px 0 rgba(255,255,255,.30),
-                inset 0 -1px 0 rgba(0,0,0,.12);
+            text-decoration: none; padding: 30px 54px; border-radius: var(--radius-lg);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            box-shadow: var(--shadow-md);
             transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
         }
         .cta-card:hover {
             transform: translateY(-3px);
-            border-color: rgba(255,255,255,.14);
-            box-shadow:
-                0 14px 44px rgba(0,0,0,.45),
-                inset 0 1px 0 rgba(255,255,255,.42);
-        }
-        /* 流动高光，强化液态金属玻璃感 */
-        .cta-card::after {
-            content: ""; position: absolute; inset: 0; border-radius: inherit;
-            background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.14) 50%, transparent 68%);
-            transform: translateX(-120%);
-            animation: ctaSheen 6.5s ease-in-out infinite;
-            pointer-events: none;
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg);
         }
         @keyframes ctaSheen {
             0%,100% { transform: translateX(-120%); }
             50%     { transform: translateX(120%); }
         }
         @media (prefers-reduced-motion: reduce) {
-            .cta-glow, .hero-glow { animation: none; }
-            .cta-card::after, .hero-artwork::after { animation: none; display: none; }
+            .hero-glow { animation: none; }
+            .hero-artwork::after { animation: none; display: none; }
             .tool-card { animation: none; }
         }
         .cta-icon { font-size: 42px; }
@@ -163,12 +133,10 @@
         .tools-panel.open { display: grid; }
         .tool-card {
             display: flex; align-items: center; gap: 10px;
-            padding: 15px 18px; border-radius: 15px;
-            background: linear-gradient(135deg, rgba(255,255,255,.02), rgba(255,255,255,.01));
-            backdrop-filter: blur(14px) saturate(160%);
-            -webkit-backdrop-filter: blur(14px) saturate(160%);
-            border: 1px solid rgba(255,255,255,.06);
-            box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.22);
+            padding: 15px 18px; border-radius: var(--radius-lg);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            box-shadow: var(--shadow-md);
             color: var(--fg-primary); text-decoration: none;
             font-size: 14.5px; font-weight: 600;
             transition: transform .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
@@ -176,8 +144,7 @@
         }
         .tool-card:hover {
             transform: translateY(-2px); color: var(--accent);
-            border-color: rgba(255,255,255,.12);
-            box-shadow: 0 10px 26px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.34);
+            border-color: var(--accent);
         }
         @keyframes toolsIn {
             from { opacity: 0; transform: translateY(10px); }
@@ -272,8 +239,7 @@
 
         <!-- 主入口：打开即写 -->
         <div class="cta-wrap">
-            <div class="cta-glow"></div>
-            <a href="main-editor.html" class="cta-card cursor-target">
+                        <a href="main-editor.html" class="cta-card cursor-target">
                 <div class="cta-icon">✍️</div>
                 <div class="cta-title">开始写作</div>
                 <div class="cta-sub">打开即写 · AI 技能与导出都在右侧面板里，不离开页面</div>
@@ -282,8 +248,7 @@
 
         <!-- 更多创作工具：与「开始写作」同款液态玻璃容器，点击展开嵌套工具 -->
         <div class="tools-wrap">
-            <div class="cta-glow"></div>
-            <button class="cta-card cursor-target" id="toolsToggle" type="button" aria-expanded="false" aria-controls="toolsPanel">
+                        <button class="cta-card cursor-target" id="toolsToggle" type="button" aria-expanded="false" aria-controls="toolsPanel">
                 <div class="cta-icon">🧰</div>
                 <div class="cta-title">更多创作工具</div>
                 <div class="cta-sub">构思 / 分析 / 发布 · 点击展开</div>
@@ -305,8 +270,7 @@
 
         <!-- 快速开始：严格复刻「开始写作」玻璃容器 -->
         <div class="cta-wrap">
-            <div class="cta-glow"></div>
-            <div class="quick cta-card">
+                        <div class="quick cta-card">
                 <h3>🚀 三步开始</h3>
                 <ol>
                     <li>在 <a href="settings.html">设置</a> 里配置 AI（推荐本地 Ollama）</li>
@@ -318,8 +282,7 @@
 
         <!-- 官方使用帮助说明：与「开始写作」同款液态玻璃容器，点击跳转 docs.html -->
         <div class="cta-wrap">
-            <div class="cta-glow"></div>
-            <a href="docs.html" class="cta-card cursor-target">
+                        <a href="docs.html" class="cta-card cursor-target">
                 <div class="cta-icon">📖</div>
                 <div class="cta-title">官方使用帮助说明</div>
                 <div class="cta-sub">从配置 AI 到手机云同步，九节图文详解 · 点击查看</div>
