@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SAGEBOOK 使用说明</title>
+<style>
+  :root{
+    --bg-primary:#141413;--bg-secondary:#1c1c1a;--bg-tertiary:#2a2a28;--bg-hover:#333331;
+    --border:#3d3d3a;--border-2:#2e2e2c;
+    --text-primary:#f0eee6;--text-secondary:#c8c6bd;--text-tertiary:#8b8a82;--text-muted:#5c5b55;
+    --accent:#d97757;--accent-hover:#e08a6e;--accent-dim:rgba(217,119,87,.14);
+    --success:#5aab7a;--warning:#d4a853;--danger:#e05555;--info:#5a8ecc;
+    --radius:12px;--radius-lg:16px;
+    --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei','Noto Sans SC',sans-serif;
+    --font-mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{font-family:var(--font-sans);background:var(--bg-primary);color:var(--text-secondary);line-height:1.75;-webkit-font-smoothing:antialiased;}
+
+  /* 顶栏 */
+  .topbar{max-width:1180px;margin:0 auto;padding:22px 24px 10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:var(--text-primary);font-weight:800;font-size:18px;letter-spacing:.04em;}
+  .brand .ico{font-size:22px;}
+  .brand:hover{opacity:.75;}
+  .topbar .ver{font-size:13px;color:var(--text-tertiary);border:1px solid var(--border);border-radius:20px;padding:4px 12px;}
+
+  /* 布局 */
+  .wrap{max-width:1180px;margin:0 auto;padding:10px 24px 60px;display:grid;grid-template-columns:236px 1fr;gap:36px;}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr;}}
+
+  /* 左侧目录 */
+  .nav{position:sticky;top:18px;align-self:start;max-height:calc(100vh - 36px);overflow:auto;padding-right:6px;}
+  .nav h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin:18px 0 8px;}
+  .nav a{display:block;color:var(--text-tertiary);text-decoration:none;font-size:13.5px;padding:6px 10px;border-radius:8px;border-left:2px solid transparent;transition:.15s;}
+  .nav a:hover{color:var(--text-primary);background:var(--bg-tertiary);}
+  .nav a.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-dim);}
+
+  /* 内容 */
+  main{min-width:0;}
+  .hero{padding:14px 0 8px;}
+  .hero h1{font-size:30px;font-weight:800;color:var(--text-primary);letter-spacing:.02em;}
+  .hero p{margin-top:10px;color:var(--text-secondary);font-size:15px;max-width:680px;}
+
+  section{margin-top:46px;scroll-margin-top:18px;}
+  h2{font-size:21px;font-weight:700;color:var(--text-primary);padding-left:13px;border-left:4px solid var(--accent);margin-bottom:16px;}
+  h3{font-size:16px;font-weight:700;color:var(--text-primary);margin:22px 0 10px;}
+  p{margin:10px 0;}
+  ul,ol{margin:10px 0 10px 22px;}
+  li{margin:6px 0;}
+  code{font-family:var(--font-mono);font-size:13px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--accent-hover);}
+
+  .card{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin:14px 0;}
+  .card.note{border-color:var(--info);background:rgba(90,142,204,.08);}
+  .card.warn{border-color:var(--warning);background:rgba(212,168,83,.08);}
+  .card.tip{border-color:var(--success);background:rgba(90,171,122,.08);}
+  .card .lbl{font-weight:700;color:var(--text-primary);font-size:13px;letter-spacing:.03em;display:block;margin-bottom:6px;}
+  .card .lbl.info{color:var(--info);} .card .lbl.warn{color:var(--warning);} .card .lbl.tip{color:var(--success);}
+
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  th{text-align:left;padding:11px 14px;color:var(--text-tertiary);font-size:12px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);background:var(--bg-tertiary);}
+  td{padding:11px 14px;border-bottom:1px solid var(--border-2);color:var(--text-secondary);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--bg-tertiary);}
+  td b{color:var(--text-primary);}
+
+  .steps{counter-reset:s;list-style:none;margin:12px 0;padding:0;}
+  .steps li{counter-increment:s;position:relative;padding:10px 14px 10px 46px;margin:8px 0;background:var(--bg-secondary);border:1px solid var(--border);border-radius:10px;}
+  .steps li::before{content:counter(s);position:absolute;left:12px;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+  .steps li b{color:var(--text-primary);}
+
+  .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin:14px 0;}
+  .tile{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+  .tile .t{font-weight:700;color:var(--text-primary);font-size:14.5px;display:flex;align-items:center;gap:8px;}
+  .tile .d{font-size:13px;color:var(--text-tertiary);margin-top:6px;line-height:1.6;}
+
+  .pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:20px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);margin-right:6px;}
+  .kbd{font-family:var(--font-mono);font-size:12px;background:var(--bg-tertiary);border:1px solid var(--border);border-bottom-width:2px;border-radius:6px;padding:1px 7px;color:var(--text-primary);}
+
+  .footer{max-width:1180px;margin:40px auto 0;padding:24px;border-top:1px solid var(--border-2);text-align:center;color:var(--text-muted);font-size:13px;}
+  a.link{color:var(--accent);text-decoration:none;} a.link:hover{color:var(--accent-hover);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="index.html"><span class="ico">📚</span> SAGEBOOK</a>
+  <span class="ver">使用说明 · v1.5</span>
+</div>
+
+<div class="wrap">
+  <!-- 目录 -->
+  <nav class="nav">
+    <h4>目录</h4>
+    <a href="#intro">一、SAGEBOOK 是什么</a>
+    <a href="#start">二、三步开始</a>
+    <a href="#home">三、首页功能</a>
+    <a href="#editor">四、主编辑器</a>
+    <a href="#settings">五、设置页面</a>
+    <a href="#skills">六、写作技能（12 项）</a>
+    <a href="#tools">七、构思 / 分析 / 发布工具</a>
+    <a href="#sync">八、手机电脑云同步</a>
+    <a href="#faq">九、常见问题</a>
+  </nav>
+
+  <main>
+    <div class="hero">
+      <h1>SAGEBOOK 使用说明</h1>
+      <p>一个<strong>纯静态、本地优先</strong>的小说创作平台：打开即写，内嵌 AI 写作技能，支持本地 Ollama 与云端大模型，并能通过云同步在手机与电脑间互通书稿。</p>
+    </div>
+
+    <!-- 一 -->
+    <section id="intro">
+      <h2>一、SAGEBOOK 是什么</h2>
+      <p>SAGEBOOK 是一套部署在网页上的写作工具集，不依赖后端服务器，所有书稿默认保存在你浏览器的本地存储（<code>localStorage</code>）中，<b>完全私有</b>。它通过调用你自己的 AI（本地 Ollama 或云端 API）提供续写、润色、审查等能力。</p>
+      <div class="grid2">
+        <div class="tile"><div class="t">✍️ 沉浸写作</div><div class="d">三栏式编辑器：章节树 / 写作区 / AI 面板，不离开页面即可完成构思到成稿。</div></div>
+        <div class="tile"><div class="t">🤖 内嵌 AI 技能</div><div class="d">12 项写作技能 + 编辑器内 5 项审查/生成技能，全部真实调用你配置的模型。</div></div>
+        <div class="tile"><div class="t">💾 实时保存</div><div class="d">每一次输入自动写入本地，刷新或关闭浏览器不丢稿。</div></div>
+        <div class="tile"><div class="t">🔒 本地隐私</div><div class="d">书稿默认只存在本机浏览器；是否上云由你决定是否开启同步。</div></div>
+        <div class="tile"><div class="t">🔄 跨设备同步</div><div class="d">通过 GitHub Gist / Gitee 把书稿加密托管，手机与电脑共享同一份。</div></div>
+      </div>
+    </section>
+
+    <!-- 二 -->
+    <section id="start">
+      <h2>二、三步开始</h2>
+      <ol class="steps">
+        <li><b>配置 AI</b>：打开 <a class="link" href="settings.html">设置</a>，选择「本地 Ollama」或「云端大模型」并填写模型信息（推荐本地 Ollama，免费用、数据不出本机）。</li>
+        <li><b>进入编辑器</b>：回到首页点「开始写作」，或书稿页左上角 📚 <b>SAGEBOOK</b> 回首页再进入。</li>
+        <li><b>动手写 + 调 AI</b>：直接在中间写作区动笔；选中文字 → 右侧面板切到「💬 AI 助手」或「⚡ 技能」→ 让 AI 续写、润色或审查。</li>
+      </ol>
+      <div class="card note"><span class="lbl info">提示</span>首次使用请务必先到设置页配置模型，否则 AI 相关按钮会提示「未配置 AI」。</div>
+    </section>
+
+    <!-- 三 -->
+    <section id="home">
+      <h2>三、首页功能</h2>
+      <h3>状态栏（五张卡片）</h3>
+      <table>
+        <tr><th>卡片</th><th>含义</th></tr>
+        <tr><td>✍️ 沉浸写作</td><td>三栏编辑器，专注成文。</td></tr>
+        <tr><td>🤖 内嵌 AI 写作技能</td><td>AI 能力内置于编辑器右侧面板，不跳页。</td></tr>
+        <tr><td>💾 实时保存</td><td>输入即存本地，刷新不丢。</td></tr>
+        <tr><td>🔒 本地隐私保存</td><td>书稿默认仅存本机浏览器。</td></tr>
+        <tr><td>🔄 电脑、手机同步</td><td>开启云同步后，多端共享同一书稿。</td></tr>
+      </table>
+
+      <h3>「开始写作」玻璃容器</h3>
+      <p>首页中央的液态玻璃大卡，点击进入 <a class="link" href="main-editor.html">主编辑器</a>。背后彩色光晕与流动高光仅作视觉装饰。</p>
+
+      <h3>「更多创作工具」可展开板块</h3>
+      <p>与「开始写作」同款玻璃容器，点击后向下展开 10 个工具入口（写作技能、大纲、角色、世界观、知识图谱、写作分析、平台工具、AI 集成、模板库、设置）。再点一次收起。</p>
+    </section>
+
+    <!-- 四 -->
+    <section id="editor">
+      <h2>四、主编辑器（核心工作区）</h2>
+      <p>地址：<code>main-editor.html</code>。布局为左侧章节树、中间写作区、右侧 AI 面板，顶部为工具栏。</p>
+
+      <h3>顶部工具栏</h3>
+      <table>
+        <tr><th>按钮</th><th>作用</th></tr>
+        <tr><td>👁 预览</td><td>切换 Markdown 渲染预览 / 原文编辑。</td></tr>
+        <tr><td>🔍 审查</td><td>立即对当前章节运行「写作审查器」，结果出现在右侧「✅ 审查」面板。</td></tr>
+        <tr><td>☁ 同步</td><td>把本地书稿上传到云端（GitHub Gist / Gitee）。</td></tr>
+        <tr><td>⬇ 拉取</td><td>从云端下载书稿并覆盖本地（会先二次确认）。</td></tr>
+        <tr><td>📚 SAGEBOOK</td><td>返回首页。</td></tr>
+      </table>
+
+      <h3>左侧 · 章节目录</h3>
+      <ul>
+        <li>点击章节切换当前编辑文件；悬停章节行右侧出现三个按钮：</li>
+        <ul>
+          <li><b>✏️ 重命名</b>：行内输入新名，自动补 <code>.md</code> 后缀。</li>
+          <li><b>📋 创建副本</b>：复制全文并新开一份（标题自动加「(副本)」）。</li>
+          <li><b>🗑 删除</b>：二次确认后删除；仅剩一章时禁止删除。</li>
+        </ul>
+      </ul>
+
+      <h3>中间 · 写作区</h3>
+      <ul>
+        <li>支持 <b>Markdown</b> 语法；顶部「AI 续写」按钮可在光标处生成续写内容。</li>
+        <li>续写结果以浮层出现，可 <b>✓ 接受 / ✗ 拒绝 / 🔄 重新生成</b>。</li>
+        <li>输入实时自动保存，无需手动存盘。</li>
+      </ul>
+
+      <h3>右侧 · AI 面板（5 个标签页）</h3>
+      <table>
+        <tr><th>标签</th><th>功能</th></tr>
+        <tr><td>💬 AI 助手</td><td>对话式协作：续写/改写当前章、讨论角色与剧情、检查逻辑、生成大纲。输入框 <span class="kbd">Enter</span> 发送，<span class="kbd">Shift+Enter</span> 换行。</td></tr>
+        <tr><td>⚡ 技能</td><td>一键运行 5 项内置技能（见下），结果写入「✅ 审查」面板。</td></tr>
+        <tr><td>📋 模板</td><td>点击插入：场景模板、章节模板、角色卡模板、大纲模板。</td></tr>
+        <tr><td>✅ 审查</td><td>展示「🔍 审查」与各项技能的运行结果。</td></tr>
+        <tr><td>⚙ 设置</td><td>快速切换 AI 引擎（本地 Ollama / 云端）、地址、模型、API Key，与全局设置联动。</td></tr>
+      </table>
+
+      <h3>⚡ 技能面板内置 5 项</h3>
+      <table>
+        <tr><th>技能</th><th>说明</th></tr>
+        <tr><td>📝 写作审查器</td><td>三阶段递进审查：禁用词 → 名称一致性 → 跨章连贯性。</td></tr>
+        <tr><td>🔗 跨章一致性检查</td><td>检查角色、地点、设定在相邻章节间是否前后一致。</td></tr>
+        <tr><td>🔍 名称相似度检查</td><td>检测过于相似的角色名/地名，防止读者混淆。</td></tr>
+        <tr><td>🧹 去 AI 味</td><td>去除机器腔与套路表达，回归自然笔触。</td></tr>
+        <tr><td>🗺 大纲生成器</td><td>基于当前内容自动生成/更新章节大纲。</td></tr>
+      </table>
+    </section>
+
+    <!-- 五 -->
+    <section id="settings">
+      <h2>五、设置页面</h2>
+      <p>地址：<code>settings.html</code>。集中配置 AI 引擎与云同步。</p>
+
+      <h3>1. AI 引擎配置</h3>
+      <div class="card"><span class="lbl">本地 Ollama（推荐）</span>
+        <ul>
+          <li>填写 Ollama 服务地址（默认 <code>http://localhost:11434</code>）与模型名（如 <code>qwen2.5:14b</code>）。</li>
+          <li>点 <b>🔄 扫描本地模型</b> 自动列出本机已装模型；点「测试」验证连通性。</li>
+          <li>数据不出本机，免费、隐私最佳。</li>
+        </ul>
+      </div>
+      <div class="card"><span class="lbl">云端大模型</span>
+        <ul>
+          <li>填写 API 地址（兼容 OpenAI 格式，如 <code>https://api.openai.com/v1</code>）、API Key、模型名。</li>
+          <li>点「测试连接」验证（公网 HTTPS 页若填了 <code>http://</code> 地址会被浏览器拦截，需改 https 或用本地模式）。</li>
+        </ul>
+      </div>
+
+      <h3>2. 一键本地启动器（解决混合内容限制）</h3>
+      <div class="card warn"><span class="lbl warn">重要</span>当你通过公网地址（<code>https://sagebool.github.io</code>）访问时，浏览器出于安全策略<strong>禁止</strong>网页连接本地 <code>http://localhost</code> 的 Ollama（混合内容限制）。此时「扫描本地模型」会提示改用本地模式。</div>
+      <p>解决：双击项目里的 <code>start-local.command</code>（macOS）/ <code>start-local.bat</code>（Windows），它会自动起一个本地服务器并打开浏览器，让你以 <code>http://localhost</code> 访问本站，从而正常使用本地 Ollama。无需安装任何额外软件。</p>
+
+      <h3>3. 云同步（手机 / 电脑互通）</h3>
+      <p>见 <a class="link" href="#sync">第八节</a> 详解。</p>
+    </section>
+
+    <!-- 六 -->
+    <section id="skills">
+      <h2>六、写作技能页（完整 12 项）</h2>
+      <p>地址：<code>writing-skills.html</code>。一个独立的「输入文本 → 选技能 → 看结果」工作台，适合脱离编辑器单独处理片段、设定草稿。</p>
+      <p><b>用法</b>：左侧粘贴/输入文本 → 点任一技能卡片 → 右侧出 AI 结果 → 「📋 复制结果」或「💾 下载 .txt」。</p>
+      <table>
+        <tr><th style="width:42px"></th><th>技能</th><th>用途</th></tr>
+        <tr><td>🧹</td><td><b>去 AI 味</b></td><td>消除机器感与模板化表达，让文字更自然、有个人风格。</td></tr>
+        <tr><td>✨</td><td><b>润色</b></td><td>文学性打磨，提升流畅度与节奏，不改原意与语气。</td></tr>
+        <tr><td>🔍</td><td><b>扩写</b></td><td>增加感官细节、心理与氛围，篇幅扩至 1.5–2 倍，不水字数。</td></tr>
+        <tr><td>➡️</td><td><b>续写</b></td><td>顺承文风往下写 200–300 字，自然推进情节。</td></tr>
+        <tr><td>📋</td><td><b>大纲生成</b></td><td>从片段提炼章节大纲（卷/章标题 + 要点 + 可展开支线）。</td></tr>
+        <tr><td>⚔️</td><td><b>矛盾冲突</b></td><td>挖掘文本张力，给出 3–5 个加强冲突/反转的切入点。</td></tr>
+        <tr><td>🌍</td><td><b>设定生成</b></td><td>由片段反向推导世界观（地理/势力/力量体系/规则/历史）。</td></tr>
+        <tr><td>💬</td><td><b>对话生成</b></td><td>创作自然、有潜台词与观点冲突的对话（2–4 人）。</td></tr>
+        <tr><td>💡</td><td><b>情节脑暴</b></td><td>提供 5 个可行发展方向/爽点，含看点与风险。</td></tr>
+        <tr><td>👤</td><td><b>人物小传</b></td><td>生成角色档案：身份、性格、欲望恐惧、核心矛盾、弧光。</td></tr>
+        <tr><td>📊</td><td><b>章节点评</b></td><td>从风格/节奏/人物/悬念四维点评，给 3 条修改建议。</td></tr>
+        <tr><td>🌟</td><td><b>金句提炼</b></td><td>提炼或创作 3–5 句金句，并注明适用场景。</td></tr>
+      </table>
+    </section>
+
+    <!-- 七 -->
+    <section id="tools">
+      <h2>七、构思 / 分析 / 发布 工具</h2>
+      <p>首页「更多创作工具」展开后进入的 8 个独立模块，各自专注一类创作任务：</p>
+      <div class="grid2">
+        <div class="tile"><div class="t">📋 大纲编辑器</div><div class="d">规划卷次、章节、节点事件的结构化大纲。</div></div>
+        <div class="tile"><div class="t">👤 角色管理</div><div class="d">建立并维护人物档案、关系与成长弧光。</div></div>
+        <div class="tile"><div class="t">🌍 世界观管理</div><div class="d">沉淀地理、势力、力量体系与社会规则等设定。</div></div>
+        <div class="tile"><div class="t">🕸️ 知识图谱</div><div class="d">以图谱形式呈现人物、地点、事件之间的关联。</div></div>
+        <div class="tile"><div class="t">📊 写作分析</div><div class="d">对文本做节奏、风格、密度等维度的量化分析。</div></div>
+        <div class="tile"><div class="t">📱 网文平台工具</div><div class="d">面向发布平台的辅助工具（格式、章节管理等）。</div></div>
+        <div class="tile"><div class="t">🤖 AI 深度集成</div><div class="d">更高级的 AI 调用与编排能力。</div></div>
+        <div class="tile"><div class="t">📚 模板库</div><div class="d">可复用的写作模板集合，一键调用。</div></div>
+      </div>
+      <div class="card tip"><span class="lbl tip">小建议</span>先在「大纲编辑器 / 角色管理 / 世界观管理」打底，再用主编辑器成稿，最后用「写作技能页」统一润色与审查，工作流最顺。</div>
+    </section>
+
+    <!-- 八 -->
+    <section id="sync">
+      <h2>八、手机 / 电脑云同步</h2>
+      <p>本地书稿默认只存浏览器。开启云同步后，书稿会被托管到 <b>GitHub Gist</b> 或 <b>Gitee 仓库</b>，凭 Token 在多端共享——不受「公网页 vs 本地页」来源隔离影响。</p>
+
+      <h3>第一步 · 在设置页配置（电脑端）</h3>
+      <ol class="steps">
+        <li>打开 <a class="link" href="settings.html">设置</a> → 「云同步（手机/电脑互通）」。</li>
+        <li>选择平台：<b>GitHub Gist</b> 或 <b>Gitee 仓库</b>。</li>
+        <li>填写对应 <b>Token</b>：
+          <ul>
+            <li>GitHub：到 <a class="link" href="https://github.com/settings/tokens" target="_blank">Personal Access Tokens</a> 生成，勾选 <code>gist</code> 权限。</li>
+            <li>Gitee：到 Gitee 个人设置生成私有令牌，并填写「仓库（owner/repo）+ 文件路径」。</li>
+          </ul>
+        </li>
+        <li>（GitHub）可留空 Gist ID，首次「☁ 同步」会自动创建。</li>
+        <li>可选开启「自动定时同步」，设定间隔（默认 10 分钟，后台静默上传）。</li>
+      </ol>
+
+      <h3>第二步 · 同步使用</h3>
+      <table>
+        <tr><th>操作</th><th>在哪</th><th>效果</th></tr>
+        <tr><td>☁ 同步（上传）</td><td>主编辑器工具栏</td><td>本地书稿 → 云端；首次建 Gist，之后更新。顶栏显示「上次同步 X 前」。</td></tr>
+        <tr><td>⬇ 拉取（下载）</td><td>主编辑器工具栏</td><td>云端书稿 → 本地（覆盖前会确认）。</td></tr>
+      </table>
+
+      <h3>第三步 · 在手机 / 另一台电脑</h3>
+      <p>用同一浏览器打开本站 → 设置页填入<strong>相同的 Token</strong> → 点「⬇ 拉取」即可下载书稿继续写。之后各自「☁ 同步」即可互通。</p>
+      <div class="card warn"><span class="lbl warn">注意</span>「⬇ 拉取」会<strong>覆盖本地</strong>当前书稿。多端同时写时，先「☁ 同步」再在另一端点「⬇ 拉取」，避免互相覆盖。</div>
+    </section>
+
+    <!-- 九 -->
+    <section id="faq">
+      <h2>九、常见问题</h2>
+
+      <h3>Q1：在公网页（sagebool.github.io）连不上本地 Ollama？</h3>
+      <p>这是浏览器<strong>混合内容</strong>安全限制：HTTPS 页不能请求本地 HTTP 地址。解决：用项目里的 <code>start-local.command</code> / <code>start-local.bat</code> 起本地服务器，以 <code>http://localhost</code> 访问即可。</p>
+
+      <h3>Q2：点技能 / 续写提示「未配置 AI」？</h3>
+      <p>先到 <a class="link" href="settings.html">设置</a> 配置本地 Ollama 或云端 API Key 并测试通过，再回编辑器使用。</p>
+
+      <h3>Q3：AI 调用失败 / 报错？</h3>
+      <p>依次检查：① 本地 Ollama 是否在运行（<code>ollama serve</code>）；② 云端 Key 是否正确、额度是否充足；③ 网络是否畅通；④ 若在公网页用本地模型，参见 Q1。</p>
+
+      <h3>Q4：我的书稿存在哪？私密吗？</h3>
+      <p>默认只存在你浏览器的 <code>localStorage</code>，不上传任何服务器，完全私有。只有你主动开启「云同步」才会托管到 Gist/Gitee（由你的 Token 控制权限）。</p>
+
+      <h3>Q5：换设备或换浏览器书稿看不见？</h3>
+      <p>本地存储按「浏览器 + 域名」隔离，不会自动跨设备。请用第八节的云同步在设备间搬运。</p>
+
+      <h3>Q6：误删了章节能恢复吗？</h3>
+      <p>删除前有二次确认；若已确认删除，可尝试从「☁ 同步」的云端版本「⬇ 拉取」恢复（前提是之前同步过）。</p>
+    </section>
+
+    <div class="footer">
+      SAGE BOOK v1.5 · 使用说明 · 你的创作主场<br>
+      Powered by Ollama · OpenAI · Claude · Qwen
+    </div>
+  </main>
+</div>
+
+<script>
+  // 左侧目录滚动高亮
+  const links = [...document.querySelectorAll('.nav a')];
+  const map = {};
+  links.forEach(a => { const id = a.getAttribute('href').slice(1); const el = document.getElementById(id); if (el) map[id] = a; });
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const a = map[e.target.id]; if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -75% 0px' });
+  Object.keys(map).forEach(id => obs.observe(document.getElementById(id)));
+</script>
+</body>
+</html>
