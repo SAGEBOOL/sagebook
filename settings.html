@@ -628,6 +628,44 @@
             </div>
         </div>
 
+        <!-- 云同步（跨设备） -->
+        <div class="settings-group">
+            <div class="group-title">
+                <span>☁️</span>
+                <span>云同步（手机 / 电脑互通）</span>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-header">
+                    <div class="setting-label">🔑 GitHub Token（gist 权限）</div>
+                    <span class="setting-badge badge-local">端到端</span>
+                </div>
+                <div class="setting-desc">
+                    书稿存为你的私人 Gist，手机和电脑填同一个 Token 即可互通。零服务器、纯前端实现。
+                </div>
+
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">GitHub Personal Access Token（只需 gist 权限）</label>
+                <input type="password" class="input-box" id="gistToken" placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" style="margin-bottom:12px;">
+
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">Gist ID（首次同步后自动生成，可留空）</label>
+                <input type="text" class="input-box" id="gistId" placeholder="选填，首次上传后自动保存" style="margin-bottom:14px;">
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="saveGistSettings()">💾 保存同步设置</button>
+                    <button class="btn btn-secondary" onclick="testGistConnection()">🔗 测试连接</button>
+                </div>
+
+                <div style="margin-top: 15px; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
+                    <strong style="color: var(--text-primary);">📱 如何开启跨设备同步？</strong><br>
+                    1. 打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color: var(--accent-light);">GitHub Token 设置页</a><br>
+                    2. 生成新 Token，勾选 <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">gist</code> 权限<br>
+                    3. 复制 Token 粘贴到上方，点「保存同步设置」<br>
+                    4. 电脑 / 手机都填同一个 Token，在编辑器点「☁ 同步」即可互通<br>
+                    <span style="color:var(--text-tertiary);font-size:11px;">Token 仅存于本机浏览器，不上传任何服务器。</span>
+                </div>
+            </div>
+        </div>
+
         <!-- 保存按钮 -->
         <div style="text-align: center; margin-top: 40px;">
             <button class="btn btn-success" style="padding: 15px 40px; font-size: 16px;" onclick="saveAllSettings()">
@@ -961,6 +999,36 @@
             showToast(`✅ 已切换到${mode === 'local' ? '本地' : '云端'}AI模式`);
         }
 
+        // 云同步设置：保存 Token / Gist ID 到本地
+        function saveGistSettings() {
+            const token = document.getElementById('gistToken').value.trim();
+            const gistId = document.getElementById('gistId').value.trim();
+            if (token) localStorage.setItem('sagebook_gist_token', token);
+            else localStorage.removeItem('sagebook_gist_token');
+            if (gistId) localStorage.setItem('sagebook_gist_id', gistId);
+            else localStorage.removeItem('sagebook_gist_id');
+            showToast('✅ 云同步设置已保存');
+        }
+
+        async function testGistConnection() {
+            const token = document.getElementById('gistToken').value.trim();
+            if (!token) { alert('请先填写 Token'); return; }
+            try {
+                const res = await fetch('https://api.github.com/user', {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+                });
+                if (res.ok) {
+                    const u = await res.json();
+                    showToast(`✅ 连接成功 · @${u.login}`);
+                } else {
+                    const e = await res.json().catch(() => ({}));
+                    throw new Error(e.message || `HTTP ${res.status}`);
+                }
+            } catch (err) {
+                alert('❌ 连接失败：' + err.message + '\n\n请检查 Token 是否正确、是否已勾选 gist 权限。');
+            }
+        }
+
         // 保存所有设置
         function saveAllSettings() {
             // 开关
@@ -991,6 +1059,12 @@
             if (localModel) {
                 localStorage.setItem('localModel', localModel);
             }
+
+            // 云同步 Token / Gist ID 落盘
+            const gistToken = document.getElementById('gistToken')?.value.trim();
+            if (gistToken) localStorage.setItem('sagebook_gist_token', gistToken);
+            const gistId = document.getElementById('gistId')?.value.trim();
+            if (gistId) localStorage.setItem('sagebook_gist_id', gistId);
 
             // 决定生效模式：两者都配时按策略；缺其一则自动回退到已配的那个
             let useLocal;
@@ -1117,6 +1191,11 @@
                     const ms = document.getElementById('modelStrategy');
                     if (ms && ms.querySelector(`option[value="${modelStrategy}"]`)) ms.value = modelStrategy;
                 }
+                // 恢复云同步设置
+                const gistToken = localStorage.getItem('sagebook_gist_token');
+                if (gistToken) { const gt = document.getElementById('gistToken'); if (gt) gt.value = gistToken; }
+                const gistId = localStorage.getItem('sagebook_gist_id');
+                if (gistId) { const gi = document.getElementById('gistId'); if (gi) gi.value = gistId; }
                 // 清除旧版 customEndpoint 残留键
                 localStorage.removeItem('customEndpoint');
             }, 2000);

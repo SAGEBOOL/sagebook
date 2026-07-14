@@ -209,6 +209,8 @@ body {
 .main-header .header-actions button.primary:hover { background:var(--accent-hover); }
 .main-header .header-actions button.ai-btn { border-color:var(--accent); color:var(--accent); }
 .main-header .header-actions button.ai-btn:hover { background:var(--accent-dim); }
+.main-header .header-actions button.sync-btn { border-color:var(--border-primary); color:var(--fg-secondary); }
+.main-header .header-actions button.sync-btn:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
 
 /* AI 状态指示灯 */
 .ai-status {
@@ -502,6 +504,8 @@ body {
         </button>
         <button onclick="runAudit()" title="运行审查">🔍 审查</button>
         <button class="primary" onclick="saveFile()">💾 保存</button>
+        <button class="sync-btn" onclick="syncUpload()" title="同步到云端（上传本地→Gist）">☁ 同步</button>
+        <button class="sync-btn" onclick="syncDownload()" title="从云端拉取（下载 Gist→本地）">⬇ 拉取</button>
         <button onclick="togglePanel()" title="切换面板">⚙</button>
       </div>
     </div>
@@ -1407,6 +1411,80 @@ function saveFile() {
   saveCurrentToNovel();
   const words = document.getElementById('editor').value.replace(/\s/g, '').length;
   toast('已保存 · ' + words + ' 字', 'success');
+}
+
+// ============================================
+// 云同步（GitHub Gist，跨设备）
+// 书稿存为私人 Gist，手机/电脑填同一 Token 即可互通
+// ============================================
+const GIST_FILE = 'sagebook_novel.json';
+function getGistToken() { return localStorage.getItem('sagebook_gist_token') || ''; }
+function getGistId() { return localStorage.getItem('sagebook_gist_id') || ''; }
+function setGistId(id) { if (id) localStorage.setItem('sagebook_gist_id', id); }
+
+/** 上传：本地 → Gist（首次创建，之后更新） */
+async function syncUpload() {
+  const token = getGistToken();
+  if (!token) { alert('请先在设置页（⚙️）填写 GitHub Token（gist 权限）'); return; }
+  saveCurrentToNovel();
+  const novel = getNovel();
+  const content = JSON.stringify(novel, null, 2);
+  const gistId = getGistId();
+
+  try {
+    const body = { public: false, files: { [GIST_FILE]: { content } } };
+    let url = 'https://api.github.com/gist', method = 'POST';
+    if (gistId) { url = `https://api.github.com/gist/${gistId}`; method = 'PATCH'; }
+    else { body.description = 'SageBook 书稿同步'; }
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/vnd.github+json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+    const data = await res.json();
+    if (!gistId) setGistId(data.id);
+    localStorage.setItem('sagebook_gist_synced', Date.now());
+    toast('已同步到云端 ☁', 'success');
+  } catch (err) {
+    toast('同步失败：' + err.message, 'error');
+  }
+}
+
+/** 下载：Gist → 本地（覆盖当前书稿） */
+async function syncDownload() {
+  const token = getGistToken();
+  const gistId = getGistId();
+  if (!token || !gistId) { alert('请先在编辑器点一次「☁ 同步」创建云端存档，或检查设置页 Token / Gist ID。'); return; }
+  if (!confirm('从云端拉取会用云端内容覆盖本地当前书稿，确定继续？\n（建议先在另一端上传最新版本）')) return;
+
+  try {
+    const res = await fetch(`https://api.github.com/gist/${gistId}`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+    const data = await res.json();
+    const file = data.files && data.files[GIST_FILE];
+    if (!file || !file.content) throw new Error('云端没有找到书稿文件');
+
+    const novel = JSON.parse(file.content);
+    saveNovel(novel);
+
+    const cur = (novel.currentFile && novel.chapters[novel.currentFile]) ? novel.currentFile : Object.keys(novel.chapters)[0];
+    document.getElementById('editor').value = (novel.chapters[cur] && novel.chapters[cur].content) || '';
+    document.getElementById('currentFileName').textContent = (novel.chapters[cur] && novel.chapters[cur].title) || '未命名';
+    updateWordCount();
+    renderFileTree();
+    localStorage.setItem('sagebook_gist_synced', Date.now());
+    toast('已从云端拉取 ☁', 'success');
+  } catch (err) {
+    toast('拉取失败：' + err.message, 'error');
+  }
 }
 
 function filterFiles() {
