@@ -1421,12 +1421,20 @@ function saveFile() {
 // 书稿存为私人 Gist，手机/电脑填同一 Token 即可互通
 // ============================================
 const GIST_FILE = 'sagebook_novel.json';
+function getSyncPlatform() { return localStorage.getItem('sagebook_sync_platform') || 'github'; }
 function getGistToken() { return localStorage.getItem('sagebook_gist_token') || ''; }
 function getGistId() { return localStorage.getItem('sagebook_gist_id') || ''; }
 function setGistId(id) { if (id) localStorage.setItem('sagebook_gist_id', id); }
+function getGiteeToken() { return localStorage.getItem('sagebook_gitee_token') || ''; }
+function getGiteeRepo() { return localStorage.getItem('sagebook_gitee_repo') || ''; }
+function getGiteePath() { return localStorage.getItem('sagebook_gitee_path') || 'sagebook_novel.json'; }
+function getSyncToken() { return getSyncPlatform() === 'gitee' ? getGiteeToken() : getGistToken(); }
+function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+function base64ToUtf8(b64) { return decodeURIComponent(escape(atob((b64 || '').replace(/\s/g, '')))); }
 
 /** 上传：本地 → Gist（首次创建，之后更新） */
 async function syncUpload(silent) {
+  if (getSyncPlatform() === 'gitee') return giteeUpload(silent);
   const token = getGistToken();
   if (!token) { if (!silent) alert('请先在设置页（⚙️）填写 GitHub Token（gist 权限）'); return; }
   saveCurrentToNovel();
@@ -1462,6 +1470,7 @@ async function syncUpload(silent) {
 
 /** 下载：Gist → 本地（覆盖当前书稿） */
 async function syncDownload() {
+  if (getSyncPlatform() === 'gitee') return giteeDownload();
   const token = getGistToken();
   const gistId = getGistId();
   if (!token || !gistId) { alert('请先在编辑器点一次「☁ 同步」创建云端存档，或检查设置页 Token / Gist ID。'); return; }
@@ -1486,6 +1495,63 @@ async function syncDownload() {
     renderFileTree();
     localStorage.setItem('sagebook_gist_synced', Date.now());
     toast('已从云端拉取 ☁', 'success');
+  } catch (err) {
+    toast('拉取失败：' + err.message, 'error');
+  }
+}
+
+/** 上传：本地 → Gitee 私有仓库文件（首次创建，之后更新） */
+async function giteeUpload(silent) {
+  const token = getGiteeToken();
+  const repo = getGiteeRepo();
+  const path = getGiteePath();
+  if (!token || !repo) { if (!silent) alert('请先在设置页（⚙️）选择 Gitee 平台并填写 Token 与仓库（owner/repo）'); return; }
+  saveCurrentToNovel();
+  const novel = getNovel();
+  const content = utf8ToBase64(JSON.stringify(novel, null, 2));
+  const url = `https://gitee.com/api/v5/repos/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
+  try {
+    let sha = null;
+    const head = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (head.ok) { const d = await head.json(); sha = d.sha; }
+    const body = { content, message: 'SageBook 同步 ' + new Date().toISOString() };
+    if (sha) body.sha = sha;
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+    localStorage.setItem('sagebook_gist_synced', Date.now());
+    updateSyncStatus();
+    if (!silent) toast('已同步到 Gitee ☁', 'success');
+  } catch (err) {
+    if (!silent) toast('同步失败：' + err.message, 'error');
+  }
+}
+
+/** 下载：Gitee 私有仓库文件 → 本地（覆盖当前书稿） */
+async function giteeDownload() {
+  const token = getGiteeToken();
+  const repo = getGiteeRepo();
+  const path = getGiteePath();
+  if (!token || !repo) { alert('请先在设置页选择 Gitee 平台并填写 Token 与仓库（owner/repo）。'); return; }
+  if (!confirm('从 Gitee 拉取会用云端内容覆盖本地当前书稿，确定继续？\n（建议先在另一端上传最新版本）')) return;
+  const url = `https://gitee.com/api/v5/repos/${encodeURIComponent(repo)}/contents/${encodeURIComponent(path)}`;
+  try {
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `HTTP ${res.status}`); }
+    const data = await res.json();
+    if (!data.content) throw new Error('云端没有找到书稿文件');
+    const novel = JSON.parse(base64ToUtf8(data.content));
+    saveNovel(novel);
+    const cur = (novel.currentFile && novel.chapters[novel.currentFile]) ? novel.currentFile : Object.keys(novel.chapters)[0];
+    document.getElementById('editor').value = (novel.chapters[cur] && novel.chapters[cur].content) || '';
+    document.getElementById('currentFileName').textContent = (novel.chapters[cur] && novel.chapters[cur].title) || '未命名';
+    updateWordCount();
+    renderFileTree();
+    localStorage.setItem('sagebook_gist_synced', Date.now());
+    toast('已从 Gitee 拉取 ☁', 'success');
   } catch (err) {
     toast('拉取失败：' + err.message, 'error');
   }
@@ -1521,7 +1587,7 @@ function startAutoSync() {
   if (!on) return;
   const mins = Math.max(1, parseInt(localStorage.getItem('sagebook_auto_sync_interval') || '10', 10));
   autoSyncTimer = setInterval(() => {
-    if (!getGistToken()) return;
+    if (!getSyncToken()) return;
     saveCurrentToNovel();
     syncUpload(true).then(updateSyncStatus);
   }, mins * 60000);

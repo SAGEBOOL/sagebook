@@ -637,20 +637,46 @@
 
             <div class="setting-item">
                 <div class="setting-header">
-                    <div class="setting-label">🔑 GitHub Token（gist 权限）</div>
+                    <div class="setting-label">☁️ 同步平台</div>
                     <span class="setting-badge badge-local">端到端</span>
                 </div>
                 <div class="setting-desc">
-                    书稿存为你的私人 Gist，手机和电脑填同一个 Token 即可互通。零服务器、纯前端实现。
+                    书稿存为你的私人仓库，手机和电脑填同一 Token 即可互通。零服务器、纯前端实现。
                 </div>
 
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">GitHub Personal Access Token（只需 gist 权限）</label>
-                <input type="password" class="input-box" id="gistToken" placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" style="margin-bottom:12px;">
+                <div style="margin:10px 0 16px;">
+                    <select id="syncPlatform" class="input-box" style="width:100%; padding:8px 10px;" onchange="toggleSyncPlatform()">
+                        <option value="github">GitHub Gist（海外）</option>
+                        <option value="gitee">Gitee 仓库（国内更快更稳）</option>
+                    </select>
+                </div>
 
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">Gist ID（首次同步后自动生成，可留空）</label>
-                <input type="text" class="input-box" id="gistId" placeholder="选填，首次上传后自动保存" style="margin-bottom:14px;">
+                <!-- GitHub 配置 -->
+                <div id="githubCfg">
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">GitHub Personal Access Token（只需 gist 权限）</label>
+                    <input type="password" class="input-box" id="gistToken" placeholder="ghp_xxxxxxxxxxxx 或 github_pat_xxx" style="margin-bottom:12px;">
 
-                <div style="display:flex; gap:10px;">
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">Gist ID（首次同步后自动生成，可留空）</label>
+                    <input type="text" class="input-box" id="gistId" placeholder="选填，首次上传后自动保存" style="margin-bottom:8px;">
+
+                    <div style="font-size:11px; color:var(--text-tertiary);">创建 Token：<a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color:var(--accent-light);">github.com/settings/tokens</a> 勾选 gist 权限</div>
+                </div>
+
+                <!-- Gitee 配置 -->
+                <div id="giteeCfg" style="display:none;">
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">Gitee 私人令牌（需 projects 权限）</label>
+                    <input type="password" class="input-box" id="giteeToken" placeholder="gitee 个人令牌" style="margin-bottom:12px;">
+
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">仓库（owner/repo）</label>
+                    <input type="text" class="input-box" id="giteeRepo" placeholder="如 yourname/sagebook-sync" style="margin-bottom:12px;">
+
+                    <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">文件路径</label>
+                    <input type="text" class="input-box" id="giteePath" placeholder="sagebook_novel.json" style="margin-bottom:8px;">
+
+                    <div style="font-size:11px; color:var(--text-tertiary);">创建令牌：<a href="https://gitee.com/profile/personal_access_tokens" target="_blank" style="color:var(--accent-light);">gitee.com/profile/personal_access_tokens</a> 勾选 projects 权限</div>
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:14px;">
                     <button class="btn btn-secondary" onclick="saveGistSettings()">💾 保存同步设置</button>
                     <button class="btn btn-secondary" onclick="testGistConnection()">🔗 测试连接</button>
                 </div>
@@ -670,15 +696,6 @@
                         </select>
                         <span>（仅在已配置 Token 时生效；自动上传不会弹窗提示）</span>
                     </div>
-                </div>
-
-                <div style="margin-top: 15px; padding: 15px; background: var(--bg-tertiary); border-radius: 8px; font-size: 12px; color: var(--text-secondary); line-height: 1.8;">
-                    <strong style="color: var(--text-primary);">📱 如何开启跨设备同步？</strong><br>
-                    1. 打开 <a href="https://github.com/settings/tokens?type=beta" target="_blank" style="color: var(--accent-light);">GitHub Token 设置页</a><br>
-                    2. 生成新 Token，勾选 <code style="background: var(--bg-primary); padding: 2px 6px; border-radius: 4px;">gist</code> 权限<br>
-                    3. 复制 Token 粘贴到上方，点「保存同步设置」<br>
-                    4. 电脑 / 手机都填同一个 Token，在编辑器点「☁ 同步」即可互通<br>
-                    <span style="color:var(--text-tertiary);font-size:11px;">Token 仅存于本机浏览器，不上传任何服务器。</span>
                 </div>
             </div>
         </div>
@@ -1016,20 +1033,56 @@
             showToast(`✅ 已切换到${mode === 'local' ? '本地' : '云端'}AI模式`);
         }
 
-        // 云同步设置：保存 Token / Gist ID 到本地
+        // 同步平台切换：显示对应配置块
+        function toggleSyncPlatform() {
+            const p = document.getElementById('syncPlatform').value;
+            document.getElementById('githubCfg').style.display = p === 'github' ? '' : 'none';
+            document.getElementById('giteeCfg').style.display = p === 'gitee' ? '' : 'none';
+        }
+
+        // 云同步设置：按平台保存 Token / 仓库 / Gist ID 到本地
         function saveGistSettings() {
-            const token = document.getElementById('gistToken').value.trim();
-            const gistId = document.getElementById('gistId').value.trim();
-            if (token) localStorage.setItem('sagebook_gist_token', token);
-            else localStorage.removeItem('sagebook_gist_token');
-            if (gistId) localStorage.setItem('sagebook_gist_id', gistId);
-            else localStorage.removeItem('sagebook_gist_id');
+            const platform = document.getElementById('syncPlatform').value;
+            localStorage.setItem('sagebook_sync_platform', platform);
+            if (platform === 'gitee') {
+                const gt = document.getElementById('giteeToken').value.trim();
+                const repo = document.getElementById('giteeRepo').value.trim();
+                const path = document.getElementById('giteePath').value.trim() || 'sagebook_novel.json';
+                if (gt) localStorage.setItem('sagebook_gitee_token', gt); else localStorage.removeItem('sagebook_gitee_token');
+                if (repo) localStorage.setItem('sagebook_gitee_repo', repo); else localStorage.removeItem('sagebook_gitee_repo');
+                localStorage.setItem('sagebook_gitee_path', path);
+            } else {
+                const token = document.getElementById('gistToken').value.trim();
+                const gistId = document.getElementById('gistId').value.trim();
+                if (token) localStorage.setItem('sagebook_gist_token', token); else localStorage.removeItem('sagebook_gist_token');
+                if (gistId) localStorage.setItem('sagebook_gist_id', gistId); else localStorage.removeItem('sagebook_gist_id');
+            }
             localStorage.setItem('sagebook_auto_sync', document.getElementById('autoSync').checked ? 'true' : 'false');
             localStorage.setItem('sagebook_auto_sync_interval', document.getElementById('autoSyncInterval').value);
             showToast('✅ 云同步设置已保存');
         }
 
         async function testGistConnection() {
+            const platform = document.getElementById('syncPlatform').value;
+            if (platform === 'gitee') {
+                const token = document.getElementById('giteeToken').value.trim();
+                const repo = document.getElementById('giteeRepo').value.trim();
+                if (!token) { alert('请先填写 Gitee Token'); return; }
+                try {
+                    const url = repo ? `https://gitee.com/api/v5/repos/${repo}` : 'https://gitee.com/api/v5/user';
+                    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+                    if (res.ok) {
+                        const u = await res.json();
+                        showToast(`✅ Gitee 连接成功 · @${u.login || u.name || repo}`);
+                    } else {
+                        const e = await res.json().catch(() => ({}));
+                        throw new Error(e.message || `HTTP ${res.status}`);
+                    }
+                } catch (err) {
+                    alert('❌ Gitee 连接失败：' + err.message + '\n\n请检查 Token（需 projects 权限）与仓库名是否正确。');
+                }
+                return;
+            }
             const token = document.getElementById('gistToken').value.trim();
             if (!token) { alert('请先填写 Token'); return; }
             try {
@@ -1210,11 +1263,23 @@
                     const ms = document.getElementById('modelStrategy');
                     if (ms && ms.querySelector(`option[value="${modelStrategy}"]`)) ms.value = modelStrategy;
                 }
-                // 恢复云同步设置
-                const gistToken = localStorage.getItem('sagebook_gist_token');
-                if (gistToken) { const gt = document.getElementById('gistToken'); if (gt) gt.value = gistToken; }
-                const gistId = localStorage.getItem('sagebook_gist_id');
-                if (gistId) { const gi = document.getElementById('gistId'); if (gi) gi.value = gistId; }
+                // 恢复云同步设置（按平台）
+                const platform = localStorage.getItem('sagebook_sync_platform') || 'github';
+                const sp = document.getElementById('syncPlatform'); if (sp) sp.value = platform;
+                if (platform === 'gitee') {
+                    const gt = localStorage.getItem('sagebook_gitee_token');
+                    if (gt) { const e = document.getElementById('giteeToken'); if (e) e.value = gt; }
+                    const repo = localStorage.getItem('sagebook_gitee_repo');
+                    if (repo) { const e = document.getElementById('giteeRepo'); if (e) e.value = repo; }
+                    const path = localStorage.getItem('sagebook_gitee_path');
+                    if (path) { const e = document.getElementById('giteePath'); if (e) e.value = path; }
+                } else {
+                    const gistToken = localStorage.getItem('sagebook_gist_token');
+                    if (gistToken) { const gt = document.getElementById('gistToken'); if (gt) gt.value = gistToken; }
+                    const gistId = localStorage.getItem('sagebook_gist_id');
+                    if (gistId) { const gi = document.getElementById('gistId'); if (gi) gi.value = gistId; }
+                }
+                if (typeof toggleSyncPlatform === 'function') toggleSyncPlatform();
                 // 恢复自动同步设置
                 const autoSync = localStorage.getItem('sagebook_auto_sync') === 'true';
                 const asEl = document.getElementById('autoSync'); if (asEl) asEl.checked = autoSync;
