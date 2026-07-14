@@ -506,6 +506,12 @@
                 padding: 10px;
             }
             
+            /* 双栏堆叠：左侧导航浮层、属性面板移至下方满宽 */
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
             .sidebar {
                 position: fixed;
                 left: -280px;
@@ -517,6 +523,16 @@
             
             .sidebar.mobile-open {
                 left: 0;
+            }
+            
+            .properties-panel {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+            
+            .content-area {
+                min-height: 50vh;
             }
             
             .mobile-menu-btn {
