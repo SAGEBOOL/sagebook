@@ -211,6 +211,8 @@ body {
 .main-header .header-actions button.ai-btn:hover { background:var(--accent-dim); }
 .main-header .header-actions button.sync-btn { border-color:var(--border-primary); color:var(--fg-secondary); }
 .main-header .header-actions button.sync-btn:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+.main-header .header-actions .sync-status { font-size:11px; color:var(--fg-secondary); opacity:.65; white-space:nowrap; padding:0 4px; align-self:center; }
+.main-header .header-actions .sync-status.idle { opacity:1; color:#c9a84c; }
 
 /* AI 状态指示灯 */
 .ai-status {
@@ -504,6 +506,7 @@ body {
         </button>
         <button onclick="runAudit()" title="运行审查">🔍 审查</button>
         <button class="primary" onclick="saveFile()">💾 保存</button>
+        <span class="sync-status" id="syncStatus">尚未同步</span>
         <button class="sync-btn" onclick="syncUpload()" title="同步到云端（上传本地→Gist）">☁ 同步</button>
         <button class="sync-btn" onclick="syncDownload()" title="从云端拉取（下载 Gist→本地）">⬇ 拉取</button>
         <button onclick="togglePanel()" title="切换面板">⚙</button>
@@ -1423,9 +1426,9 @@ function getGistId() { return localStorage.getItem('sagebook_gist_id') || ''; }
 function setGistId(id) { if (id) localStorage.setItem('sagebook_gist_id', id); }
 
 /** 上传：本地 → Gist（首次创建，之后更新） */
-async function syncUpload() {
+async function syncUpload(silent) {
   const token = getGistToken();
-  if (!token) { alert('请先在设置页（⚙️）填写 GitHub Token（gist 权限）'); return; }
+  if (!token) { if (!silent) alert('请先在设置页（⚙️）填写 GitHub Token（gist 权限）'); return; }
   saveCurrentToNovel();
   const novel = getNovel();
   const content = JSON.stringify(novel, null, 2);
@@ -1450,7 +1453,8 @@ async function syncUpload() {
     const data = await res.json();
     if (!gistId) setGistId(data.id);
     localStorage.setItem('sagebook_gist_synced', Date.now());
-    toast('已同步到云端 ☁', 'success');
+    updateSyncStatus();
+    if (!silent) toast('已同步到云端 ☁', 'success');
   } catch (err) {
     toast('同步失败：' + err.message, 'error');
   }
@@ -1485,6 +1489,42 @@ async function syncDownload() {
   } catch (err) {
     toast('拉取失败：' + err.message, 'error');
   }
+}
+
+/** 上次同步时间的相对描述 */
+function relTimeAgo(diff) {
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '刚刚';
+  if (m < 60) return m + ' 分钟前';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + ' 小时前';
+  const d = Math.floor(h / 24);
+  if (d < 30) return d + ' 天前';
+  return new Date(Date.now() - diff).toLocaleDateString();
+}
+
+/** 刷新顶部「上次同步」提示 */
+function updateSyncStatus() {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const t = Number(localStorage.getItem('sagebook_gist_synced') || '0');
+  if (!t) { el.textContent = '尚未同步'; el.className = 'sync-status idle'; return; }
+  el.textContent = '☁ 上次同步 ' + relTimeAgo(Date.now() - t);
+  el.className = 'sync-status';
+}
+
+/** 自动定时同步（仅本地→云端上传；未配置 Token 时静默跳过） */
+let autoSyncTimer = null;
+function startAutoSync() {
+  if (autoSyncTimer) { clearInterval(autoSyncTimer); autoSyncTimer = null; }
+  const on = localStorage.getItem('sagebook_auto_sync') === 'true';
+  if (!on) return;
+  const mins = Math.max(1, parseInt(localStorage.getItem('sagebook_auto_sync_interval') || '10', 10));
+  autoSyncTimer = setInterval(() => {
+    if (!getGistToken()) return;
+    saveCurrentToNovel();
+    syncUpload(true).then(updateSyncStatus);
+  }, mins * 60000);
 }
 
 function filterFiles() {
@@ -1640,6 +1680,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('aiInput').addEventListener('input', function(){ autoResizeTextarea(this); });
+
+  // 同步状态刷新 + 启动自动定时同步
+  updateSyncStatus();
+  startAutoSync();
 });
 </script>
 </body>
