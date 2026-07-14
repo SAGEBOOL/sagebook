@@ -742,8 +742,15 @@ function getModelDisplayName(config) {
 async function testAIConnection(config) {
   if (config.mode === 'ollama') {
     const url = config.ollamaUrl.replace(/\/+$/, '') + '/api/tags';
+    // 混合内容检测：HTTPS 页面无法请求 HTTP 本地地址
+    if (location.protocol === 'https:' && url.startsWith('http://')) {
+      throw new Error('混合内容限制 — 当前通过公网(HTTPS)访问，浏览器会阻止连接本地 HTTP 地址(http://localhost)。请用本地服务器运行本站（如 python3 -m http.server），或切换到「云端」模式。');
+    }
     const res = await fetch(url, { method: 'GET', signal: AbortSignal.timeout(3000) });
     return res.ok;
+  }
+  if (!config.cloudBaseUrl || !config.cloudApiKey) {
+    throw new Error('请先填写云端 API 地址与 Key');
   }
   return !!config.cloudApiKey;
 }
@@ -759,6 +766,10 @@ async function callAI(messages, onChunk) {
 
 async function callOllama(config, messages, onChunk) {
   const url = config.ollamaUrl.replace(/\/+$/, '') + '/api/chat';
+  // 混合内容检测：HTTPS → HTTP localhost 会被浏览器拦截
+  if (location.protocol === 'https:' && url.startsWith('http://')) {
+    throw new Error('混合内容限制 — 公网(HTTPS)页面无法访问本地 Ollama(http://)。请用本地服务器运行本站（如 python3 -m http.server），或切换到「云端」模式。');
+  }
   const body = {
     model: config.ollamaModel || 'qwen2.5:14b',
     messages: messages,

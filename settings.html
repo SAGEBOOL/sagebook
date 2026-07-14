@@ -939,7 +939,10 @@
             const hint = document.getElementById('ollamaCorsHint');
             if (!hint) return;
             const isFile = location.protocol === 'file:';
+            const isHttps = location.protocol === 'https:';
             const isCloudStudio = location.hostname.includes('codebuddy.work') || location.hostname.includes('cloudstudio');
+            const ollamaBase = localStorage.getItem('ollamaEndpoint') || '';
+            const isOllamaHttp = ollamaBase.startsWith('http://');
 
             if (isFile) {
                 hint.style.cssText = 'padding:15px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--warning)';
@@ -951,6 +954,16 @@
                 <strong>解决方法 B——通过 HTTP 服务器访问：</strong><br>
                 <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000');showToast('已复制')">cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000</code>
                 然后访问 <a href="http://localhost:8000/settings.html" style="color:var(--accent-light)">http://localhost:8000/settings.html</a>`;
+            } else if (isHttps && isOllamaHttp) {
+                hint.style.cssText = 'padding:15px;background:rgba(224,85,85,0.10);border:1px solid rgba(224,85,85,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:#e05555';
+                hint.innerHTML = `<strong>🔒 混合内容限制 — HTTPS 页面无法连接本地 HTTP 服务</strong><br>
+                你当前通过公网（GitHub Pages 等）的 HTTPS 链接打开本站，浏览器会<strong>阻止</strong>所有对 <code>http://localhost</code> 的请求。<br><br>
+                <strong>这不是 bug，是浏览器的安全策略。</strong><br><br>
+                <strong>方案 A（推荐）— 切换到「云端」模式：</strong><br>
+                在上方「云端大模型」区域填写 API 地址、模型名和 Key 即可使用 AI 功能（支持 OpenAI 兼容接口）。<br><br>
+                <strong>方案 B — 本地运行本站：</strong><br>
+                <code style="display:block;background:var(--bg-primary);padding:7px 10px;border-radius:5px;margin:6px 0;font-size:12px;cursor:pointer;border:1px solid var(--border);" onclick="navigator.clipboard.writeText('cd /Volumes/D/WorkBuddy/sagebook网站/repo && python3 -m http.server 8000');showToast('已复制')">cd /Volumes/D/WorkBuddy/sagebook网站/repo &amp;&amp; python3 -m http.server 8000</code>
+                然后访问 <a href="http://localhost:8000/settings.html" style="color:var(--accent-light)">http://localhost:8000/settings.html</a>（Ollama 本地模式即可正常使用）。`;
             } else if (isCloudStudio) {
                 hint.style.cssText = 'padding:15px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;font-size:13px;line-height:1.9;margin-bottom:12px;color:var(--warning)';
                 hint.innerHTML = `<strong>⚠️ 当前通过公网链接访问</strong><br>公网页面无法直接访问你电脑上的 <code>localhost:11434</code>。<br><br>
@@ -1040,9 +1053,11 @@
             statusDot.className = 'status-dot';
             statusText.textContent = '检测中...';
 
-            const protocol = location.protocol; // 'file:' or 'http:'
+            const protocol = location.protocol; // 'file:', 'http:', or 'https:'
             const isFileProtocol = protocol === 'file:';
+            const isHttps = protocol === 'https:';
             const ollamaBase = localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434';
+            const isOllamaHttp = ollamaBase.startsWith('http://');
 
             function log(msg) {
                 debugLog.innerHTML += msg + '\n';
@@ -1057,6 +1072,23 @@
                 log(`   → 推荐方式 A: 重启 Ollama 并允许跨域（见下方说明）`);
                 log(`   → 推荐方式 B: 通过 http://localhost:8000 访问本站`);
                 log('');
+            }
+            if (isHttps && isOllamaHttp) {
+                log(`⛔  混合内容限制：当前通过公网 HTTPS 访问本站`);
+                log(`   浏览器会阻止 HTTPS 页面访问 HTTP 本地地址(http://localhost:11434)`);
+                log(`   这是浏览器的安全策略，不是 Ollama 或 SageBook 的 bug。`);
+                log('');
+                log(`   解决方案（任选其一）：`);
+                log(`   A. 切换到「云端」模式 — 填写云端 API 地址与 Key 即可使用 AI 功能`);
+                log(`   B. 本地运行本站 — 在 repo 目录执行：python3 -m http.server 8000`);
+                log(`      然后访问 http://localhost:8000/settings.html`);
+                log(`   C. 用本地代理转发 Ollama 到 HTTPS（进阶方案）`);
+                log('');
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = '混合内容限制';
+                modelSelect.innerHTML = '<option value="">HTTPS 无法访问 localhost</option>';
+                localStorage.setItem('ollamaConnected', 'false');
+                return;
             }
 
             // 步骤1: 先用 no-cors 测试基础连通性（绕过 CORS 预检）
