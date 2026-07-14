@@ -140,28 +140,60 @@
         @media (prefers-reduced-motion: reduce) {
             .cta-glow, .hero-glow { animation: none; }
             .cta-card::after, .hero-artwork::after { animation: none; display: none; }
+            .tool-card { animation: none; }
         }
         .cta-icon { font-size: 42px; }
         .cta-title { font-size: 24px; font-weight: 800; margin-top: 6px; }
         .cta-sub { font-size: 13px; opacity: .92; margin-top: 6px; }
 
-        /* 更多创作工具：独立呈现，每块与「开始写作」等宽 */
-        .more-section { max-width: 920px; margin: 24px auto 0; display: flex; flex-direction: column; gap: 12px; }
-        .more-heading {
-            text-align: center; font-weight: 700; font-size: 16px;
-            color: var(--fg-primary); margin-bottom: 2px;
+        /* 更多创作工具：与「开始写作」同款液态玻璃容器，可点击展开嵌套工具 */
+        .tools-wrap { position: relative; padding: 24px 0 12px; }
+        .tools-toggle {
+            cursor: pointer; font-family: inherit;
         }
-        .more-card {
-            display: block; width: 100%;
-            background: var(--bg-secondary); border: 1px solid var(--border-primary);
-            border-radius: var(--radius-lg); padding: 18px 22px; color: var(--fg-primary);
-            text-decoration: none; font-size: 15px; text-align: center;
-            transition: transform .2s, border-color .2s, color .2s, box-shadow .2s;
+        .tools-chevron {
+            font-size: 22px; line-height: 1; margin-top: 8px;
+            display: inline-block; transition: transform .3s ease;
         }
-        .more-card:hover {
-            border-color: var(--accent); color: var(--accent);
-            transform: translateY(-2px); box-shadow: var(--shadow-md);
+        .tools-toggle[aria-expanded="true"] .tools-chevron { transform: rotate(180deg); }
+        .tools-panel {
+            max-width: 920px; margin: 14px auto 0;
+            display: none; grid-template-columns: repeat(2, 1fr); gap: 12px;
         }
+        .tools-panel.open { display: grid; }
+        .tool-card {
+            display: flex; align-items: center; gap: 10px;
+            padding: 15px 18px; border-radius: 15px;
+            background: linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.03));
+            backdrop-filter: blur(14px) saturate(160%);
+            -webkit-backdrop-filter: blur(14px) saturate(160%);
+            border: 1px solid rgba(255,255,255,.14);
+            box-shadow: 0 6px 18px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.22);
+            color: var(--fg-primary); text-decoration: none;
+            font-size: 14.5px; font-weight: 600;
+            transition: transform .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease;
+            animation: toolsIn .4s ease both;
+        }
+        .tool-card:hover {
+            transform: translateY(-2px); color: var(--accent);
+            border-color: rgba(255,255,255,.30);
+            box-shadow: 0 10px 26px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.34);
+        }
+        @keyframes toolsIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        /* 展开时逐张入场 */
+        .tools-panel.open .tool-card:nth-child(1)  { animation-delay: .02s; }
+        .tools-panel.open .tool-card:nth-child(2)  { animation-delay: .06s; }
+        .tools-panel.open .tool-card:nth-child(3)  { animation-delay: .10s; }
+        .tools-panel.open .tool-card:nth-child(4)  { animation-delay: .14s; }
+        .tools-panel.open .tool-card:nth-child(5)  { animation-delay: .18s; }
+        .tools-panel.open .tool-card:nth-child(6)  { animation-delay: .22s; }
+        .tools-panel.open .tool-card:nth-child(7)  { animation-delay: .26s; }
+        .tools-panel.open .tool-card:nth-child(8)  { animation-delay: .30s; }
+        .tools-panel.open .tool-card:nth-child(9)  { animation-delay: .34s; }
+        .tools-panel.open .tool-card:nth-child(10) { animation-delay: .38s; }
 
         /* 快速开始：严格复刻「开始写作」液态磨砂玻璃容器风格（共享 .cta-card 玻璃样式） */
         .quick h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--fg-primary); }
@@ -184,6 +216,7 @@
             .status-bar { gap: 10px; }
             .status-item { min-width: 90px; padding: 10px 14px; }
             .cta-card { padding: 22px 32px; }
+            .tools-panel { grid-template-columns: 1fr; }
         }
 
         /* TargetCursor 扩展样式（核心逻辑见 target-cursor.css / .js） */
@@ -247,19 +280,27 @@
             </a>
         </div>
 
-        <!-- 更多创作工具：独立呈现，每块与「开始写作」等宽 -->
-        <div class="more-section">
-            <div class="more-heading cursor-target">🧰 更多创作工具（构思 / 分析 / 发布）</div>
-            <a class="more-card cursor-target" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
-            <a class="more-card cursor-target" href="outline-editor.html">📋 大纲编辑器</a>
-            <a class="more-card cursor-target" href="character-management.html">👤 角色管理</a>
-            <a class="more-card cursor-target" href="world-builder.html">🌍 世界观管理</a>
-            <a class="more-card cursor-target" href="knowledge-graph.html">🕸️ 知识图谱</a>
-            <a class="more-card cursor-target" href="writing-analysis.html">📊 写作分析</a>
-            <a class="more-card cursor-target" href="platform-tools.html">📱 网文平台工具</a>
-            <a class="more-card cursor-target" href="ai-suite.html">🤖 AI 深度集成</a>
-            <a class="more-card cursor-target" href="template-gallery.html">📚 模板库</a>
-            <a class="more-card cursor-target" href="settings.html">⚙️ 设置</a>
+        <!-- 更多创作工具：与「开始写作」同款液态玻璃容器，点击展开嵌套工具 -->
+        <div class="tools-wrap">
+            <div class="cta-glow"></div>
+            <button class="cta-card cursor-target" id="toolsToggle" type="button" aria-expanded="false" aria-controls="toolsPanel">
+                <div class="cta-icon">🧰</div>
+                <div class="cta-title">更多创作工具</div>
+                <div class="cta-sub">构思 / 分析 / 发布 · 点击展开</div>
+                <div class="tools-chevron">⌄</div>
+            </button>
+            <div class="tools-panel" id="toolsPanel">
+                <a class="tool-card cursor-target" href="writing-skills.html">✍️ 写作技能（完整 12 项页）</a>
+                <a class="tool-card cursor-target" href="outline-editor.html">📋 大纲编辑器</a>
+                <a class="tool-card cursor-target" href="character-management.html">👤 角色管理</a>
+                <a class="tool-card cursor-target" href="world-builder.html">🌍 世界观管理</a>
+                <a class="tool-card cursor-target" href="knowledge-graph.html">🕸️ 知识图谱</a>
+                <a class="tool-card cursor-target" href="writing-analysis.html">📊 写作分析</a>
+                <a class="tool-card cursor-target" href="platform-tools.html">📱 网文平台工具</a>
+                <a class="tool-card cursor-target" href="ai-suite.html">🤖 AI 深度集成</a>
+                <a class="tool-card cursor-target" href="template-gallery.html">📚 模板库</a>
+                <a class="tool-card cursor-target" href="settings.html">⚙️ 设置</a>
+            </div>
         </div>
 
         <!-- 快速开始：严格复刻「开始写作」玻璃容器 -->
@@ -297,6 +338,21 @@
             }
         }
         checkAIStatus();
+
+        // 更多创作工具：点击展开 / 收起
+        (function () {
+            const toggle = document.getElementById('toolsToggle');
+            const panel = document.getElementById('toolsPanel');
+            if (!toggle || !panel) return;
+            toggle.addEventListener('click', () => {
+                const open = panel.classList.toggle('open');
+                toggle.setAttribute('aria-expanded', String(open));
+                const sub = toggle.querySelector('.cta-sub');
+                if (sub) sub.textContent = open
+                    ? '构思 / 分析 / 发布 · 点击收起'
+                    : '构思 / 分析 / 发布 · 点击展开';
+            });
+        })();
     </script>
 
     <!-- TargetCursor 扩展（React Bits 原生移植，依赖 GSAP） -->
