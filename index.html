@@ -17,13 +17,25 @@
         .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
 
         /* 头部 */
-        .header { text-align: center; padding: 30px 20px 18px; }
-        .logo { font-size: 44px; margin-bottom: 10px; }
+        .header { text-align: center; padding: 30px 20px 12px; }
         .title {
             position: relative; width: 100%; max-width: 860px;
             margin: 6px auto 0; min-height: 60px;
         }
         .subtitle { font-size: 16px; color: var(--text-secondary); margin-top: 12px; }
+
+        /* Hero 艺术展示：整版等比例完整显示 */
+        .hero-artwork {
+            max-width: 920px; margin: 20px auto 0;
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            border: 1px solid var(--border-primary);
+            background: var(--bg-tertiary);
+        }
+        .hero-artwork img {
+            display: block; width: 100%; height: auto;
+            object-fit: contain; object-position: center;
+        }
 
         /* 状态栏 */
         .status-bar {
@@ -169,9 +181,13 @@
     <div class="container">
         <!-- 头部 -->
         <div class="header">
-            <div class="logo">📘</div>
             <div class="title text-pressure" data-text-pressure data-text="SAGEBOOK">SAGEBOOK</div>
             <div class="subtitle">你的智能创作伙伴 · 爽剧、网文、剧本、长篇</div>
+        </div>
+
+        <!-- Hero 艺术展示（等比例整版完整显示） -->
+        <div class="hero-artwork">
+            <img src="assets/hero-artwork.png" alt="The Creation of Adam" loading="lazy">
         </div>
 
         <!-- 状态栏 -->
