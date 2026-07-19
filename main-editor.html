@@ -547,6 +547,7 @@ body {
           <span class="ai-status connecting" id="aiHeaderDot"></span> AI 续写
         </button>
         <button onclick="runAudit()" title="运行审查">🔍 审查</button>
+        <button onclick="openImportPicker()" title="导入文本文件（.txt / .md）">📥 导入</button>
         <button class="primary" onclick="saveFile()">💾 保存</button>
         <span class="sync-status" id="syncStatus">尚未同步</span>
         <button class="sync-btn" onclick="syncUpload()" title="同步到云端（上传本地→Gist）">☁ 同步</button>
@@ -1337,6 +1338,104 @@ function saveCurrentToNovel() {
 }
 
 // ============================================
+// 导入文本文件（.txt / .md）
+// 支持多选：每个文件作为一个新章节；单文件可选“替换当前章节”
+// ============================================
+let pendingImports = [];  // [{name, title, content}]
+
+function openImportPicker() {
+  const inp = document.getElementById('importFile');
+  inp.value = '';
+  inp.click();
+}
+
+async function handleImportFiles(input) {
+  const files = Array.from(input.files || []);
+  if (!files.length) return;
+  pendingImports = [];
+  for (const f of files) {
+    let text = '';
+    try { text = await f.text(); } catch (e) { text = ''; }
+    const base = (f.name || '未命名').replace(/\.(txt|md|markdown)$/i, '');
+    pendingImports.push({ name: f.name, title: base + '.md', content: text });
+  }
+  renderImportList();
+  // 多选时强制“作为新章节”
+  document.getElementById('importModeWrap').style.display = pendingImports.length > 1 ? 'none' : '';
+  document.getElementById('importModal').classList.add('show');
+}
+
+function renderImportList() {
+  const empty = document.getElementById('importEmpty');
+  const list = document.getElementById('importFileList');
+  if (!pendingImports.length) {
+    empty.style.display = '';
+    list.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = pendingImports.map(p =>
+    `<div class="import-file-item"><span class="ifi-name">${escapeHtml(p.name)}</span><span class="ifi-meta">${p.content.length} 字</span></div>`
+  ).join('');
+}
+
+function uniqueTitle(novel, title) {
+  const existing = new Set(Object.values(novel.chapters).map(c => (c.title || '').toLowerCase()));
+  if (!existing.has(title.toLowerCase())) return title;
+  let i = 2, t;
+  do { t = title.replace(/(\.md)?$/i, ` (${i}).md`); i++; } while (existing.has(t.toLowerCase()));
+  return t;
+}
+
+function confirmImport() {
+  if (!pendingImports.length) { closeImportModal(); return; }
+  const novel = getNovel();
+  const multi = pendingImports.length > 1;
+  const mode = (document.querySelector('input[name="importMode"]:checked') || {}).value || 'new';
+
+  if (multi || mode === 'new') {
+    let firstId = null;
+    for (const p of pendingImports) {
+      const n = Object.keys(novel.chapters).length + 1;
+      const id = 'ch-' + Date.now() + '-' + Math.floor(Math.random() * 1e4);
+      const title = uniqueTitle(novel, p.title);
+      novel.chapters[id] = { title, content: p.content };
+      if (!firstId) firstId = id;
+    }
+    saveNovel(novel);
+    renderFileTree();
+    if (firstId) openFile(firstId);
+    toast(`已导入 ${pendingImports.length} 个章节`, 'success');
+  } else {
+    // 替换当前章节内容（保留原标题）
+    const id = novel.currentFile;
+    const content = pendingImports[0].content;
+    if (!id || !novel.chapters[id]) {
+      const nid = 'ch-' + Date.now();
+      novel.chapters[nid] = { title: pendingImports[0].title, content };
+      novel.currentFile = nid;
+      saveNovel(novel);
+      document.getElementById('editor').value = content;
+      document.getElementById('currentFileName').textContent = pendingImports[0].title;
+    } else {
+      novel.chapters[id].content = content;
+      saveNovel(novel);
+      document.getElementById('editor').value = content;
+    }
+    updateWordCount();
+    renderFileTree();
+    toast('已导入到当前章节', 'success');
+  }
+  closeImportModal();
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.remove('show');
+  pendingImports = [];
+  renderImportList();
+}
+
+// ============================================
 // 章节操作：重命名 / 删除 / 创建副本
 // ============================================
 
@@ -1805,6 +1904,29 @@ document.addEventListener('DOMContentLoaded', () => {
   startAutoSync();
 });
 </script>
+
+<input type="file" id="importFile" accept=".txt,.md,.markdown,text/plain" multiple style="display:none" onchange="handleImportFiles(this)">
+<div class="import-modal-overlay" id="importModal" onclick="if(event.target===this)closeImportModal()">
+  <div class="import-modal">
+    <div class="import-modal-head">
+      <span>📥 导入文本文件</span>
+      <button class="import-close" onclick="closeImportModal()" title="关闭">✕</button>
+    </div>
+    <div class="import-modal-body">
+      <div class="import-empty" id="importEmpty">请选择本机 .txt / .md 文件，可多选（每个文件作为一个章节）。</div>
+      <div class="import-files" id="importFileList"></div>
+      <div class="import-mode" id="importModeWrap">
+        <label><input type="radio" name="importMode" value="new" checked> 作为新章节（保留当前内容）</label>
+        <label><input type="radio" name="importMode" value="replace"> 替换当前章节内容</label>
+      </div>
+    </div>
+    <div class="import-modal-foot">
+      <button class="btn-secondary btn" onclick="closeImportModal()">取消</button>
+      <button class="btn primary" onclick="confirmImport()">导入</button>
+    </div>
+  </div>
+</div>
+
 <footer class="site-footer">
     <div class="sf-powered">Powered by Ollama · OpenAI · Claude · Qwen</div>
     <div class="sf-links">
