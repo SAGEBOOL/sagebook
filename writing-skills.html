@@ -199,6 +199,66 @@
             pointer-events: none;
         }
         .toast.show { opacity: 1; }
+
+        /* ===== 导入文本面板 ===== */
+        .import-overlay {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(0,0,0,0.55);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px; backdrop-filter: blur(2px);
+        }
+        .import-overlay.show { display: flex; }
+        .import-panel {
+            width: 100%; max-width: 560px; max-height: 84vh;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 16px; display: flex; flex-direction: column;
+            overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .import-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+        }
+        .import-head h3 { font-size: 16px; font-weight: 700; }
+        .import-close {
+            background: none; border: none; color: var(--text-secondary);
+            font-size: 24px; cursor: pointer; line-height: 1; padding: 0 4px;
+        }
+        .import-close:hover { color: var(--accent); }
+        .import-tabs { display: flex; gap: 8px; padding: 14px 20px 0; }
+        .import-tab {
+            flex: 1; padding: 9px; border-radius: 10px; cursor: pointer;
+            background: var(--bg-primary); border: 1px solid var(--border);
+            color: var(--text-secondary); font-size: 13px; text-align: center;
+            transition: all 0.2s;
+        }
+        .import-tab.active { border-color: var(--accent); color: var(--accent); background: var(--bg-tertiary); }
+        .import-body { padding: 14px 20px; overflow-y: auto; }
+        .import-pane { display: none; }
+        .import-pane.active { display: block; }
+        .import-list { display: flex; flex-direction: column; gap: 8px; }
+        .import-item {
+            text-align: left; padding: 12px 14px; border-radius: 10px;
+            background: var(--bg-primary); border: 1px solid var(--border);
+            cursor: pointer; transition: all 0.2s; color: var(--text-primary);
+        }
+        .import-item:hover { border-color: var(--accent); box-shadow: 0 4px 16px var(--accent-glow); }
+        .import-item .t { font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+        .import-item .w { font-size: 12px; color: var(--text-tertiary); margin-top: 4px; line-height: 1.5; }
+        .import-empty { color: var(--text-secondary); font-size: 13px; text-align: center; padding: 24px 0; line-height: 1.9; }
+        .import-empty a { color: var(--accent); }
+        .import-file-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 11px 18px; border-radius: 10px; cursor: pointer;
+            background: var(--accent); border: 1px solid var(--accent); color: #fff; font-size: 14px;
+        }
+        .import-file-btn:hover { background: var(--accent-hover); }
+        .import-foot { padding: 12px 20px; border-top: 1px solid var(--border); }
+        .import-mode { display: flex; align-items: center; gap: 16px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap; }
+        .import-mode label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .import-mode input { accent-color: var(--accent); }
+        @media (max-width: 880px) {
+            .import-panel { max-width: 100%; max-height: 88vh; }
+        }
     </style>
     <link rel="stylesheet" href="design-system.css">
 </head>
@@ -223,7 +283,10 @@
                     <textarea id="inputText" placeholder="在此粘贴或输入你的小说文本 / 片段 / 设定草稿……&#10;选好下方技能后点击，AI 会基于这段内容为你处理。"></textarea>
                     <div class="meta-row">
                         <span id="charCount">0 字</span>
-                        <button class="btn" onclick="document.getElementById('inputText').value='';updateCount()">清空</button>
+                        <div style="display:flex; gap:8px;">
+                            <button class="btn" onclick="openImport()">📥 导入文本</button>
+                            <button class="btn" onclick="document.getElementById('inputText').value='';updateCount()">清空</button>
+                        </div>
                     </div>
                 </div>
 
@@ -247,6 +310,42 @@
         </div>
 
         </div>
+
+    <!-- 导入文本面板 -->
+    <div class="import-overlay" id="importOverlay" onclick="if(event.target===this)closeImport()">
+        <div class="import-panel">
+            <div class="import-head">
+                <h3>📥 导入已写好的文本</h3>
+                <button class="import-close" onclick="closeImport()" aria-label="关闭">×</button>
+            </div>
+            <div class="import-tabs">
+                <div class="import-tab active" data-pane="novel" onclick="switchImportTab('novel')">📚 主编辑器书稿</div>
+                <div class="import-tab" data-pane="file" onclick="switchImportTab('file')">💻 本机文件</div>
+            </div>
+            <div class="import-body">
+                <div class="import-pane active" id="paneNovel">
+                    <div class="import-list" id="novelList"></div>
+                    <div class="import-empty" id="novelEmpty" style="display:none;">
+                        暂无书稿。请先在 <a href="main-editor.html">主编辑器</a> 中保存章节，<br>或切换到「本机文件」导入 .txt / .md。
+                    </div>
+                </div>
+                <div class="import-pane" id="paneFile">
+                    <div class="import-empty" style="display:flex; justify-content:center; padding:18px 0;">
+                        <label class="import-file-btn">📂 选择 .txt / .md 文件
+                            <input type="file" id="fileInput" accept=".txt,.md,.text,text/plain,text/markdown" style="display:none" onchange="handleFileImport(this)">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="import-foot">
+                <div class="import-mode">
+                    <span>导入方式：</span>
+                    <label><input type="radio" name="importMode" value="replace" checked> 替换当前内容</label>
+                    <label><input type="radio" name="importMode" value="append"> 追加到末尾</label>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="toast" id="toast"></div>
 
@@ -308,6 +407,72 @@
             document.getElementById('charCount').textContent = (inputEl.value.trim().length) + ' 字';
         }
         inputEl.addEventListener('input', updateCount);
+
+        // ===== 导入已写好的文本 =====
+        const NOVEL_KEY = 'sagebook_novel';
+        function openImport() {
+            document.getElementById('importOverlay').classList.add('show');
+            renderNovelDocs();
+            document.addEventListener('keydown', escCloseImport);
+        }
+        function closeImport() {
+            document.getElementById('importOverlay').classList.remove('show');
+            document.removeEventListener('keydown', escCloseImport);
+        }
+        function escCloseImport(e) { if (e.key === 'Escape') closeImport(); }
+        function switchImportTab(pane) {
+            document.querySelectorAll('.import-tab').forEach(t => t.classList.toggle('active', t.dataset.pane === pane));
+            document.getElementById('paneNovel').classList.toggle('active', pane === 'novel');
+            document.getElementById('paneFile').classList.toggle('active', pane === 'file');
+        }
+        function renderNovelDocs() {
+            let novel = null;
+            try { novel = JSON.parse(localStorage.getItem(NOVEL_KEY) || 'null'); } catch (e) { novel = null; }
+            const list = document.getElementById('novelList');
+            const empty = document.getElementById('novelEmpty');
+            list.innerHTML = '';
+            const chapters = (novel && novel.chapters) ? Object.values(novel.chapters) : [];
+            if (!chapters.length) { empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            chapters.forEach(ch => {
+                const title = (ch.title || '未命名').replace(/\.md$/, '');
+                const content = ch.content || '';
+                const words = content.replace(/\s/g, '').length;
+                const preview = content.replace(/\s+/g, ' ').slice(0, 44);
+                const item = document.createElement('button');
+                item.className = 'import-item';
+                item.type = 'button';
+                item.innerHTML = '<div class="t"><span>' + title + '</span><span style="color:var(--text-tertiary);font-weight:400;">' + words + ' 字</span></div>'
+                    + '<div class="w">' + (preview || '（空章节）') + (content.length > 44 ? '…' : '') + '</div>';
+                item.onclick = () => importText(content, title);
+                list.appendChild(item);
+            });
+        }
+        function importText(content, label) {
+            if (!content) { showToast('⚠️ 该文本为空', 'warning'); return; }
+            const mode = (document.querySelector('input[name="importMode"]:checked') || {}).value || 'replace';
+            const ta = document.getElementById('inputText');
+            if (mode === 'append') {
+                ta.value = ta.value.trim() ? (ta.value.replace(/\s*$/, '') + '\n\n' + content) : content;
+            } else {
+                ta.value = content;
+            }
+            updateCount();
+            closeImport();
+            showToast('✅ 已导入「' + label + '」', 'success');
+        }
+        function handleFileImport(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                const text = String(reader.result || '');
+                importText(text, file.name.replace(/\.(txt|md|text)$/i, ''));
+                input.value = '';
+            };
+            reader.onerror = () => { showToast('❌ 文件读取失败', 'danger'); input.value = ''; };
+            reader.readAsText(file, 'utf-8');
+        }
 
         // ===== AI 调用（复用全站配置：本地 Ollama / 云端 API）=====
         function getAIConfig() {
