@@ -639,6 +639,15 @@
         .mobile-menu-btn:active {
             background: var(--accent);
         }
+        /* 同步提示 */
+        .kg-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); border: 1px solid var(--accent); color: var(--text-primary);
+            padding: 12px 22px; border-radius: 12px; font-size: 14px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.3s;
+            z-index: 400; pointer-events: none;
+        }
+        .kg-toast.show { opacity: 1; }
     </style>
     <link rel="stylesheet" href="design-system.css">
 </head>
@@ -663,6 +672,7 @@
         <div class="header-actions">
             <button class="btn-secondary btn" onclick="resetView()">重置视图</button>
             <button class="btn-secondary btn" onclick="exportGraph()">导出图谱</button>
+            <button class="btn" onclick="syncFromSources()">🔄 同步内容</button>
             <button class="btn" onclick="showAddNodeModal()">+ 添加节点</button>
         </div>
     </div>
@@ -816,6 +826,11 @@
             item: '💎'
         };
 
+        // 跨页面联动：来源映射
+        const SOURCE_LABELS = { 'character':'角色管理', 'wb-loc':'世界观·地点', 'wb-faction':'世界观·势力', 'wb-enc':'世界观·词条', 'novel':'书稿章节' };
+        const SOURCE_LINKS  = { 'character':'character-management.html', 'wb-loc':'world-builder.html', 'wb-faction':'world-builder.html', 'wb-enc':'world-builder.html', 'novel':'main-editor.html' };
+        const SOURCE_DOT    = { 'character':'#d97757', 'wb-loc':'#4ade80', 'wb-faction':'#4ade80', 'wb-enc':'#5aab7a', 'novel':'#d4a853' };
+
         // 示例数据
         let graphData = {
             nodes: [
@@ -870,6 +885,7 @@
             }
 
             loadFromStorage();
+            if (!localStorage.getItem('sagebook_graph')) syncFromSources(false);
         }
 
         function resizeCanvas() {
@@ -924,6 +940,15 @@
             ctx.fill();
 
             ctx.shadowBlur = 0;
+
+            // 来源角标（跨页面联动节点）
+            if (node.source && SOURCE_DOT[node.source]) {
+                ctx.beginPath();
+                ctx.arc(node.x + radius * 0.72, node.y - radius * 0.72, 6, 0, Math.PI * 2);
+                ctx.fillStyle = SOURCE_DOT[node.source];
+                ctx.fill();
+                ctx.lineWidth = 1.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+            }
 
             // 边框
             if (isSelected) {
@@ -1053,8 +1078,7 @@
 
             if (node) {
                 draggedNode = node;
-                selectedNode = node;
-                showNodeDetail(node);
+                selectNode(node.id);
             } else {
                 selectedNode = null;
                 closeDetailPanel();
@@ -1180,7 +1204,7 @@
 
             list.innerHTML = filteredNodes.map(node => `
                 <div class="node-item ${selectedNode && selectedNode.id === node.id ? 'selected' : ''}"
-                     onclick="selectNode(${node.id})">
+                     onclick="selectNode('${node.id}')">
                     <div>
                         <span class="node-type">${nodeIcons[node.type]}</span>
                         <span class="node-name">${node.name}</span>
@@ -1201,7 +1225,7 @@
         }
 
         function selectNode(id) {
-            const node = graphData.nodes.find(n => n.id === id);
+            const node = graphData.nodes.find(n => String(n.id) === String(id));
             if (node) {
                 selectedNode = node;
                 showNodeDetail(node);
@@ -1253,18 +1277,121 @@
                 <div class="detail-section">
                     <div class="detail-section-title">关联 (${connections.length})</div>
                     ${connections.map(conn => `
-                        <div class="connection-item" onclick="selectNode(${conn.node.id})">
+                        <div class="connection-item" onclick="selectNode('${conn.node.id}')">
                             <div class="connection-type">${conn.label}</div>
                             <div class="connection-name">${nodeIcons[conn.node.type]} ${conn.node.name}</div>
                         </div>
                     `).join('')}
                 </div>
 
+                ${node.source ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">来源</div>
+                    <div class="detail-field">
+                        <div class="detail-label">来自</div>
+                        <div class="detail-value">${SOURCE_LABELS[node.source] || node.source}
+                            <button class="btn" style="margin-left:10px;padding:5px 12px;font-size:12px;" onclick="openSource('${node.source}','${String(node.sourceId||'').replace(/'/g,'')}')">打开原内容 🔗</button>
+                        </div>
+                    </div>
+                </div>` : ''}
+
                 <div style="margin-top: 20px; display: flex; gap: 10px;">
-                    <button class="btn" onclick="editNode(${node.id})">编辑</button>
-                    <button class="btn-secondary btn" onclick="deleteNode(${node.id})">删除</button>
+                    <button class="btn" onclick="editNode('${node.id}')">编辑</button>
+                    <button class="btn-secondary btn" onclick="deleteNode('${node.id}')">删除</button>
                 </div>
             `;
+        }
+
+        // ===== 跨页面内容联动 =====
+        function readExternalSources() {
+            const out = { nodes: [], edges: [] };
+            const rnd = () => ({ x: Math.random() * 600 + 150, y: Math.random() * 400 + 150, vx: 0, vy: 0 });
+            // 角色
+            let chars = [];
+            try { chars = JSON.parse(localStorage.getItem('sagebook_characters') || '[]'); } catch (e) { chars = []; }
+            if (Array.isArray(chars)) {
+                chars.forEach(c => {
+                    if (!c || !c.name) return;
+                    const nid = 'ext-char-' + (c.id != null ? c.id : c.name);
+                    out.nodes.push(Object.assign({ id: nid, name: c.name, type: 'character',
+                        description: c.description || (c.role ? '身份：' + c.role : '来自角色管理'),
+                        tags: c.role ? [c.role] : ['角色'], source: 'character', sourceId: c.id }, rnd()));
+                });
+                chars.forEach(c => {
+                    if (!c || !Array.isArray(c.relationships)) return;
+                    const fromId = 'ext-char-' + (c.id != null ? c.id : c.name);
+                    c.relationships.forEach(r => {
+                        if (!r) return;
+                        const toId = 'ext-char-' + r.charId;
+                        if (toId !== fromId) out.edges.push({ from: fromId, to: toId, label: r.type || '关联', ext: true });
+                    });
+                });
+            }
+            // 世界观·地点（字符串数组）
+            let locs = [];
+            try { locs = JSON.parse(localStorage.getItem('sagebook_wb_loc') || '[]'); } catch (e) { locs = []; }
+            (Array.isArray(locs) ? locs : []).forEach((l, i) => {
+                const name = typeof l === 'string' ? l : (l && l.name); if (!name) return;
+                out.nodes.push(Object.assign({ id: 'ext-loc-' + i, name: name, type: 'location',
+                    description: '来自世界观设定的地点', tags: ['地点'], source: 'wb-loc' }, rnd()));
+            });
+            // 世界观·势力
+            let facs = [];
+            try { facs = JSON.parse(localStorage.getItem('sagebook_wb_factions') || '[]'); } catch (e) { facs = []; }
+            (Array.isArray(facs) ? facs : []).forEach((f, i) => {
+                if (!f || !f.name) return;
+                out.nodes.push(Object.assign({ id: 'ext-fac-' + i, name: f.name, type: 'location',
+                    description: f.desc || '来自世界观设定的势力', tags: ['势力'], source: 'wb-faction' }, rnd()));
+            });
+            // 世界观·词条
+            let enc = [];
+            try { enc = JSON.parse(localStorage.getItem('sagebook_wb_enc') || '[]'); } catch (e) { enc = []; }
+            (Array.isArray(enc) ? enc : []).forEach((e2, i) => {
+                if (!e2 || !e2.title) return;
+                out.nodes.push(Object.assign({ id: 'ext-enc-' + i, name: e2.title, type: 'item',
+                    description: e2.content || '来自世界观词条', tags: ['词条'], source: 'wb-enc' }, rnd()));
+            });
+            // 书稿章节
+            let novel = null;
+            try { novel = JSON.parse(localStorage.getItem('sagebook_novel') || 'null'); } catch (e) { novel = null; }
+            if (novel && novel.chapters) {
+                const ids = Object.keys(novel.chapters);
+                ids.forEach((cid, i) => {
+                    const ch = novel.chapters[cid]; if (!ch) return;
+                    const title = (ch.title || '未命名').replace(/\.md$/, '');
+                    out.nodes.push(Object.assign({ id: 'ext-ch-' + cid, name: title, type: 'event',
+                        description: (ch.content || '').slice(0, 60) || '书稿章节', tags: ['章节'], source: 'novel', sourceId: cid }, rnd()));
+                    if (i > 0) out.edges.push({ from: 'ext-ch-' + ids[i - 1], to: 'ext-ch-' + cid, label: '衔接', ext: true });
+                });
+            }
+            return out;
+        }
+        function syncFromSources(showTip) {
+            const ext = readExternalSources();
+            graphData.nodes = graphData.nodes.filter(n => !n.source);
+            graphData.edges = graphData.edges.filter(e => !e.ext);
+            graphData.nodes = graphData.nodes.concat(ext.nodes);
+            graphData.edges = graphData.edges.concat(ext.edges);
+            updateNodeList();
+            updateCounts();
+            draw();
+            saveToStorage();
+            if (showTip !== false) {
+                const n = ext.nodes.length;
+                showKgToast(n > 0 ? ('已同步 ' + n + ' 个跨页面节点（角色/地点/势力/词条/章节）') : '其他页面暂无可同步的内容');
+            }
+        }
+        function openSource(source, sourceId) {
+            const url = SOURCE_LINKS[source];
+            if (url) window.open(url + (source === 'novel' && sourceId ? ('#ch-' + sourceId) : ''), '_blank');
+        }
+        function showKgToast(msg) {
+            const t = document.getElementById('kgToast');
+            if (!t) { console.log(msg); return; }
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 2800);
         }
 
         function closeDetailPanel() {
@@ -1334,7 +1461,7 @@
         }
 
         function editNode(id) {
-            const node = graphData.nodes.find(n => n.id === id);
+            const node = graphData.nodes.find(n => String(n.id) === String(id));
             if (node) {
                 const newName = prompt('编辑节点名称:', node.name);
                 if (newName) {
@@ -1348,8 +1475,8 @@
 
         function deleteNode(id) {
             if (confirm('确定要删除这个节点吗？')) {
-                graphData.nodes = graphData.nodes.filter(n => n.id !== id);
-                graphData.edges = graphData.edges.filter(e => e.from !== id && e.to !== id);
+                graphData.nodes = graphData.nodes.filter(n => String(n.id) !== String(id));
+                graphData.edges = graphData.edges.filter(e => String(e.from) !== String(id) && String(e.to) !== String(id));
 
                 updateNodeList();
                 updateStats();
@@ -1442,5 +1569,6 @@
     <div class="sf-home"><a href="index.html">📚 返回 SAGEBOOK 首页</a></div>
 </footer>
 
+    <div class="kg-toast" id="kgToast"></div>
 </body>
 </html>
