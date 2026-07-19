@@ -1905,7 +1905,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
-<input type="file" id="importFile" accept=".txt,.md,.markdown,text/plain" multiple style="display:none" onchange="handleImportFiles(this)">
+<input type="file" id="importFile" accept=".txt,.md,.markdown,text/plain" multiple style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;opacity:0;" onchange="handleImportFiles(this)">
 <div class="import-modal-overlay" id="importModal" onclick="if(event.target===this)closeImportModal()">
   <div class="import-modal">
     <div class="import-modal-head">
