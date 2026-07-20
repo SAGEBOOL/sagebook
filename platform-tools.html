@@ -52,7 +52,10 @@
         .hook-score.medium { color:var(--warning); }
         .hook-score.low { color:var(--error); }
         .hook-text { font-size:13px;color:var(--text-secondary);line-height:1.6; }
-        .hook-suggestion { margin-top:6px;padding:6px 10px;background:var(--bg-tertiary);border-radius:8px;font-size:12px;color:var(--accent); }
+        .hook-signals { display:flex;flex-wrap:wrap;gap:4px;margin-top:8px; }
+        .hook-signal { font-size:11px;padding:2px 8px;border-radius:9px;background:rgba(217,119,87,0.14);color:var(--accent); }
+        .hook-signal.neg { background:rgba(190,60,60,0.14);color:var(--error); }
+        .hook-suggestion { margin-top:8px;padding:6px 10px;background:var(--bg-tertiary);border-radius:8px;font-size:12px;color:var(--accent); }
         .update-plan { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:20px;margin:12px 0; }
         .plan-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:16px; }
         .plan-title { font-size:16px;font-weight:700; }
@@ -384,16 +387,56 @@
             });
         }
 
-        // ===== 钩子分析（真实）=====
-        function hookScore(text){
-            const t=text.trim(); if(!t) return 0;
-            let s=50;
-            const last=t.slice(-1);
-            if(/[？?！!]/.test(last)) s+=35;
-            s+=Math.min(20,(t.match(/[！!？?]/g)||[]).length*6);
-            if(/突然|竟|竟是|原来|竟|没想到|秘密|真相|消失|背叛|危机|低沉的|咆哮/.test(t)) s+=15;
-            if(t.length<40) s-=15;
-            return Math.max(0,Math.min(100,s));
+        // ===== 钩子分析（真实 · 多维评分）=====
+        // 基于结尾标点 / 悬念标点密度 / 悬念关键词密度 / 对话悬停 / 留白中断 /
+        // 总结性闭合负向惩罚 / 段落长度，输出 0~100 分与命中信号明细，使不同章节具备区分度。
+        const HOOK_SUSP = ['突然','竟是','原来','没想到','秘密','真相','消失','背叛','危机','咆哮','低沉','死亡','杀','血','阴谋','揭露','震惊','竟然','居然','谁知','不料','诡异','异变','黑影','神秘','难道','未知','谜','诡计','谎言','威胁','陷阱','失踪','反转','隐瞒','暗流','不祥'];
+        const HOOK_CLOSE = ['就这样','总之','从此','后来','多年以后','终于','结束了','一切归于','恢复平静','安宁','平静地','岁月','日子'];
+        function analyzeHook(text){
+            const t=text.trim();
+            if(!t) return {score:0, hits:[], label:'空段落'};
+            let s=30; const hits=[];
+            const add=(label,delta)=>{ if(delta){ s+=delta; hits.push({label, delta}); } };
+
+            const last=t.slice(-1), last2=t.slice(-2);
+            const qCount=(t.match(/[？?]/g)||[]).length;
+            const exCount=(t.match(/[！!]/g)||[]).length;
+
+            // 1. 结尾标点（最关键信号）
+            if(/[？?]/.test(last)) add('疑问收尾 · 强悬念', 32);
+            else if(/[—\-–~～]/.test(last)) add('破折号中断', 16);
+            else if(/[…．.．]/.test(last)) add('省略留白', 14);
+            else if(/[！!]/.test(last)) add('惊叹收尾', 20);
+            else if(/[。.]/.test(last)) add('句号收束', 6);
+
+            // 2. 悬念标点密度
+            const qd=Math.min(16, qCount*9 + exCount*4);
+            if(qd) add(`悬念标点密度 ×${qCount+exCount}`, qd);
+
+            // 3. 悬念关键词密度
+            let kw=0; HOOK_SUSP.forEach(k=>{ if(t.includes(k)) kw++; });
+            const kwd=Math.min(22, kw*5);
+            if(kwd) add(`悬念关键词 ×${kw}`, kwd);
+
+            // 4. 句中留白 / 中断
+            if(/…|——/.test(t)) add('句中留白', 6);
+
+            // 5. 对话悬而未决
+            if(/[“"”']$/.test(t) || last2.includes('：') || /[“"][^”"]*$/.test(t)) add('对话悬而未决', 10);
+
+            // 6. 总结性闭合（负向）
+            let neg=0; HOOK_CLOSE.forEach(c=>{ if(t.includes(c)) neg++; });
+            const nd=Math.min(18, neg*9);
+            if(nd) add(`总结性收尾 ×${neg}`, -nd);
+
+            // 7. 长度调节
+            if(t.length<12) add('段落过短（残段）', -12);
+            else if(t.length<25) add('段落偏短', -6);
+            else if(t.length>=60) add('铺陈充分', 4);
+
+            s=Math.max(0, Math.min(100, Math.round(s)));
+            const label = s>=75 ? '强悬念，追读率高' : s>=50 ? '中等悬念，可优化' : '悬念不足，建议加转折/留白';
+            return {score:s, hits, label};
         }
         function renderHooks(){
             const el=document.getElementById('hookList');
@@ -401,11 +444,13 @@
             if(!chapters.length){ el.innerHTML='<div class="empty-hint">暂无文稿。<br>请先到 <a href="main-editor.html">主编辑器</a> 写作，本页会实时分析每章结尾的悬念强度。</div>'; return; }
             el.innerHTML=chapters.slice(0,15).map((ch,i)=>{
                 const lastPara=ch.split(/\n\s*\n/).map(p=>p.trim()).filter(p=>p.length).pop()||ch;
-                const sc=hookScore(lastPara);
+                const {score:sc, hits, label}=analyzeHook(lastPara);
                 const lvl=sc>=75?'high':sc>=50?'medium':'low';
-                const label=sc>=75?'强悬念，追读率高':sc>=50?'中等悬念':'悬念不足，建议加转折';
                 const title=(ch.split('\n')[0]||'').slice(0,30);
-                return `<div class="hook-item"><div class="hook-header"><span class="hook-chapter">第${i+1}章/段 · ${title.replace(/</g,'&lt;')}</span><span class="hook-score ${lvl}">${sc}</span></div><div class="hook-text">${lastPara.slice(0,60).replace(/</g,'&lt;')}…</div><div class="hook-suggestion">💡 ${label}</div></div>`;
+                const sigHtml=hits.length
+                    ? `<div class="hook-signals">${hits.map(h=>`<span class="hook-signal ${h.delta<0?'neg':''}">${h.label} ${h.delta>0?'+':''}${h.delta}</span>`).join('')}</div>`
+                    : '';
+                return `<div class="hook-item"><div class="hook-header"><span class="hook-chapter">第${i+1}章/段 · ${title.replace(/</g,'&lt;')}</span><span class="hook-score ${lvl}">${sc}</span></div><div class="hook-text">${lastPara.slice(0,60).replace(/</g,'&lt;')}…</div>${sigHtml}<div class="hook-suggestion">💡 ${label}</div></div>`;
             }).join('');
         }
 
