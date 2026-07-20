@@ -362,7 +362,7 @@
                 {n:'情节推进',v:plotScore,c:'var(--success)'},
                 {n:'角色发展',v:charScore,c:'var(--accent)'},
                 {n:'对话占比',v:dRatio,c:'var(--warning)'},
-                {n:'段落均衡',v:Math.max(20,100-Math.min(80,variance/30)),c:'var(--error)'}
+                {n:'段落均衡',v:Math.max(20, Math.round(100-Math.min(80,variance/30))),c:'var(--error)'}
             ];
             const avgScore=Math.round(dims.reduce((a,d)=>a+d.v,0)/dims.length);
             const chapterScores=chapters.map((c,i)=>({i, title: c.slice(0,18), score: scoreChapter(c) }));
