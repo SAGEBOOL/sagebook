@@ -1723,58 +1723,73 @@
             });
         }
 
-        // 解析 MD 格式的角色设定（兼容多种格式）
+        // 解析 MD 格式的角色设定（兼容多种格式：标准模板 / # 角色名 / ## 角色名 / 纯列表 - 姓名：xxx / 纯文本 / 多角色）
         function parseMarkdownCharacters(md) {
             const results = [];
-            // 策略1: 按 # 📋 角色档案： 分割（SAGEBOOK 标准模板）
-            let sections = md.split(/^#\s+📋\s*角色档案[：:]\s*/i).filter(s => s.trim());
-            if (sections.length > 0) {
-                sections.forEach(section => {
-                    const char = parseSingleMarkdownProfile(section);
-                    if (char && char.name) results.push(char);
-                });
-                if (results.length > 0) return results;
-            }
 
-            // 策略2: 按一级标题 # xxx 或 ## xxx 分割（通用 Markdown 角色文件）
-            // 用捕获组分割，保留标题文本
-            const headerSplit = md.split(/(?:^|\n)(#{1,3})\s+(.+?)(?:\n|$)/m).filter(s => s !== '' && s !== '\n');
-            if (headerSplit.length >= 2) {
-                // 尝试按 "标题+内容" 配对
-                for (let i = 0; i < headerSplit.length; i++) {
-                    const block = headerSplit[i].trim();
-                    // 如果这行看起来像标题（短且不含冒号键值对）
-                    if (/^#{0,3}\s*\S/.test(block) && block.length < 80 && !block.includes('**') && !block.includes('：') && i + 1 < headerSplit.length) {
-                        const name = block.replace(/^#+\s*/, '').trim();
-                        const content = headerSplit[i + 1] || '';
-                        const char = parseSingleMarkdownProfile(name + '\n' + content);
-                        if (!char.name) char.name = name;
-                        if (char && char.name && char.name.length < 50) results.push(char);
-                        i++; // 跳过已消费的 content
-                    } else {
-                        // 整块当作一个角色
-                        const char = parseSingleMarkdownProfile(block);
-                        if (char && char.name && char.name.length < 50) results.push(char);
+            // 步骤1：按一级/二级标题 (# 或 ##) 分割成多个角色块
+            // （### 及以下视为字段小节，不作为角色分隔）
+            // 已知的小节标题（字段分类），不应作为独立角色
+            const SECTION_TITLES = new Set(['基本信息','基础信息','性格','背景','故事背景','外貌','设定','简介','人物关系','关系','能力','技能','装备','法器','武器','成长','故事','档案','其他','身份','概述','详情','描述','经历','动机','目标','性格特点','外貌描写']);
+            const parts = md.split(/^#{1,2}\s+(.+?)\s*$/m);
+            let blocks = [];
+            if (parts.length >= 3) {
+                for (let i = 1; i < parts.length; i += 2) {
+                    const title = (parts[i] || '').trim();
+                    const content = (parts[i + 1] || '').trim();
+                    if (!title) continue;
+                    // 小节标题并入上一个角色块，避免被误判为独立角色
+                    if (SECTION_TITLES.has(title) && blocks.length > 0) {
+                        blocks[blocks.length - 1].content += '\n' + title + '\n' + content;
+                        continue;
                     }
-                }
-                if (results.length > 0) return results;
-            }
-
-            // 策略3: 整个文件就是一个角色（最常见情况）
-            const singleChar = parseSingleMarkdownProfile(md);
-            if (singleChar && singleChar.name) return [singleChar];
-
-            // 策略4: 尝试从第一行提取名字作为 fallback
-            const firstLine = md.split('\n').find(l => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('*') && !l.trim().startsWith('|') && !l.trim().startsWith('-'));
-            if (firstLine) {
-                const nameGuess = firstLine.trim().replace(/^\**/, '').replace(/\**$/, '').trim();
-                if (nameGuess && nameGuess.length > 0 && nameGuess.length < 40 && !nameGuess.includes('：')) {
-                    const fbChar = parseSingleMarkdownProfile(md);
-                    if (fbChar) { fbChar.name = nameGuess; return [fbChar]; }
+                    blocks.push({ title: title, content: title + '\n' + content });
                 }
             }
 
-            return [];
+            // 步骤2：若无标题分割，整文件作为一个角色块
+            if (blocks.length === 0) {
+                blocks.push({ title: '', content: md });
+            }
+
+            // 步骤3：逐块解析
+            blocks.forEach(b => {
+                const char = parseSingleMarkdownProfile(b.content);
+                // 名字兜底：用标题行（去掉 #/📋/角色档案 等前缀）
+                if (!char.name && b.title) {
+                    char.name = cleanNameFromTitle(b.title);
+                }
+                if (char.name && char.name.length > 0 && char.name.length < 50) {
+                    results.push(char);
+                }
+            });
+
+            // 步骤4：若仍为空（如整文件是纯列表、无标题），用整文件兜底 + KV 名字提取
+            if (results.length === 0) {
+                const single = parseSingleMarkdownProfile(md);
+                if (!single.name) {
+                    const kvName = extractNameFromKV(md);
+                    if (kvName) single.name = kvName;
+                }
+                if (single.name) results.push(single);
+            }
+
+            return results;
+        }
+
+        // 从标题提取干净的姓名
+        function cleanNameFromTitle(t) {
+            return t.replace(/^📋\s*/, '')
+                    .replace(/角色档案[：:]?/, '')
+                    .replace(/[（(].+?[)）]/g, '')
+                    .replace(/[#*]/g, '')
+                    .trim();
+        }
+
+        // 从 KV 行提取姓名（兼容 "- 姓名：林清" / "姓名: 林清" 等）
+        function extractNameFromKV(md) {
+            const m = md.match(/^\s*[-*]?\s*(?:姓名|名字|名称|角色名|角色)\s*[：:]\s*(.+)$/m);
+            return m ? m[1].trim() : null;
         }
 
         // 解析单个角色档案
@@ -1833,11 +1848,17 @@
             // 如果在分割时去掉了 # 📋 角色档案：xxx，第一行可能就是角色名
             if (!char.name) {
                 const firstLine = lines[0]?.trim();
-                if (firstLine && !firstLine.match(/^#{1,4}/) && !firstLine.match(/^[-*|\[#{]/) && !firstLine.startsWith('【')) {
-                    // 可能是纯名字行（分割后剩余）
-                    const nameOnly = firstLine.match(/^(.+?)(?:\s*[（(].+?[)）])?\s*$/);
-                    if (nameOnly && nameOnly[1].length > 0 && nameOnly[1].length < 50) {
-                        char.name = nameOnly[1].trim();
+                if (firstLine) {
+                    // 兼容首行为「角色档案：林清」（分割后去掉了 #）
+                    const raM = firstLine.match(/角色档案[：:]?\s*(.+)$/);
+                    if (raM) {
+                        char.name = raM[1].replace(/[（(].+?[)）]/g, '').trim();
+                    } else if (!firstLine.match(/^#{1,4}/) && !firstLine.match(/^[-*|\[#{]/) && !firstLine.startsWith('【')) {
+                        // 可能是纯名字行（分割后剩余）
+                        const nameOnly = firstLine.match(/^(?:[-*]\s*)?(.+?)(?:\s*[（(].+?[)）])?\s*$/);
+                        if (nameOnly && nameOnly[1] && nameOnly[1].length > 0 && nameOnly[1].length < 50 && !nameOnly[1].includes('：') && !nameOnly[1].includes(':')) {
+                            char.name = nameOnly[1].trim();
+                        }
                     }
                 }
             }
@@ -1885,7 +1906,17 @@
                 if (trimmed.match(/^#{1,3}\s+(.+)$/)) {
                     const m = trimmed.match(/^#{1,3}\s+(.+)$/);
                     const titleText = m[1];
-                    if (!char.name) char.name = titleText.replace(/[（(].+?[)）]/g, '').replace(/[👤👭💖✨⚙️💎⚔️🔮📜ⅠⅡ.]/g, '').trim();
+                    // 角色档案前缀：# 角色档案：林清 → 林清
+                    const raMatch = titleText.match(/角色档案[：:]?\s*(.+)$/);
+                    if (raMatch) {
+                        char.name = raMatch[1].replace(/[（(].+?[)）]/g, '').trim();
+                    } else if (!char.name) {
+                        // 第一个标题作为名字，排除明显的小节标题
+                        const isSectionTitle = /^(基本信息|基础信息|性格|背景|外貌|设定|简介|关系|能力|技能|装备|法器|武器|成长|故事|故事背景|档案|人物关系|其他)$/.test(titleText.trim());
+                        if (!isSectionTitle) {
+                            char.name = titleText.replace(/[（(].+?[)）]/g, '').replace(/[👤👭💖✨⚙️💎⚔️🔮📜ⅠⅡ.]/g, '').trim();
+                        }
+                    }
                     // 如果是 ### 标题，设置 section
                     if (trimmed.match(/^###\s/)) {
                         section = titleText.replace(/[📜✨💖]/g, '').trim();
@@ -1936,13 +1967,18 @@
                     continue;
                 }
 
-                // 列表项 key: value（去掉 ** 后格式: * 种族：xxx 或 * 种族: xxx）
-                // 去掉可能的 * 前缀（来自缩进或清理残留）
-                const cleanKV = trimmed.replace(/^\*+\s*/, '');
+                // 列表项 key: value（格式: * 种族：xxx / - 姓名：林清 / 种族：xxx）
+                // 去掉可能的 * 或 - 前缀（来自列表或清理残留）
+                const cleanKV = trimmed.replace(/^[-*]+\s*/, '');
                 const kvMatch = cleanKV.match(/^(.+?)[：:]\s*(.+)$/);
                 if (kvMatch) {
                     const key = kvMatch[1].trim().replace(/^\*+/, '');
                     const value = kvMatch[2].replace(/^\*+/, "").trim();
+
+                    // 姓名类字段直接作为角色名（兼容 - 姓名：林清 / 名字：xxx）
+                    if (key.includes('姓名') || key.includes('名字') || key.includes('名称') || key.includes('角色名')) {
+                        if (value) char.name = value;
+                    }
 
                     // 映射到角色字段
                     if (key.match(/^\[CH/)) {
