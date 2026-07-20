@@ -489,6 +489,13 @@
             background: var(--bg-hover);
         }
 
+        .import-md-label {
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .import-md-label:hover { background: var(--bg-hover); }
+
         .btn-icon {
             width: 36px;
             height: 36px;
@@ -868,7 +875,7 @@
                 <div style="display: flex; gap: 10px;">
                     <button class="btn-secondary btn" onclick="exportCharacters()">📤 导出</button>
                     <button class="btn-secondary btn" onclick="importCharacters()">📥 导入JSON</button>
-                    <button class="btn-secondary btn" onclick="importMarkdownFile()">📄 导入MD</button>
+                    <label class="btn-secondary btn import-md-label" for="mdImportFile">📄 导入MD</label>
                 </div>
             </div>
 
@@ -1607,80 +1614,100 @@
             showToast('导出成功', 'success');
         }
 
-        // ===== MD 导入功能 =====
-        function importMarkdownFile() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.md,.markdown,.txt';
-            input.multiple = true;
-            input.onchange = (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
+        // ===== MD 导入功能（label for 原生关联，全浏览器兼容） =====
+        function handleMdImportFiles(fileList) {
+            const files = Array.from(fileList || []);
+            if (files.length === 0) return;
 
-                let loaded = 0;
-                let success = 0;
+            let loaded = 0;
+            let success = 0;
 
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        loaded++;
-                        try {
-                            const md = event.target.result;
-                            const chars = parseMarkdownCharacters(md);
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    loaded++;
+                    try {
+                        const md = event.target.result;
+                        const chars = parseMarkdownCharacters(md);
 
-                            chars.forEach(charMd => {
-                                const existing = characters.findIndex(c => c.name === charMd.name);
-                                if (existing >= 0) {
-                                    Object.assign(characters[existing], charMd);
-                                } else {
-                                    charMd.id = Date.now() + Math.random();
-                                    characters.push(charMd);
-                                }
-                            });
-                            success += chars.length;
-                        } catch (err) {
-                            console.error('解析失败:', file.name, err);
-                        }
+                        chars.forEach(charMd => {
+                            const existing = characters.findIndex(c => c.name === charMd.name);
+                            if (existing >= 0) {
+                                Object.assign(characters[existing], charMd);
+                            } else {
+                                charMd.id = Date.now() + Math.random();
+                                characters.push(charMd);
+                            }
+                        });
+                        success += chars.length;
+                    } catch (err) {
+                        console.error('解析失败:', file.name, err);
+                    }
 
-                        if (loaded === files.length) {
-                            saveToStorage();
-                            updateCharacterList();
-                            updateCards();
-                            updateCounts();
-                            showToast(`成功导入 ${success} 个角色`, 'success');
-                        }
-                    };
-                    reader.readAsText(file);
-                });
-            };
-            input.click();
+                    if (loaded === files.length) {
+                        saveToStorage();
+                        updateCharacterList();
+                        updateCards();
+                        updateCounts();
+                        showToast(`成功导入 ${success} 个角色`, success > 0 ? 'success' : 'warning');
+                    }
+                };
+                reader.readAsText(file);
+            });
         }
 
-        // 解析 MD 格式的角色设定（适配 SAGEBOOK 人物图谱模板）
+        // 解析 MD 格式的角色设定（兼容多种格式）
         function parseMarkdownCharacters(md) {
             const results = [];
-            // 用一级标题分割多个角色
-            const sections = md.split(/^#\s+📋\s*角色档案[：:]\s*/i).filter(s => s.trim());
-            // 备用分割：任意 # 开头
-            const fallbackSections = md.split(/^#\s+(.+)$/m);
-
+            // 策略1: 按 # 📋 角色档案： 分割（SAGEBOOK 标准模板）
+            let sections = md.split(/^#\s+📋\s*角色档案[：:]\s*/i).filter(s => s.trim());
             if (sections.length > 0) {
                 sections.forEach(section => {
                     const char = parseSingleMarkdownProfile(section);
                     if (char && char.name) results.push(char);
                 });
-            } else if (fallbackSections.length > 1) {
-                // 第一个元素通常是标题前的内容，跳过
-                for (let i = 1; i < fallbackSections.length; i += 2) {
-                    const name = fallbackSections[i].trim();
-                    const content = fallbackSections[i + 1] || '';
-                    let char = parseSingleMarkdownProfile(name + '\n' + content);
-                    if (char && !char.name) char.name = name;
-                    if (char && char.name) results.push(char);
+                if (results.length > 0) return results;
+            }
+
+            // 策略2: 按一级标题 # xxx 或 ## xxx 分割（通用 Markdown 角色文件）
+            // 用捕获组分割，保留标题文本
+            const headerSplit = md.split(/(?:^|\n)(#{1,3})\s+(.+?)(?:\n|$)/m).filter(s => s !== '' && s !== '\n');
+            if (headerSplit.length >= 2) {
+                // 尝试按 "标题+内容" 配对
+                for (let i = 0; i < headerSplit.length; i++) {
+                    const block = headerSplit[i].trim();
+                    // 如果这行看起来像标题（短且不含冒号键值对）
+                    if (/^#{0,3}\s*\S/.test(block) && block.length < 80 && !block.includes('**') && !block.includes('：') && i + 1 < headerSplit.length) {
+                        const name = block.replace(/^#+\s*/, '').trim();
+                        const content = headerSplit[i + 1] || '';
+                        const char = parseSingleMarkdownProfile(name + '\n' + content);
+                        if (!char.name) char.name = name;
+                        if (char && char.name && char.name.length < 50) results.push(char);
+                        i++; // 跳过已消费的 content
+                    } else {
+                        // 整块当作一个角色
+                        const char = parseSingleMarkdownProfile(block);
+                        if (char && char.name && char.name.length < 50) results.push(char);
+                    }
+                }
+                if (results.length > 0) return results;
+            }
+
+            // 策略3: 整个文件就是一个角色（最常见情况）
+            const singleChar = parseSingleMarkdownProfile(md);
+            if (singleChar && singleChar.name) return [singleChar];
+
+            // 策略4: 尝试从第一行提取名字作为 fallback
+            const firstLine = md.split('\n').find(l => l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('*') && !l.trim().startsWith('|') && !l.trim().startsWith('-'));
+            if (firstLine) {
+                const nameGuess = firstLine.trim().replace(/^\**/, '').replace(/\**$/, '').trim();
+                if (nameGuess && nameGuess.length > 0 && nameGuess.length < 40 && !nameGuess.includes('：')) {
+                    const fbChar = parseSingleMarkdownProfile(md);
+                    if (fbChar) { fbChar.name = nameGuess; return [fbChar]; }
                 }
             }
 
-            return results;
+            return [];
         }
 
         // 解析单个角色档案
@@ -1972,6 +1999,25 @@
                 }
             }
 
+            // Fallback: 如果仍未提取到名字，尝试从原始文本中找
+            if (!char.name || !char.name.trim()) {
+                // 尝试从 # 标题行或第一行非特殊字符的短文本中取
+                const rawLines = md.split('\n');
+                for (const rl of rawLines) {
+                    const t = rl.trim();
+                    // 跳过空、标题标记、列表、表格、分隔线、说明
+                    if (!t || /^#{1,4}\s/.test(t) || /^[-*|]/.test(t) ||
+                        /^[*]{3,}$/.test(t) || /^---+$/.test(t) ||
+                        t.startsWith('【') || t.startsWith('说明')) continue;
+                    // 取第一个看起来像名字的短行（不含冒号键值对）
+                    const nameGuess = t.replace(/^\**/, '').replace(/\**$/, '').trim();
+                    if (nameGuess && nameGuess.length > 0 && nameGuess.length < 40 && !nameGuess.includes('：') && !nameGuess.includes(':')) {
+                        char.name = nameGuess;
+                        break;
+                    }
+                }
+            }
+
             return char;
         }
 
@@ -2058,6 +2104,9 @@
     <div class="sf-friends">友情链接｜<a href="https://storylucas.top/" target="_blank" rel="noopener">NON九界</a>｜<a href="https://sagebool.github.io/lifeline/" target="_blank" rel="noopener">人生运势K线图</a>｜<a href="https://sagebool.github.io/crystal-calculator/" target="_blank" rel="noopener">水晶运势计算器</a></div>
     <div class="sf-home"><a href="index.html">📚 返回 SAGEBOOK 首页</a></div>
 </footer>
+
+<!-- 导入MD用的隐藏 file input（通过 label for 原生关联，兼容所有浏览器） -->
+<input type="file" id="mdImportFile" accept=".md,.markdown,.txt" multiple style="position:fixed; left:-9999px; width:1px; height:1px; opacity:0; overflow:hidden;" onchange="handleMdImportFiles(this.files)">
 
 </body>
 </html>
