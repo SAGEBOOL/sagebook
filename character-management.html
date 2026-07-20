@@ -1844,6 +1844,7 @@
             let subSection = ''; // 当前三级分类
             let inTable = false;
             let tableContent = '';
+            let tableHeaderSeen = false; // 表格第一行是表头，需跳过
 
             // 如果在分割时去掉了 # 📋 角色档案：xxx，第一行可能就是角色名
             if (!char.name) {
@@ -1867,16 +1868,19 @@
                 let line = lines[i];
                 const trimmed = line.trim();
 
-                // 跳过表格行
+                // 处理表格（关键关系网等）→ 收集到 keyRelations
                 if (trimmed.startsWith('|')) {
-                    if (trimmed.includes('---')) continue; // 分隔线
-                    const cells = trimmed.split('|').filter(c => c.trim());
-                    if (cells.length >= 3 && !tableFirstRow) {
-                        tableContent += cells.join(' | ') + '\n';
-                    }
-                    if (cells.length >= 3) {
-                        inTable = true;
-                        tableContent = '';
+                    if (/^\s*\|?\s*:?-{2,}\s*\|?/.test(trimmed)) continue; // 分隔线 | :--- | :--- |
+                    const cells = trimmed.split('|')
+                        .map(c => c.replace(/\*\*/g, '').replace(/^\[\[?/, '').replace(/\]?\]$/, '').trim())
+                        .filter(c => c.length > 0);
+                    if (cells.length >= 2) {
+                        if (!tableHeaderSeen) {
+                            tableHeaderSeen = true; // 第一行是表头，跳过
+                        } else {
+                            tableContent += cells.join('｜') + '\n';
+                            inTable = true;
+                        }
                     }
                     continue;
                 } else if (inTable && tableContent !== '') {
@@ -1939,11 +1943,11 @@
                     continue;
                 }
 
-                // 【核心标签】行
+                // 【核心标签】行（兼容 #标签 与 #[标签] 两种写法）
                 if (trimmed.match(/^【核心标签】/)) {
-                    const tagsMatch = trimmed.match(/#\[([^\]]+)\]/g);
+                    const tagsMatch = trimmed.match(/#(\[[^\]]+\]|[^\s#，,]+)/g);
                     if (tagsMatch) {
-                        char.tags = tagsMatch.map(t => t.replace(/#\[|\]/g, '').trim());
+                        char.tags = tagsMatch.map(t => t.replace(/^#/, '').replace(/^\[|\]$/g, '').trim()).filter(Boolean);
                     }
                     continue;
                 }
@@ -1973,7 +1977,9 @@
                 const kvMatch = cleanKV.match(/^(.+?)[：:]\s*(.+)$/);
                 if (kvMatch) {
                     const key = kvMatch[1].trim().replace(/^\*+/, '');
-                    const value = kvMatch[2].replace(/^\*+/, "").trim();
+                    let value = kvMatch[2].replace(/^\*+/, "").trim();
+                    // 去除 wiki 链接括号 [[x]] / [x]，让导入值更干净
+                    value = value.replace(/^\[\[?/, '').replace(/\]?\]$/, '');
 
                     // 姓名类字段直接作为角色名（兼容 - 姓名：林清 / 名字：xxx）
                     if (key.includes('姓名') || key.includes('名字') || key.includes('名称') || key.includes('角色名')) {
