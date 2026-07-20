@@ -122,7 +122,7 @@
         <div class="header">
             <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt">SAGEBOOK</span></a>
             <div class="title">网文平台工具</div>
-            <div class="subtitle">格式导出 · 章节钩子 · 更新规划 · 读者反馈 · 系列管理（均基于你的真实数据）</div>
+            <div class="subtitle">格式导出 · 章节钩子 · 更新规划 · 系列管理（均基于你的真实数据）</div>
             <nav class="nav">
                 <a href="index.html" class="nav-link">🏠 首页</a>
                 <a href="main-editor.html" class="nav-link">编辑器</a>
@@ -141,7 +141,6 @@
             <button class="tab-btn active" onclick="switchTab('export')">📤 格式导出</button>
             <button class="tab-btn" onclick="switchTab('hooks')">🪝 钩子分析</button>
             <button class="tab-btn" onclick="switchTab('schedule')">📅 更新规划</button>
-            <button class="tab-btn" onclick="switchTab('feedback')">💬 读者反馈</button>
             <button class="tab-btn" onclick="switchTab('series')">📚 系列管理</button>
         </div>
 
@@ -202,24 +201,6 @@
             </div>
         </div>
 
-        <!-- 读者反馈 -->
-        <div id="tab-feedback" class="tab-content">
-            <div class="card">
-                <div class="card-title">💬 读者反馈管理（本地保存）</div>
-                <div class="row">
-                    <input id="fbChapter" placeholder="章节，如 第18章">
-                    <select id="fbType">
-                        <option value="positive">好评</option>
-                        <option value="negative">差评</option>
-                        <option value="suggestion">建议</option>
-                    </select>
-                    <textarea id="fbText" placeholder="反馈内容"></textarea>
-                    <button class="btn btn-primary" onclick="addFeedback()">➕ 添加反馈</button>
-                </div>
-                <div id="fbList"></div>
-            </div>
-        </div>
-
         <!-- 系列管理 -->
         <div id="tab-series" class="tab-content">
             <div class="card">
@@ -234,7 +215,10 @@
                     <input id="bkChapters" type="number" min="0" placeholder="章数" style="width:90px">
                     <input id="bkWords" type="number" min="0" placeholder="字数" style="width:110px">
                     <button class="btn btn-primary" onclick="addBook()">➕ 新建关联书籍</button>
+                    <label class="btn" for="seriesImportFile" style="cursor:pointer">📥 导入文件</label>
+                    <input id="seriesImportFile" type="file" accept=".json,.csv,.md,.txt" multiple style="display:none" onchange="handleSeriesImportFiles(event)">
                 </div>
+                <div id="seriesImportInfo" style="font-size:13px;color:var(--text-secondary);margin-top:8px"></div>
                 <div class="series-grid" id="seriesGrid"></div>
             </div>
         </div>
@@ -246,7 +230,6 @@
         const LS_CAL='sagebook_write_calendar';
         const LS_GOAL='sagebook_write_goal';
         const LS_POMO='sagebook_pomo';
-        const LS_FB='sagebook_feedback';
         const LS_SERIES='sagebook_series';
 
         function setTheme(t){const h=document.documentElement,b=document.querySelectorAll('.theme-btn');
@@ -458,31 +441,6 @@
         function getPomo(){ try{return JSON.parse(localStorage.getItem(LS_POMO)||'{"len":25,"goal":4}');}catch{return {len:25,goal:4};} }
         function savePomo(){ const p={len:parseInt(document.getElementById('pomoLen').value)||25,goal:parseInt(document.getElementById('pomoGoal').value)||4}; localStorage.setItem(LS_POMO,JSON.stringify(p)); }
 
-        // ===== 读者反馈（真实 CRUD）=====
-        function getFB(){ try{return JSON.parse(localStorage.getItem(LS_FB)||'[]');}catch{return [];} }
-        function saveFB(l){ localStorage.setItem(LS_FB,JSON.stringify(l)); renderFB(); }
-        function addFeedback(){
-            const ch=document.getElementById('fbChapter').value.trim();
-            const type=document.getElementById('fbType').value;
-            const txt=document.getElementById('fbText').value.trim();
-            if(!txt){ alert('请填写反馈内容'); return; }
-            const l=getFB(); l.push({id:Date.now(),chapter:ch||'未注明',type,text:txt});
-            saveFB(l);
-            document.getElementById('fbChapter').value=''; document.getElementById('fbText').value='';
-        }
-        function delFB(id){ saveFB(getFB().filter(f=>f.id!==id)); }
-        function renderFB(){
-            const el=document.getElementById('fbList'); const l=getFB();
-            if(!l.length){ el.innerHTML='<div class="empty-hint">还没有反馈记录。在上方添加读者的好评 / 差评 / 建议。</div>'; return; }
-            const tmap={positive:'好评',negative:'差评',suggestion:'建议'};
-            el.innerHTML=l.slice().reverse().map(f=>`
-                <div class="reader-feedback">
-                    <div class="feedback-header"><span class="feedback-chapter">${f.chapter}</span><span class="feedback-type ${f.type}">${tmap[f.type]}</span></div>
-                    <div class="feedback-text">${f.text.replace(/</g,'&lt;')}</div>
-                    <div class="btn-group" style="margin:6px 0 0"><button class="btn btn-danger" onclick="delFB(${f.id})">🗑️ 删除</button></div>
-                </div>`).join('');
-        }
-
         // ===== 系列管理（真实 CRUD）=====
         function getSeries(){ try{return JSON.parse(localStorage.getItem(LS_SERIES)||'[]');}catch{return [];} }
         function saveSeries(l){ localStorage.setItem(LS_SERIES,JSON.stringify(l)); renderSeries(); }
@@ -509,9 +467,97 @@
                 </div>`).join('');
         }
 
+        // 系列导入文件（支持 JSON / CSV / MD）
+        function handleSeriesImportFiles(e){
+            const files=Array.from((e.target.files)||[]);
+            if(!files.length) return;
+            const info=document.getElementById('seriesImportInfo');
+            if(info) info.textContent='正在读取 '+files.length+' 个文件…';
+            let done=0, ok=0, skip=0;
+            files.forEach(file=>{
+                const r=new FileReader();
+                r.onload=ev=>{
+                    done++;
+                    try{
+                        const books=parseBooksFile(file.name, ev.target.result);
+                        const l=getSeries();
+                        books.forEach(b=>{
+                            if(!b.title){ skip++; return; }
+                            if(l.findIndex(x=>x.title===b.title)<0){
+                                l.push({id:Date.now()+Math.random(),title:b.title,status:b.status||'计划中',chapters:parseInt(b.chapters)||0,words:parseInt(b.words)||0});
+                                ok++;
+                            } else skip++;
+                        });
+                        saveSeries(l);
+                    }catch(err){ console.error('导入失败',file.name,err); }
+                    if(done===files.length && info) info.textContent='导入完成：新增 '+ok+' 本，跳过 '+skip+' 本（重复或无书名）';
+                };
+                r.readAsText(file);
+            });
+            e.target.value=''; // 允许重复导入同一文件
+        }
+        function parseBooksFile(name,text){
+            const lower=name.toLowerCase();
+            if(lower.endsWith('.json')){
+                try{ const d=JSON.parse(text); return Array.isArray(d)?d:(d.books?d.books:[]); }catch(err){ console.error('JSON 解析失败',err); return []; }
+            }
+            if(lower.endsWith('.csv')) return parseBooksCSV(text);
+            return parseBooksMD(text); // .md / .txt
+        }
+        function parseBooksCSV(text){
+            const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(s=>s);
+            if(!lines.length) return [];
+            const header=lines[0].split(',').map(s=>s.trim());
+            const idx=colIndex(header);
+            const res=[];
+            for(let i=1;i<lines.length;i++){
+                const cells=lines[i].split(',');
+                res.push(pickBook(cells,idx));
+            }
+            return res;
+        }
+        function parseBooksMD(text){
+            const res=[];
+            // 表格：| 书名 | 状态 | 章数 | 字数 |
+            const tableRows=text.split(/\r?\n/).map(s=>s.trim()).filter(s=>s.startsWith('|'));
+            if(tableRows.length>=2){
+                const header=tableRows[0].split('|').map(s=>s.trim()).filter(s=>s);
+                const idx=colIndex(header);
+                for(let i=1;i<tableRows.length;i++){
+                    if(/^[\|\s\-:]+$/.test(tableRows[i])) continue; // 分隔线
+                    const cells=tableRows[i].split('|').map(s=>s.trim()).filter(s=>s);
+                    if(cells.length) res.push(pickBook(cells,idx));
+                }
+                if(res.length) return res;
+            }
+            // 列表：- 书名：xxx 或 - 书名 | 状态
+            text.split(/\r?\n/).forEach(line=>{
+                const m=line.match(/^[-*]\s*(.+)$/);
+                if(!m) return;
+                const content=m[1].trim();
+                const kv=content.match(/^(.+?)[：:]\s*(.+)$/);
+                if(kv) res.push({title:kv[1].trim(),status:'',chapters:'',words:kv[2].trim()});
+                else res.push({title:content,status:'',chapters:'',words:''});
+            });
+            return res;
+        }
+        function colIndex(header){
+            const idx={title:-1,status:-1,chapters:-1,words:-1};
+            header.forEach((h,i)=>{ const k=h.toLowerCase(); if(/书名|title|name/.test(k)) idx.title=i; else if(/状态|status|state/.test(k)) idx.status=i; else if(/章|chapter/.test(k)) idx.chapters=i; else if(/字|word/.test(k)) idx.words=i; });
+            return idx;
+        }
+        function pickBook(cells,idx){
+            return {
+                title: idx.title>=0 ? (cells[idx.title]||'') : (cells[0]||''),
+                status: idx.status>=0 ? (cells[idx.status]||'') : '',
+                chapters: idx.chapters>=0 ? (cells[idx.chapters]||'') : '',
+                words: idx.words>=0 ? (cells[idx.words]||'') : ''
+            };
+        }
+
         // 初始化
         const pomo=getPomo(); document.getElementById('pomoLen').value=pomo.len; document.getElementById('pomoGoal').value=pomo.goal;
-        renderPlatforms(); renderHooks(); renderSchedule(); renderFB(); renderSeries();
+        renderPlatforms(); renderHooks(); renderSchedule(); renderSeries();
         document.getElementById('exportInfo').textContent = getContent().trim()? '已读取主编辑器文稿' : '⚠️ 主编辑器暂无内容';
     </script>
 <footer class="site-footer">
