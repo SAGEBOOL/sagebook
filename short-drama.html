@@ -440,7 +440,7 @@ async function genScript(){
     const parsed=parseScriptJSON(text);
     state.script=parsed.outline||text;
     if(parsed.shots&&parsed.shots.length){
-      state.shots=parsed.shots.map((s,i)=>({ id:uid(), num:s.num||('SC'+(i+1)), imagePrompt:s.imagePrompt||'', animationPrompt:s.animationPrompt||'', characterId:'', imageUrl:'', videoUrl:'' }));
+      state.shots=parsed.shots.map((s,i)=>({ id:uid(), num:s.num||s.story_num||('SC'+(i+1)), imagePrompt:s.imagePrompt||s.image_prompt||'', animationPrompt:s.animationPrompt||s.animation_prompt||'', characterId:'', imageUrl:'', videoUrl:'' }));
     }
     save();
     st.innerHTML='<div class="note ok">✅ 已生成 '+state.shots.length+' 个场次草稿，去「分镜·场次」查看/编辑。</div>';
@@ -451,7 +451,12 @@ async function genScript(){
   }finally{ btn.disabled=false; }
 }
 function parseScriptJSON(text){
-  try{ const j=JSON.parse(text.match(/\{[\s\S]*\}/)[0]); return j; }catch(e){}
+  try{
+    // 先尝试去掉可能的 markdown 代码块包裹
+    let cleaned=text.replace(/```(?:json)?\s*/gi,'').replace(/```\s*$/g,'').trim();
+    const m=cleaned.match(/\{[\s\S]*\}/);
+    if(m){ return JSON.parse(m[0]); }
+  }catch(e){}
   return { outline:text, shots:[] };
 }
 function fillDemoScript(){
