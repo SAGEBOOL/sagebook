@@ -65,7 +65,7 @@
         <div class="header">
             <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt">SAGEBOOK</span></a>
             <div class="title">AI 深度集成</div>
-            <div class="subtitle">AI 辅助写作 · 设定管理 · 写作教练 · 三模型对比</div>
+            <div class="subtitle">AI 辅助写作 · 设定管理 · 写作教练 · 三风格对比</div>
         </div>
         <div class="nav">
             <a class="nav-link" href="index.html">🏠 首页</a>
@@ -76,7 +76,7 @@
             <button class="tab-btn active" onclick="switchTab('continue')">✍️ AI 续写</button>
             <button class="tab-btn" onclick="switchTab('polish')">💅 AI 润色</button>
             <button class="tab-btn" onclick="switchTab('coach')">🎯 写作教练</button>
-            <button class="tab-btn" onclick="switchTab('compare')">🔬 三模型对比</button>
+            <button class="tab-btn" onclick="switchTab('compare')">🔬 三风格对比</button>
         </div>
         <!-- AI 续写 -->
         <div id="tab-continue" class="tab-content active">
@@ -119,13 +119,13 @@
             </div>
             <div class="ai-output" id="coachOutput">等待 AI 生成...</div>
         </div>
-        <!-- 三模型对比 -->
+        <!-- 三风格对比 -->
         <div id="tab-compare" class="tab-content">
             <div class="ai-panel">
-                <div class="panel-title">🔬 三模型对比写作</div>
-                <textarea class="ai-input" id="compareInput" placeholder="输入场景描述，三个模型会分别生成不同版本..." style="min-height:100px;">黎明初现，天启城在晨光中缓缓苏醒。远处的钟楼传来悠远的钟声，城墙上巡逻的士兵开始一天的工作。街道上的早点摊冒着热气，行人匆匆...</textarea>
+                <div class="panel-title">🔬 三风格对比写作</div>
+                <textarea class="ai-input" id="compareInput" placeholder="输入场景描述，三种写法风格会分别生成不同版本..." style="min-height:100px;">黎明初现，天启城在晨光中缓缓苏醒。远处的钟楼传来悠远的钟声，城墙上巡逻的士兵开始一天的工作。街道上的早点摊冒着热气，行人匆匆...</textarea>
                 <div class="btn-group">
-                    <button class="btn btn-primary" onclick="runCompare()">🚀 三模型生成</button>
+                    <button class="btn btn-primary" onclick="runCompare()">🚀 三风格生成</button>
                 </div>
             </div>
             <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px;">
@@ -321,7 +321,7 @@ ${input}
             }
         }
 
-        // 三模型对比
+        // 三风格对比（同一模型 + 三种写法提示词）
         async function runCompare(){
             const input = document.getElementById('compareInput').value.trim();
             if(!input){alert('请先输入场景描述');return;}
