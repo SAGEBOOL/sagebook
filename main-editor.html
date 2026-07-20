@@ -154,15 +154,15 @@ body {
   transition: transform var(--transition-fast); flex-shrink:0;
 }
 .tree-folder.expanded .arrow { transform: rotate(90deg); }
-.tree-folder .name, .tree-file .name { overflow:hidden; text-overflow:flex:1; }
+.tree-folder .name, .tree-file .name { overflow:hidden; text-overflow:ellipsis; flex:1; min-width:0; }
 .file-words { color:var(--fg-tertiary); font-size:11px; flex-shrink:0; margin-right:6px; }
 
 /* 章节项悬浮操作按钮 */
 .tree-file { position:relative; }
-.tree-file:hover .chapter-actions { opacity:1; pointer-events:auto; }
+.tree-file:hover .chapter-actions { opacity:1; }
 .chapter-actions {
   display:flex; gap:1px; align-items:center; flex-shrink:0;
-  opacity:0; pointer-events:none;
+  opacity:0; pointer-events:auto;
   transition:opacity 0.15s ease; margin-left:auto;
 }
 .chapter-actions button {
@@ -185,6 +185,35 @@ body {
 .tree-children.show { max-height:2000px; }
 
 .vol-badge { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:6px; flex-shrink:0; }
+
+/* 文件树：文件夹 / 文件图标与悬浮操作 */
+.file-ico, .folder-ico { margin-right:6px; flex-shrink:0; font-size:13px; line-height:1; }
+.tree-folder.active { background:var(--accent-dim); color:var(--accent); }
+.tree-folder.active .name { color:var(--accent); }
+
+/* 文件夹悬浮操作（与文件操作一致） */
+.tree-folder { position:relative; }
+.tree-folder:hover .folder-actions { opacity:1; }
+.folder-actions {
+  display:flex; gap:1px; align-items:center; flex-shrink:0;
+  opacity:0; pointer-events:auto;
+  transition:opacity 0.15s ease; margin-left:auto;
+}
+.folder-actions button {
+  background:none; border:none; color:var(--fg-tertiary);
+  cursor:pointer; padding:3px 5px; border-radius:4px;
+  font-size:13px; line-height:1; transition:all var(--transition-fast);
+}
+.folder-actions button:hover { color:var(--fg-primary); background:var(--bg-hover); }
+.folder-actions button.danger:hover { color:#f87171; background:rgba(248,113,113,0.12); }
+
+/* 当前位置提示条 */
+.sidebar-hint {
+  padding:6px 12px; font-size:11px; color:var(--fg-tertiary);
+  border-bottom:1px solid var(--border-secondary);
+  cursor:pointer; user-select:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sidebar-hint:hover { color:var(--fg-secondary); }
 
 /* ---------- 主编辑区 ---------- */
 .main { flex:1; display:flex; flex-direction:column; min-width:0; background:var(--bg-primary); }
@@ -585,13 +614,16 @@ body {
     <div class="sidebar-header">
       <a href="index.html" class="brand-link sb-brand"><span class="sb-brand-ico">📚</span><span>SAGEBOOK</span></a>
       <div class="actions">
-        <button title="新建章节" onclick="newFile()">＋</button>
+        <button title="新建章节（建在当前文件夹）" onclick="newFile()">＋</button>
+        <button title="新建文件夹" onclick="newFolder()">📁</button>
+        <button title="返回根目录" onclick="setRootFolder()">🏠</button>
         <button title="搜索" onclick="document.getElementById('fileSearch').focus()">🔍</button>
       </div>
     </div>
     <div class="sidebar-search">
       <input type="text" id="fileSearch" placeholder="搜索章节..." oninput="filterFiles()">
     </div>
+    <div class="sidebar-hint" id="sidebarHint" onclick="setRootFolder()" title="点击返回根目录"></div>
     <nav class="file-tree" id="fileTree"></nav>
   </aside>
 
@@ -819,6 +851,7 @@ function getNovel() {
   let n = loadNovel();
   if (!n || !n.chapters) n = { chapters: {}, currentFile: null };
   if (!n.chapters) n.chapters = {};
+  if (!n.folders) n.folders = [];
   // 首次无章节时建一个
   const ids = Object.keys(n.chapters);
   if (ids.length === 0) {
@@ -1342,36 +1375,296 @@ async function testAI(evt) {
 }
 
 // ============================================
-// 文件树（真实数据：sagebook_novel.chapters）
+// 文件树（Obsidian 式：文件夹 + 文件 嵌套结构）
+// 每个章节可选带 folder 字段（如 "卷一" / "卷一/序章"），缺省归根目录
 // ============================================
+const COLLAPSE_KEY = 'sagebook_collapsed_folders';
+const CURFOLDER_KEY = 'sagebook_current_folder';
+
+function getCollapsed() {
+  try { return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY)) || []); } catch { return new Set(); }
+}
+function setCollapsed(set) { try { localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...set])); } catch {} }
+function getActiveFolder() { return localStorage.getItem(CURFOLDER_KEY) || ''; }
+function setActiveFolder(p) { try { localStorage.setItem(CURFOLDER_KEY, p || ''); } catch {} }
+
+// 收集所有文件夹路径（含 chapters.folder 与 novel.folders，并补全各级祖先）
+function collectFolderPaths(novel) {
+  const set = new Set(novel.folders || []);
+  const add = (p) => {
+    if (!p) return;
+    const parts = String(p).split('/').map(s => s.trim()).filter(Boolean);
+    let cur = '';
+    for (const part of parts) { cur = cur ? cur + '/' + part : part; set.add(cur); }
+  };
+  (novel.folders || []).forEach(add);
+  Object.values(novel.chapters).forEach(c => { if (c.folder) add(c.folder); });
+  return set;
+}
+
+// 由路径集合构建父→子映射 + 每文件夹下的文件列表
+function buildFolderTree(novel) {
+  const paths = collectFolderPaths(novel);
+  const tree = {};                 // path -> { subfolders:Set, files:[id] }
+  const ensure = (p) => { if (!tree[p]) tree[p] = { subfolders: new Set(), files: [] }; return tree[p]; };
+  paths.forEach(ensure);
+  paths.forEach(p => {
+    const idx = p.lastIndexOf('/');
+    const parent = idx >= 0 ? p.slice(0, idx) : '';
+    if (parent && tree[parent]) tree[parent].subfolders.add(p);
+  });
+  const rootFiles = [];
+  Object.keys(novel.chapters).forEach(id => {
+    const f = (novel.chapters[id].folder || '').trim();
+    if (f && tree[f]) tree[f].files.push(id);
+    else rootFiles.push(id);
+  });
+  return { tree, rootFiles };
+}
+
 function renderFileTree() {
   const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const { tree, rootFiles } = buildFolderTree(novel);
+  const collapsed = getCollapsed();
+  const active = getActiveFolder();
+  const q = (document.getElementById('fileSearch') || {}).value || '';
+  const ql = q.toLowerCase();
+  const expandAll = !!ql;
+
+  // 搜索态：标记含匹配文件或匹配名称的文件夹（含祖先），仅展示这些文件夹
+  const matchFolders = new Set();
+  if (ql) {
+    Object.keys(novel.chapters).forEach(id => {
+      const t = (novel.chapters[id].title || '').toLowerCase();
+      if (t.includes(ql)) {
+        let f = (novel.chapters[id].folder || '').trim();
+        matchFolders.add(f);
+        const parts = f.split('/').filter(Boolean);
+        let cur = '';
+        for (const p of parts) { cur = cur ? cur + '/' + p : p; matchFolders.add(cur); }
+      }
+    });
+    // 文件夹名称也参与匹配
+    Object.keys(tree).forEach(p => {
+      const leaf = p.split('/').pop().toLowerCase();
+      if (leaf.includes(ql)) {
+        const parts = p.split('/').filter(Boolean);
+        let cur = '';
+        for (const part of parts) { cur = cur ? cur + '/' + part : part; matchFolders.add(cur); }
+      }
+    });
+  }
+
   const container = document.getElementById('fileTree');
   container.innerHTML = '';
-  Object.keys(novel.chapters).forEach(id => {
+
+  function renderFolder(path, depth) {
+    if (ql && !matchFolders.has(path)) return;
+    const node = tree[path];
+    const name = path.split('/').pop();
+    const isCollapsed = !expandAll && collapsed.has(path);
+    const el = document.createElement('div');
+    el.className = 'tree-folder' + (isCollapsed ? '' : ' expanded') + (path === active ? ' active' : '');
+    el.style.paddingLeft = (8 + depth * 16) + 'px';
+    el.innerHTML =
+      `<span class="arrow">▶</span>` +
+      `<span class="folder-ico">${isCollapsed ? '📁' : '📂'}</span>` +
+      `<span class="name">${escapeHtml(name)}</span>` +
+      `<span class="folder-actions">` +
+        `<button title="在此新建子文件夹" onclick="event.stopPropagation();newSubFolder('${encodeURIComponent(path)}')">＋</button>` +
+        `<button title="重命名文件夹" onclick="event.stopPropagation();renameFolder('${encodeURIComponent(path)}')">✏️</button>` +
+        `<button class="danger" title="删除文件夹（内容移至上级）" onclick="event.stopPropagation();deleteFolder('${encodeURIComponent(path)}')">🗑</button>` +
+      `</span>`;
+    el.addEventListener('click', (e) => {
+      if (e.target.closest('.folder-actions') || e.target.closest('.rename-input')) return;
+      toggleFolder(decodeURIComponent(path));
+    });
+    container.appendChild(el);
+
+    if (!isCollapsed) {
+      [...node.subfolders].sort().forEach(sp => renderFolder(sp, depth + 1));
+      sortIds(novel, node.files).forEach(id => renderFile(id, depth + 1));
+    }
+  }
+
+  function renderFile(id, depth) {
     const item = novel.chapters[id];
+    const title = item.title || '未命名';
+    if (ql && !title.toLowerCase().includes(ql)) return;
     const file = document.createElement('div');
     file.className = 'tree-file' + (id === novel.currentFile ? ' active' : '');
     file.dataset.id = id;
+    file.style.paddingLeft = (8 + depth * 16) + 'px';
     const words = (item.content || '').replace(/\s/g, '').length;
-
-    // 名称行：标题 + 操作按钮
     file.innerHTML =
-      `<span class="name" onclick="openFile('${id}')">${escapeHtml(item.title || '未命名')}</span>` +
-      ` <span class="file-words">${words}字</span>` +
+      `<span class="file-ico">📄</span>` +
+      `<span class="name">${escapeHtml(title)}</span>` +
+      `<span class="file-words">${words}字</span>` +
       `<span class="chapter-actions">` +
+        `<button title="移动到文件夹" onclick="event.stopPropagation();moveChapter('${id}')">📁</button>` +
         `<button title="重命名" onclick="event.stopPropagation();startRename('${id}')">✏️</button>` +
         `<button title="创建副本" onclick="event.stopPropagation();duplicateChapter('${id}')">📋</button>` +
         `<button title="删除章节" class="danger" onclick="event.stopPropagation();deleteChapter('${id}')">🗑</button>` +
       `</span>`;
-
-    // 点击空白区域切换文件
     file.addEventListener('click', (e) => {
       if (e.target.closest('.chapter-actions') || e.target.closest('.rename-input')) return;
       openFile(id);
     });
     container.appendChild(file);
+  }
+
+  // 根级文件夹（无父级的路径）
+  const rootFolders = Object.keys(tree).filter(p => {
+    const idx = p.lastIndexOf('/');
+    const parent = idx >= 0 ? p.slice(0, idx) : '';
+    return !parent || !tree[parent];
+  }).sort();
+  rootFolders.forEach(p => renderFolder(p, 0));
+  sortIds(novel, rootFiles).forEach(id => renderFile(id, 0));
+
+  // 当前位置提示
+  const hint = document.getElementById('sidebarHint');
+  if (hint) {
+    hint.textContent = active
+      ? '📍 当前位置：' + active + '（点击返回根目录）'
+      : '📍 根目录（点文件夹后新章节将建在其中）';
+  }
+}
+
+function sortIds(novel, ids) {
+  return ids.slice().sort((a, b) =>
+    (novel.chapters[a].title || '').localeCompare(novel.chapters[b].title || '', 'zh'));
+}
+
+// 折叠 / 展开 + 设为当前活动文件夹
+function toggleFolder(path) {
+  const c = getCollapsed();
+  if (c.has(path)) c.delete(path); else c.add(path);
+  setCollapsed(c);
+  setActiveFolder(path);
+  renderFileTree();
+}
+
+// 返回根目录（新章节将建在根）
+function setRootFolder() { setActiveFolder(''); renderFileTree(); }
+
+// 新建文件夹（建在当前活动文件夹下）
+function newFolder() {
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const active = getActiveFolder();
+  const name = window.prompt('新建文件夹名称：');
+  if (!name) return;
+  const clean = name.trim().replace(/\/+/g, '-');
+  if (!clean) return;
+  const path = active ? active + '/' + clean : clean;
+  if (novel.folders.includes(path)) { toast('文件夹已存在', 'error'); return; }
+  novel.folders.push(path);
+  const c = getCollapsed(); c.delete(path); setCollapsed(c);
+  saveNovel(novel);
+  renderFileTree();
+  toast('已新建文件夹「' + path + '」', 'success');
+}
+
+// 在某个文件夹下新建子文件夹
+function newSubFolder(encPath) {
+  const path = decodeURIComponent(encPath);
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const name = window.prompt('在「' + path + '」下新建子文件夹名称：');
+  if (!name) return;
+  const clean = name.trim().replace(/\/+/g, '-');
+  if (!clean) return;
+  const newPath = path + '/' + clean;
+  if (novel.folders.includes(newPath)) { toast('文件夹已存在', 'error'); return; }
+  novel.folders.push(newPath);
+  const c = getCollapsed(); c.delete(path); c.delete(newPath); setCollapsed(c);
+  saveNovel(novel);
+  renderFileTree();
+  toast('已新建「' + newPath + '」', 'success');
+}
+
+// 重命名文件夹（同步重命名其下所有子文件夹与文件归属）
+function renameFolder(encPath) {
+  const oldPath = decodeURIComponent(encPath);
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const oldName = oldPath.split('/').pop();
+  const name = window.prompt('重命名文件夹「' + oldPath + '」：', oldName);
+  if (!name) return;
+  const clean = name.trim().replace(/\/+/g, '-');
+  if (!clean) return;
+  const idx = oldPath.lastIndexOf('/');
+  const parent = idx >= 0 ? oldPath.slice(0, idx) : '';
+  const newPath = parent ? parent + '/' + clean : clean;
+  if (newPath !== oldPath && novel.folders.includes(newPath)) { toast('已存在同名文件夹', 'error'); return; }
+  novel.folders = novel.folders.map(p => {
+    if (p === oldPath) return newPath;
+    if (p.startsWith(oldPath + '/')) return newPath + p.slice(oldPath.length);
+    return p;
   });
+  Object.keys(novel.chapters).forEach(id => {
+    const f = novel.chapters[id].folder || '';
+    if (f === oldPath) novel.chapters[id].folder = newPath;
+    else if (f.startsWith(oldPath + '/')) novel.chapters[id].folder = newPath + f.slice(oldPath.length);
+  });
+  const c = getCollapsed();
+  if (c.has(oldPath)) { c.delete(oldPath); c.add(newPath); }
+  setCollapsed(c);
+  if (getActiveFolder() === oldPath) setActiveFolder(newPath);
+  saveNovel(novel);
+  renderFileTree();
+  toast('已重命名文件夹', 'success');
+}
+
+// 删除文件夹：内容（文件+子文件夹）上移至父级，不删除文件
+function deleteFolder(encPath) {
+  const path = decodeURIComponent(encPath);
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const count = Object.values(novel.chapters).filter(c => {
+    const f = c.folder || '';
+    return f === path || f.startsWith(path + '/');
+  }).length;
+  if (!window.confirm('删除文件夹「' + path + '」？\n其中的 ' + count + ' 个文件将移至上级目录（不会被删除）。')) return;
+  const idx = path.lastIndexOf('/');
+  const parent = idx >= 0 ? path.slice(0, idx) : '';
+  Object.keys(novel.chapters).forEach(id => {
+    const f = novel.chapters[id].folder || '';
+    if (f === path) novel.chapters[id].folder = parent;
+    else if (f.startsWith(path + '/')) {
+      const rest = f.slice(path.length);
+      novel.chapters[id].folder = parent ? parent + rest : rest.replace(/^\//, '');
+    }
+  });
+  novel.folders = novel.folders.filter(p => p !== path && !p.startsWith(path + '/'));
+  const c = getCollapsed(); c.delete(path); setCollapsed(c);
+  const af = getActiveFolder();
+  if (af === path || af.startsWith(path + '/')) setActiveFolder(parent);
+  saveNovel(novel);
+  renderFileTree();
+  toast('已删除文件夹（文件已上移）', 'success');
+}
+
+// 移动章节到指定文件夹（留空=根目录，支持 / 多级）
+function moveChapter(id) {
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  if (!novel.chapters[id]) return;
+  const cur = novel.chapters[id].folder || '';
+  const input = window.prompt('移动到文件夹（留空=根目录，可用 / 分隔多级）：', cur);
+  if (input === null) return;
+  let path = input.trim().replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+  if (path) {
+    const parts = path.split('/').filter(Boolean);
+    let cur2 = '';
+    parts.forEach(p => { cur2 = cur2 ? cur2 + '/' + p : p; if (!novel.folders.includes(cur2)) novel.folders.push(cur2); });
+  }
+  novel.chapters[id].folder = path;
+  saveNovel(novel);
+  renderFileTree();
+  toast(path ? '已移至「' + path + '」' : '已移至根目录', 'success');
 }
 
 function openFile(id) {
@@ -1392,16 +1685,20 @@ function openFile(id) {
 function newFile() {
   saveCurrentToNovel();
   const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  const active = getActiveFolder();
   const n = Object.keys(novel.chapters).length + 1;
   const id = 'ch-' + Date.now();
-  novel.chapters[id] = { title: `第${String(n).padStart(3,'0')}章.md`, content: '' };
+  novel.chapters[id] = { title: `第${String(n).padStart(3,'0')}章.md`, content: '', folder: active || '' };
+  if (active) { const c = getCollapsed(); c.delete(active); setCollapsed(c); }
   novel.currentFile = id;
   saveNovel(novel);
   document.getElementById('editor').value = '';
   document.getElementById('currentFileName').textContent = novel.chapters[id].title;
   updateWordCount();
   renderFileTree();
-  toast('已新建章节', 'success');
+  openFile(id);
+  toast(active ? '已在「' + active + '」新建章节' : '已在根目录新建章节', 'success');
 }
 
 function saveCurrentToNovel() {
@@ -1477,7 +1774,7 @@ function confirmImport() {
       const n = Object.keys(novel.chapters).length + 1;
       const id = 'ch-' + Date.now() + '-' + Math.floor(Math.random() * 1e4);
       const title = uniqueTitle(novel, p.title);
-      novel.chapters[id] = { title, content: p.content };
+      novel.chapters[id] = { title, content: p.content, folder: getActiveFolder() || '' };
       if (!firstId) firstId = id;
     }
     saveNovel(novel);
@@ -1694,7 +1991,8 @@ function duplicateChapter(id) {
 
   novel.chapters[newId] = {
     title: newTitle,
-    content: src.content || ''
+    content: src.content || '',
+    folder: src.folder || ''
   };
   novel.currentFile = newId;
   saveNovel(novel);
@@ -1890,10 +2188,8 @@ function startAutoSync() {
 }
 
 function filterFiles() {
-  const q = document.getElementById('fileSearch').value.toLowerCase();
-  document.querySelectorAll('.tree-file').forEach(f => {
-    f.style.display = f.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
+  // 搜索交给 renderFileTree 统一处理（含文件夹级联显示）
+  renderFileTree();
 }
 
 function updateWordCount() {
