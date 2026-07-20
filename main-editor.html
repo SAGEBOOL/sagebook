@@ -598,6 +598,7 @@ body {
         </button>
         <button onclick="runAudit()" title="运行审查">🔍 审查</button>
         <label class="import-label" for="importFile" title="导入文本文件（.txt / .md）">📥 导入</label>
+        <button class="import-label" onclick="openExportModal()" title="导出当前章节或全书到本机文件（可选路径 / .txt .md .json）">⬇️ 导出</button>
         <button class="primary" onclick="saveFile()">💾 保存</button>
         <span class="sync-status" id="syncStatus">尚未同步</span>
         <button class="sync-btn" onclick="syncUpload()" title="同步到云端（上传本地→Gist）">☁ 同步</button>
@@ -1489,6 +1490,81 @@ function closeImportModal() {
 }
 
 // ============================================
+// 导出到本机文件（可选路径 / 多格式）
+// ============================================
+function openExportModal() {
+  document.getElementById('exportModal').classList.add('show');
+}
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('show');
+}
+
+function buildExportContent(novel, scope, fmt) {
+  const ids = Object.keys(novel.chapters || {});
+  if (!ids.length) return { text: '', name: 'sagebook.空' };
+  if (scope === 'all') {
+    if (fmt === 'json') {
+      const book = ids.map(id => ({ title: novel.chapters[id].title, content: novel.chapters[id].content }));
+      return { text: JSON.stringify({ book, exportedAt: new Date().toISOString() }, null, 2), name: 'sagebook-全书.json' };
+    }
+    const text = ids.map(id => {
+      const c = novel.chapters[id];
+      const head = fmt === 'md' ? `# ${c.title || '未命名'}\n\n` : (c.title ? c.title + '\n\n' : '');
+      return head + (c.content || '');
+    }).join('\n\n---\n\n');
+    return { text, name: 'sagebook-全书.' + fmt };
+  }
+  const cur = (novel.currentFile && novel.chapters[novel.currentFile])
+    ? novel.chapters[novel.currentFile]
+    : novel.chapters[ids[0]];
+  const base = (cur.title || '未命名').replace(/\.(md|txt|json)$/i, '');
+  if (fmt === 'json') {
+    return { text: JSON.stringify({ title: cur.title, content: cur.content }, null, 2), name: base + '.json' };
+  }
+  const head = fmt === 'md' ? `# ${cur.title || '未命名'}\n\n` : '';
+  return { text: head + (cur.content || ''), name: base + '.' + fmt };
+}
+
+async function saveTextToDisk(text, suggestedName, fmt) {
+  const mime = fmt === 'json' ? 'application/json' : (fmt === 'md' ? 'text/markdown' : 'text/plain');
+  const accept = {}; accept[mime] = ['.' + fmt];
+  try {
+    if (window.showSaveFilePicker) {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggestedName,
+        types: [{ description: fmt === 'json' ? 'JSON 数据' : '文本文件', accept }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      toast('已保存到本地文件', 'success');
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return; // 用户取消保存
+    // 其他异常（如 headless 不允许）走下载兜底
+  }
+  // 兜底：浏览器下载
+  const blob = new Blob([text], { type: mime + ';charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = suggestedName;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('已下载到浏览器默认下载目录', 'success');
+}
+
+async function doExport() {
+  const novel = getNovel();
+  const scope = (document.querySelector('input[name="exportScope"]:checked') || {}).value || 'current';
+  const fmt = (document.querySelector('input[name="exportFmt"]:checked') || {}).value || 'txt';
+  const { text, name } = buildExportContent(novel, scope, fmt);
+  if (!text && !name) { toast('暂无内容可导出', 'error'); closeExportModal(); return; }
+  await saveTextToDisk(text, name, fmt);
+  closeExportModal();
+}
+
+// ============================================
 // 章节操作：重命名 / 删除 / 创建副本
 // ============================================
 
@@ -1976,6 +2052,33 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="import-modal-foot">
       <button class="btn-secondary btn" onclick="closeImportModal()">取消</button>
       <button class="btn primary" onclick="confirmImport()">导入</button>
+    </div>
+  </div>
+</div>
+
+<div class="import-modal-overlay" id="exportModal" onclick="if(event.target===this)closeExportModal()">
+  <div class="import-modal">
+    <div class="import-modal-head">
+      <span>⬇️ 导出到本机文件</span>
+      <button class="import-close" onclick="closeExportModal()" title="关闭">✕</button>
+    </div>
+    <div class="import-modal-body">
+      <div class="import-mode">
+        <label style="font-weight:600;color:var(--fg-primary)">导出范围</label>
+        <label><input type="radio" name="exportScope" value="current" checked> 当前章节</label>
+        <label><input type="radio" name="exportScope" value="all"> 整本书（全部章节合并）</label>
+      </div>
+      <div class="import-mode">
+        <label style="font-weight:600;color:var(--fg-primary)">文件格式</label>
+        <label><input type="radio" name="exportFmt" value="txt" checked> 纯文本 .txt</label>
+        <label><input type="radio" name="exportFmt" value="md"> Markdown .md</label>
+        <label><input type="radio" name="exportFmt" value="json"> 数据 .json</label>
+      </div>
+      <div class="import-empty" style="margin-top:12px">💡 Chromium 内核浏览器（Brave / Chrome / Edge）可弹出系统对话框选择保存路径；Safari / Firefox 将下载到默认下载目录。</div>
+    </div>
+    <div class="import-modal-foot">
+      <button class="btn-secondary btn" onclick="closeExportModal()">取消</button>
+      <button class="btn primary" onclick="doExport()">保存到本地</button>
     </div>
   </div>
 </div>
