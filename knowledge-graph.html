@@ -925,7 +925,10 @@
         function drawNode(node) {
             const isSelected = selectedNode && selectedNode.id === node.id;
             const isHovered = hoveredNode && hoveredNode.id === node.id;
-            const radius = isSelected ? 35 : (isHovered ? 32 : 28);
+            const targetRadius = isSelected ? 35 : (isHovered ? 32 : 28);
+            node.dr = (node.dr === undefined) ? 28 : node.dr;
+            node.dr += (targetRadius - node.dr) * 0.18;   // 半径平滑过渡，放大/缩小更自然
+            const radius = node.dr;
 
             // 发光效果
             if (isSelected || isHovered) {
@@ -981,7 +984,9 @@
 
             ctx.strokeStyle = 'rgba(140, 138, 130, 0.35)';
             ctx.lineWidth = 2;
+            ctx.setLineDash([7, 7]);   // 连线用虚线
             ctx.stroke();
+            ctx.setLineDash([]);       // 复位，避免影响节点描边
 
             // 标签
             if (label) {
@@ -1053,12 +1058,15 @@
         }
 
         function updatePositions() {
+            const maxV = 14;   // 限制最大速度，避免拖拽释放后突跳
             graphData.nodes.forEach(node => {
                 if (node !== draggedNode) {
-                    node.x += node.vx;
-                    node.y += node.vy;
-                    node.vx *= 0.9;
-                    node.vy *= 0.9;
+                    node.vx *= 0.88;   // 更强阻尼，平顺收敛
+                    node.vy *= 0.88;
+                    node.vx = Math.max(-maxV, Math.min(maxV, node.vx));
+                    node.vy = Math.max(-maxV, Math.min(maxV, node.vy));
+                    node.x += node.vx * 0.75;   // 分步位移，运动更连续自然
+                    node.y += node.vy * 0.75;
                 }
             });
         }
