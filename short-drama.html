@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SAGE BOOK - 短剧｜漫剧创作工作台</title>
+    <style>
+        * { margin:0;padding:0;box-sizing:border-box; }
+        :root[data-theme="dark"] {
+            --bg-primary:#141413;--bg-secondary:#1c1c1a;--bg-tertiary:#2a2a28;--bg-hover:#333331;--bg-input:#1a1a19;--bg-card:#1c1c1a;--text-primary:#f0eee6;--text-secondary:#c8c6bd;--text-tertiary:#8b8a82;--text-muted:#5c5b55;--border:#3d3d3a;--accent:#d97757;--accent-hover:#e08a6e;--accent-light:#e08a6e;--accent-glow:rgba(217,119,87,0.3);--success:#5aab7a;--warning:#d4a853;--error:#e05555;
+        }
+        :root[data-theme="light"] {
+            --bg-primary:#f7f5f0;--bg-secondary:#ffffff;--bg-tertiary:#efece6;--bg-hover:#e6e2da;--bg-input:#ffffff;--bg-card:#ffffff;--text-primary:#1c1b19;--text-secondary:#4a4843;--text-tertiary:#7a776f;--text-muted:#9a968c;--border:#d8d4cc;--accent:#c2410c;--accent-hover:#b85a3a;--accent-light:#d97757;--accent-glow:rgba(217,119,87,0.2);--success:#2f8f5b;--warning:#b07a1f;--error:#c0392b;
+        }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;line-height:1.6; }
+        .container { max-width:1200px;margin:0 auto;padding:20px; }
+        .header { text-align:center;padding:30px 20px 14px;position:relative; }
+        .logo-link { display:inline-flex;align-items:center;gap:6px;font-size:24px;font-weight:800;color:var(--text-primary);text-decoration:none;cursor:pointer; }
+        .logo-ico { font-size:26px; }
+        .title { font-size:26px;font-weight:700;color:var(--accent);margin-top:8px;letter-spacing:0.02em; }
+        .subtitle { font-size:14px;color:var(--text-secondary);margin-top:6px; }
+        .theme-switcher { position:fixed;top:15px;right:20px;display:flex;gap:4px;z-index:100; }
+        .theme-btn { padding:6px 10px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
+        .theme-btn:hover { border-color:var(--accent); }
+        .theme-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .cursor-target { cursor:pointer; }
+
+        /* 模式指示灯 */
+        .mode-bar { display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap; }
+        .mode-pill { padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border); }
+        .mode-pill.demo { background:rgba(212,168,83,.16);color:var(--warning);border-color:rgba(212,168,83,.4); }
+        .mode-pill.live { background:rgba(90,171,122,.16);color:var(--success);border-color:rgba(90,171,122,.4); }
+
+        /* 设置区 */
+        .settings-card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:14px;margin:14px 0;overflow:hidden; }
+        .settings-head { display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;user-select:none; }
+        .settings-head .st { font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px; }
+        .settings-head .chev { transition:transform .25s;font-size:18px;color:var(--text-secondary); }
+        .settings-card.open .settings-head .chev { transform:rotate(180deg); }
+        .settings-body { display:none;padding:6px 18px 18px;border-top:1px solid var(--border); }
+        .settings-card.open .settings-body { display:block; }
+        .field { margin:12px 0; }
+        .field label { display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px; }
+        .field input { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
+        .field input:focus { border-color:var(--accent); }
+        .field .hint { font-size:12px;color:var(--text-tertiary);margin-top:4px; }
+        .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+        @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+        /* 按钮 */
+        .btn { padding:9px 16px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-primary);border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .2s; }
+        .btn:hover { border-color:var(--accent); }
+        .btn:disabled { opacity:.5;cursor:not-allowed; }
+        .btn-primary { background:var(--accent);color:white;border-color:var(--accent); }
+        .btn-primary:hover { background:var(--accent-hover); }
+        .btn-ghost { background:transparent; }
+        .btn-danger { border-color:rgba(224,85,85,.5);color:var(--error); }
+        .btn-danger:hover { background:rgba(224,85,85,.12); }
+        .btn-sm { padding:6px 12px;font-size:12px;border-radius:8px; }
+
+        /* Tab */
+        .tabs { display:flex;gap:8px;margin:18px 0;flex-wrap:wrap; }
+        .tab-btn { padding:9px 18px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);border-radius:10px;cursor:pointer;font-size:14px;transition:all .2s; }
+        .tab-btn:hover { border-color:var(--accent); }
+        .tab-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        .card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:18px;margin:12px 0; }
+        .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px; }
+        .row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0; }
+        textarea, .inp { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:10px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical; }
+        textarea:focus, .inp:focus { border-color:var(--accent); }
+        select.inp { width:auto; }
+
+        .note { font-size:13px;color:var(--text-secondary);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:8px 0; }
+        .note.warn { border-color:rgba(212,168,83,.4);color:var(--warning); }
+        .note.ok { border-color:rgba(90,171,122,.4);color:var(--success); }
+        .note.err { border-color:rgba(224,85,85,.4);color:var(--error); }
+
+        /* 场次列表 */
+        .shot-list { display:flex;flex-direction:column;gap:10px;margin:10px 0; }
+        .shot-item { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start; }
+        .shot-item.dragging { opacity:.4; }
+        .shot-item.drop-target { border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow); }
+        .shot-handle { cursor:grab;color:var(--text-tertiary);font-size:18px;padding-top:2px;user-select:none; }
+        .shot-main { flex:1;min-width:0; }
+        .shot-num { font-weight:700;color:var(--accent);font-size:14px; }
+        .shot-field { font-size:12px;color:var(--text-secondary);margin-top:4px; }
+        .shot-field b { color:var(--text-primary);font-weight:600; }
+        .shot-actions { display:flex;flex-direction:column;gap:6px; }
+        .badge { display:inline-block;font-size:11px;padding:2px 8px;border-radius:9px;margin-top:6px; }
+        .badge.none { background:rgba(139,138,130,.2);color:var(--text-tertiary); }
+        .badge.img { background:rgba(90,142,204,.18);color:#7aa6e0; }
+        .badge.vid { background:rgba(90,171,122,.18);color:var(--success); }
+
+        /* 网格画廊 */
+        .grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:12px 0; }
+        .cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+        .cell img, .cell .ph { width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--bg-tertiary); }
+        .cell .ph { display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:13px;text-align:center;padding:10px; }
+        .cell .meta { padding:10px 12px;font-size:12px;color:var(--text-secondary); }
+        .cell .play { position:relative; }
+        .cell .play::after { content:"▶"; position:absolute; inset:0; display:flex;align-items:center;justify-content:center; font-size:34px; color:rgba(255,255,255,.9); text-shadow:0 2px 8px rgba(0,0,0,.5); pointer-events:none; }
+        .cell .vidtag { position:absolute; left:8px; bottom:8px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; padding:2px 8px; border-radius:8px; }
+
+        .char-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:10px 0; }
+        .char-card { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px; }
+        .char-card .nm { font-weight:700;color:var(--accent);font-size:14px; }
+        .char-card .ds { font-size:12px;color:var(--text-secondary);margin-top:4px;word-break:break-word; }
+        .char-card img { width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin-top:8px;background:var(--bg-tertiary); }
+        .char-card .acts { display:flex;gap:6px;margin-top:8px; }
+
+        .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
+        .footer a { color:var(--accent);text-decoration:none; }
+        .footer .sep { color:var(--text-muted);margin:0 6px; }
+        .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-hover);border:1px solid var(--border);color:var(--text-primary);padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none; }
+        .toast.show { opacity:1; }
+        .spinner { display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        code.cmd { display:block;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent-light);white-space:pre-wrap;word-break:break-all;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="text-pressure.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
+        <div class="title">短剧｜漫剧创作工作台</div>
+        <div class="subtitle">你的智能创作伙伴 · 短剧、网文、漫剧、长篇 — 剧本 → 人物 → 分镜 → 生图 → 生视频</div>
+        <div class="mode-bar">
+            <span class="mode-pill demo" id="modePill">🎭 演示模式（开放占位，无需 Key）</span>
+        </div>
+    </div>
+    <div class="theme-switcher">
+        <button class="theme-btn" onclick="setTheme('dark')">🌙 暗</button>
+        <button class="theme-btn" onclick="setTheme('light')">☀️ 亮</button>
+        <button class="theme-btn" onclick="setTheme('system')">🖥️ 跟随</button>
+    </div>
+
+    <!-- WorkRally 设置 -->
+    <div class="settings-card" id="wrSettings">
+        <div class="settings-head" onclick="toggleSettings()">
+            <span class="st">⚙️ WorkRally 设置（接入真实生图 / 生视频）</span>
+            <span class="chev">⌄</span>
+        </div>
+        <div class="settings-body">
+            <div class="note">
+                默认「演示模式」：生图用本地生成的占位图、生视频用占位播放框，无需任何 Key 即可跑通全流程。<br>
+                填入下方 <b>API Key</b> 后，生图/生视频将尝试直连 WorkRally 真实生成；若浏览器因跨域(CORS)或网络无法直连，会自动回退为「复制命令本地运行」或跳转 WorkRally 网页端，演示不受影响。
+            </div>
+            <div class="field">
+                <label>WorkRally API Key（Bearer Token）</label>
+                <input type="password" id="wrKey" placeholder="粘贴你的 WorkRally API Key，留空即演示模式" autocomplete="off">
+                <div class="hint">申请：workrally.qq.com/open-api · 仅存于你本机浏览器 localStorage</div>
+            </div>
+            <div class="field">
+                <label>MCP 端点（Endpoint）</label>
+                <input type="text" id="wrEndpoint" value="https://workrally.qq.com/zenstudio/api/mcp">
+            </div>
+            <div class="grid2">
+                <div class="field">
+                    <label>图片模型 ID（可选，用于命令模板）</label>
+                    <input type="text" id="wrImgModel" placeholder="如填写前先运行 workrally generate image-models">
+                </div>
+                <div class="field">
+                    <label>视频模型 ID（可选，用于命令模板）</label>
+                    <input type="text" id="wrVidModel" placeholder="如填写前先运行 workrally generate video-models">
+                </div>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary" onclick="saveWRConfig()">💾 保存配置</button>
+                <button class="btn" onclick="testWRConnection()">🔌 测试连接</button>
+                <button class="btn btn-ghost" onclick="clearWRConfig()">🧹 清空（回演示模式）</button>
+            </div>
+            <div id="wrStatus"></div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="script" onclick="switchTab('script')">📝 剧本 / 提示词</button>
+        <button class="tab-btn" data-tab="chars" onclick="switchTab('chars')">👤 人物设定</button>
+        <button class="tab-btn" data-tab="shots" onclick="switchTab('shots')">🎞️ 分镜 · 场次</button>
+        <button class="tab-btn" data-tab="image" onclick="switchTab('image')">🖼️ AI 生图</button>
+        <button class="tab-btn" data-tab="video" onclick="switchTab('video')">🎬 AI 生视频</button>
+    </div>
+
+    <!-- Tab1 剧本 -->
+    <div class="tab-content active" id="tab-script">
+        <div class="card">
+            <div class="card-title">📝 一句话创意</div>
+            <textarea id="premise" rows="3" placeholder="例：女主重生回到被渣男害死前一夜，用前世记忆逆袭打脸，短剧爽点密集，共 6 场"></textarea>
+            <div class="row">
+                <button class="btn btn-primary" id="genScriptBtn" onclick="genScript()">🤖 生成大纲与分镜草稿</button>
+                <button class="btn" onclick="fillDemoScript()">✨ 填充示例剧本</button>
+            </div>
+            <div id="scriptStatus"></div>
+            <div class="card-title" style="margin-top:14px">📜 大纲 / 分镜文本</div>
+            <div id="scriptOut" class="note" style="white-space:pre-wrap;line-height:1.7">（点击「生成大纲」调用你已配置的 AI，或「填充示例剧本」快速体验）</div>
+        </div>
+    </div>
+
+    <!-- Tab2 人物 -->
+    <div class="tab-content" id="tab-chars">
+        <div class="card">
+            <div class="card-title">👤 新增人物</div>
+            <div class="field">
+                <label>名称</label>
+                <input type="text" id="charName" placeholder="如：林晚（女主）">
+            </div>
+            <div class="field">
+                <label>描述 / 外貌提示词</label>
+                <textarea id="charDesc" rows="2" placeholder="如：25岁，冷白皮，黑长直发，红裙，眼神倔强"></textarea>
+            </div>
+            <div class="field">
+                <label>参考图 URL（可选）</label>
+                <input type="text" id="charRef" placeholder="https://... 留空则用占位">
+            </div>
+            <div class="row">
+                <button class="btn btn-primary" onclick="addChar()">➕ 添加人物</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">📇 人物库</div>
+            <div class="char-grid" id="charGrid"><div class="note">还没有人物，先在上方添加。</div></div>
+        </div>
+    </div>
+
+    <!-- Tab3 分镜 -->
+    <div class="tab-content" id="tab-shots">
+        <div class="card">
+            <div class="card-title">🎞️ 场次列表 <span id="shotCount" style="font-size:13px;color:var(--text-tertiary)"></span></div>
+            <div class="row">
+                <button class="btn btn-primary" onclick="addShot()">➕ 添加场次</button>
+                <button class="btn" onclick="exportProject()">⬇️ 导出项目 JSON</button>
+                <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ 导入 JSON</button>
+                <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importProject(this)">
+            </div>
+            <div class="shot-list" id="shotList"></div>
+        </div>
+    </div>
+
+    <!-- Tab4 生图 -->
+    <div class="tab-content" id="tab-image">
+        <div class="card">
+            <div class="card-title">🖼️ AI 生图</div>
+            <div class="note">选择场次后即可生成该场的视觉图。演示模式生成本地占位图；填了 WorkRally Key 会尝试真实生成。</div>
+            <div class="row">
+                <select class="inp" id="imgShotSel"></select>
+                <button class="btn btn-primary" id="genImgBtn" onclick="genImage()">🖼️ 生成图片</button>
+                <button class="btn" onclick="genAllImages()">⚡ 全部场次生图</button>
+            </div>
+            <div id="imgStatus"></div>
+            <div class="grid" id="imgGrid"></div>
+        </div>
+    </div>
+
+    <!-- Tab5 生视频 -->
+    <div class="tab-content" id="tab-video">
+        <div class="card">
+            <div class="card-title">🎬 AI 生视频</div>
+            <div class="note">需先有该场的图片（去「生图」标签生成）。演示模式显示占位播放框；填了 WorkRally Key 会尝试真实生成（文生/图生视频）。</div>
+            <div class="row">
+                <select class="inp" id="vidShotSel"></select>
+                <button class="btn btn-primary" id="genVidBtn" onclick="genVideo()">🎬 生成视频</button>
+            </div>
+            <div id="vidStatus"></div>
+            <div class="grid" id="vidGrid"></div>
+        </div>
+    </div>
+
+    <div style="margin-top:20px" class="row">
+        <button class="btn btn-ghost" onclick="location.href='index.html'">📚 返回首页</button>
+    </div>
+</div>
+
+<footer class="footer">
+    <div>Powered by WorkRally · Ollama · OpenAI · Claude · Qwen</div>
+    <div style="margin-top:6px">
+        <a href="copyright.html">版权声明</a><span class="sep">·</span>
+        <a href="privacy.html">隐私条款</a><span class="sep">·</span>
+        <a href="terms.html">使用条款</a>
+    </div>
+    <div style="margin-top:6px">友情链接｜<a href="https://storylucas.top/" target="_blank" rel="noopener">NON九界</a>｜<a href="https://sagebool.github.io/lifeline/" target="_blank" rel="noopener">人生运势K线图</a>｜<a href="https://sagebool.github.io/crystal-calculator/" target="_blank" rel="noopener">水晶运势计算器</a></div>
+</footer>
+
+<script>
+/* ============ 数据模型 ============ */
+const LS='sagebook_shortdrama';
+let state = load();
+function load(){
+  try{ const s=JSON.parse(localStorage.getItem(LS)); if(s) return s; }catch(e){}
+  return { config:{ workrallyKey:'', workrallyEndpoint:'https://workrally.qq.com/zenstudio/api/mcp', imageModel:'', videoModel:'' }, characters:[], shots:[], script:'' };
+}
+function save(){ localStorage.setItem(LS, JSON.stringify(state)); }
+
+/* ============ 主题 ============ */
+function setTheme(t){
+  const h=document.documentElement;
+  if(t==='system'){ const d=window.matchMedia('(prefers-color-scheme:dark)').matches; h.setAttribute('data-theme',d?'dark':'light'); }
+  else h.setAttribute('data-theme',t);
+  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
+  const map={dark:'🌙 暗',light:'☀️ 亮',system:'🖥️ 跟随'};
+  const cur=[...document.querySelectorAll('.theme-btn')].find(b=>b.textContent.trim()===map[t]);
+  if(cur) cur.classList.add('active');
+}
+(function(){ const saved=localStorage.getItem('sagebook_theme')||'dark'; setTheme(saved); document.querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>{ setTheme(b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); localStorage.setItem('sagebook_theme',b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); }); })();
+
+/* ============ 工具 ============ */
+function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h; }
+function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function toggleSettings(){ document.getElementById('wrSettings').classList.toggle('open'); }
+
+/* ============ 站点既有 AI（与设置页共享键） ============ */
+function getAIConfig(){
+  const useLocal = localStorage.getItem('useLocalAI')==='true';
+  return {
+    mode: useLocal?'ollama':'cloud',
+    ollamaUrl: localStorage.getItem('ollamaEndpoint')||'http://localhost:11434',
+    ollamaModel: localStorage.getItem('localModel')||'qwen2.5:14b',
+    cloudBaseUrl: localStorage.getItem('cloudBaseUrl')||'https://api.openai.com/v1',
+    cloudModel: localStorage.getItem('cloudModel')||'gpt-4o',
+    cloudApiKey: localStorage.getItem('cloudApiKey')||''
+  };
+}
+async function callSiteAI(messages){
+  const c=getAIConfig();
+  if(c.mode==='ollama'){
+    const url=c.ollamaUrl.replace(/\/+$/,'')+'/api/chat';
+    if(location.protocol==='https:'&&url.startsWith('http://')) throw new Error('混合内容限制：HTTPS 页面无法访问本地 Ollama(http://)。请用本地服务器运行本站，或切到「云端」模式。');
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:c.ollamaModel,messages,stream:false,options:{temperature:0.7}}),signal:AbortSignal.timeout(90000)});
+    if(!res.ok) throw new Error('Ollama 调用失败：'+res.status);
+    const data=await res.json(); return data.message?.content||'';
+  } else {
+    if(!c.cloudApiKey) throw new Error('未配置云端 API Key（请在设置页填写）。');
+    let base=(c.cloudBaseUrl||'https://api.openai.com/v1').replace(/\/+$/,'');
+    if(location.protocol==='https:'&&base.startsWith('http://')) throw new Error('混合内容限制：HTTPS 页面无法请求 HTTP 地址。');
+    const url=base.endsWith('/chat/completions')?base:base+'/chat/completions';
+    const res=await fetch(url,{method:'POST',headers:{Authorization:`Bearer ${c.cloudApiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:c.cloudModel,messages,temperature:0.7}),signal:AbortSignal.timeout(90000)});
+    if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
+    const data=await res.json(); return data.choices?.[0]?.message?.content||'';
+  }
+}
+
+/* ============ WorkRally 配置 ============ */
+function saveWRConfig(){
+  state.config.workrallyKey=document.getElementById('wrKey').value.trim();
+  state.config.workrallyEndpoint=document.getElementById('wrEndpoint').value.trim()||'https://workrally.qq.com/zenstudio/api/mcp';
+  state.config.imageModel=document.getElementById('wrImgModel').value.trim();
+  state.config.videoModel=document.getElementById('wrVidModel').value.trim();
+  save(); updateModePill();
+  toast(state.config.workrallyKey? '已保存 · 将尝试真实生成':'已保存 · 演示模式');
+}
+function clearWRConfig(){
+  document.getElementById('wrKey').value='';
+  state.config.workrallyKey=''; save(); updateModePill();
+  document.getElementById('wrStatus').innerHTML='<div class="note">已清空 Key，回到演示模式。</div>';
+  toast('已回演示模式');
+}
+function applyWRConfigToUI(){
+  document.getElementById('wrKey').value=state.config.workrallyKey||'';
+  document.getElementById('wrEndpoint').value=state.config.workrallyEndpoint||'https://workrally.qq.com/zenstudio/api/mcp';
+  document.getElementById('wrImgModel').value=state.config.imageModel||'';
+  document.getElementById('wrVidModel').value=state.config.videoModel||'';
+}
+function updateModePill(){
+  const pill=document.getElementById('modePill');
+  if(state.config.workrallyKey){ pill.className='mode-pill live'; pill.textContent='🔑 已配置 WorkRally Key（真实生成优先）'; }
+  else { pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（开放占位，无需 Key）'; }
+}
+async function testWRConnection(){
+  const st=document.getElementById('wrStatus');
+  if(!state.config.workrallyKey){ st.innerHTML='<div class="note warn">未填写 Key，当前为演示模式，无需测试连接。</div>'; return; }
+  st.innerHTML='<div class="note"><span class="spinner"></span>正在尝试连接 WorkRally 端点…</div>';
+  try{
+    const r=await workrallyCall('tools/list',{},state.config,true);
+    st.innerHTML='<div class="note ok">✅ 连接成功，端点可用。可用工具已返回（'+ (r?.result?.tools?.length||'?') +' 项）。</div>';
+  }catch(e){
+    st.innerHTML='<div class="note err">⚠️ 直连失败：'+esc(e.message)+'。<br>多为浏览器跨域(CORS)限制——不影响演示模式，真实生成将自动回退为「复制命令本地运行」。</div>';
+  }
+}
+/* 最佳努力的 MCP JSON-RPC 调用；失败抛出，由调用方回退 */
+async function workrallyCall(tool, args, config, isTest){
+  const endpoint=config.workrallyEndpoint||'https://workrally.qq.com/zenstudio/api/mcp';
+  const headers={'Content-Type':'application/json','Authorization':'Bearer '+(config.workrallyKey||''),'Accept':'application/json, text/event-stream'};
+  const post=async(body)=>{
+    const res=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const txt=await res.text();
+    try{ return JSON.parse(txt); }catch{ return {raw:txt}; }
+  };
+  if(!isTest){
+    await post({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'sagebook',version:'1.0'}}});
+    await post({jsonrpc:'2.0',method:'notifications/initialized'});
+  }
+  return await post({jsonrpc:'2.0',id:2,method:isTest?'tools/list':'tools/call',params:isTest?{}:{name:tool,arguments:args}});
+}
+function extractURL(r){
+  try{
+    const c=r?.result?.content;
+    if(Array.isArray(c)){ for(const it of c){ if(it?.text && /https?:\/\//.test(it.text)){ const m=it.text.match(/https?:\/\/[^\s"',)]+/); if(m) return m[0]; } } }
+    if(r?.result?.data?.url) return r.result.data.url;
+  }catch(e){}
+  return null;
+}
+function buildImageCmd(shot){
+  const m=state.config.imageModel||'<图片模型ID>';
+  return `workrally generate image --prompt "${shot.imagePrompt}" --model ${m} --aspect-ratio 16:9 --poll`;
+}
+function buildVideoCmd(shot){
+  const m=state.config.videoModel||'<视频模型ID>';
+  const ref=(shot.imageUrl&&shot.imageUrl.startsWith('http'))?` --single-image-url "${shot.imageUrl}"`:'';
+  return `workrally generate video --prompt "${shot.animationPrompt||shot.imagePrompt}" --model ${m}${ref} --poll`;
+}
+
+/* ============ Tab 切换 ============ */
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='shots') renderShots();
+  if(name==='image'){ fillShotSelect('imgShotSel'); renderImgGrid(); }
+  if(name==='video'){ fillShotSelect('vidShotSel'); renderVidGrid(); }
+  if(name==='chars') renderChars();
+}
+
+/* ============ 剧本生成 ============ */
+async function genScript(){
+  const premise=document.getElementById('premise').value.trim();
+  if(!premise){ toast('先填一句话创意'); return; }
+  const btn=document.getElementById('genScriptBtn'); const st=document.getElementById('scriptStatus');
+  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在生成大纲与分镜…</div>';
+  try{
+    const sys='你是短剧/漫剧编剧助手。根据用户创意，输出紧凑的短剧大纲，并拆分为若干场次（建议4-8场）。用 JSON 输出：{ "outline":"大纲文字(150字内)", "shots":[ {"num":"EP01-SC01","image_prompt":"画面/角色视觉提示词(英文或中文均可，含风格)","animation_prompt":"运镜/动效提示词"} ] }。只输出 JSON，不要解释。';
+    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:premise}]);
+    const parsed=parseScriptJSON(text);
+    state.script=parsed.outline||text;
+    if(parsed.shots&&parsed.shots.length){
+      state.shots=parsed.shots.map((s,i)=>({ id:uid(), num:s.num||('SC'+(i+1)), imagePrompt:s.imagePrompt||'', animationPrompt:s.animationPrompt||'', characterId:'', imageUrl:'', videoUrl:'' }));
+    }
+    save();
+    st.innerHTML='<div class="note ok">✅ 已生成 '+state.shots.length+' 个场次草稿，去「分镜·场次」查看/编辑。</div>';
+    document.getElementById('scriptOut').textContent=state.script;
+    renderShots();
+  }catch(e){
+    st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>';
+  }finally{ btn.disabled=false; }
+}
+function parseScriptJSON(text){
+  try{ const j=JSON.parse(text.match(/\{[\s\S]*\}/)[0]); return j; }catch(e){}
+  return { outline:text, shots:[] };
+}
+function fillDemoScript(){
+  const outline='【示例】重生逆袭爽剧：女主林晚被害死前一夜重生，利用前世记忆一步步夺回家产、打脸渣男与继妹，节奏密集、反转不断。';
+  state.script=outline;
+  state.shots=[
+    {id:uid(),num:'EP01-SC01',imagePrompt:'林晚倒在血泊中，都市夜景，冷色调，悲剧氛围',animationPrompt:'缓慢推近，雨滴落下',characterId:'',imageUrl:'',videoUrl:''},
+    {id:uid(),num:'EP01-SC02',imagePrompt:'林晚猛然睁眼，回到一年前卧室，晨光，惊愕表情',animationPrompt:'快速变焦到眼睛特写',characterId:'',imageUrl:'',videoUrl:''},
+    {id:uid(),num:'EP01-SC03',imagePrompt:'渣男与继妹在客厅密谋，奢华家装，阴影构图',animationPrompt:'平移跟拍两人',characterId:'',imageUrl:'',videoUrl:''},
+    {id:uid(),num:'EP01-SC04',imagePrompt:'林晚冷笑，红裙转身，自信姿态，逆光',animationPrompt:'镜头环绕主角',characterId:'',imageUrl:'',videoUrl:''},
+    {id:uid(),num:'EP01-SC05',imagePrompt:'股东大会甩出证据，众人震惊，戏剧性打脸',animationPrompt:'快速剪辑，节奏加快',characterId:'',imageUrl:'',videoUrl:''},
+    {id:uid(),num:'EP01-SC06',imagePrompt:'林晚站在落地窗前俯瞰城市，华丽收尾',animationPrompt:'缓慢拉远，定格',characterId:'',imageUrl:'',videoUrl:''}
+  ];
+  save();
+  document.getElementById('scriptOut').textContent=outline;
+  document.getElementById('scriptStatus').innerHTML='<div class="note ok">✅ 已填充示例剧本（6 场）。可改创意后重新生成，或去「分镜」编辑。</div>';
+  renderShots();
+  toast('示例剧本已就绪');
+}
+
+/* ============ 人物 ============ */
+function addChar(){
+  const name=document.getElementById('charName').value.trim();
+  if(!name){ toast('填人物名称'); return; }
+  state.characters.push({ id:uid(), name, desc:document.getElementById('charDesc').value.trim(), ref:document.getElementById('charRef').value.trim() });
+  save();
+  document.getElementById('charName').value=''; document.getElementById('charDesc').value=''; document.getElementById('charRef').value='';
+  renderChars(); toast('已添加：'+name);
+}
+function delChar(id){ state.characters=state.characters.filter(c=>c.id!==id); save(); renderChars(); }
+function renderChars(){
+  const g=document.getElementById('charGrid');
+  if(!state.characters.length){ g.innerHTML='<div class="note">还没有人物，先在上方添加。</div>'; return; }
+  g.innerHTML=state.characters.map(c=>`
+    <div class="char-card">
+      <div class="nm">${esc(c.name)}</div>
+      <div class="ds">${esc(c.desc)||'<span style="color:var(--text-tertiary)">无描述</span>'}</div>
+      ${c.ref?`<img src="${esc(c.ref)}" alt="${esc(c.name)}" onerror="this.style.display='none'">`:''}
+      <div class="acts"><button class="btn btn-sm btn-danger" onclick="delChar('${c.id}')">删除</button></div>
+    </div>`).join('');
+}
+
+/* ============ 分镜场次 ============ */
+let dragId=null;
+function addShot(){
+  state.shots.push({ id:uid(), num:'SC'+(state.shots.length+1), imagePrompt:'', animationPrompt:'', characterId:'', imageUrl:'', videoUrl:'' });
+  save(); renderShots();
+}
+function delShot(id){ state.shots=state.shots.filter(s=>s.id!==id); save(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); }
+function updateShot(id,field,val){ const s=state.shots.find(x=>x.id===id); if(s){ s[field]=val; save(); } }
+function renderShots(){
+  const list=document.getElementById('shotList');
+  document.getElementById('shotCount').textContent='（共 '+state.shots.length+' 场）';
+  if(!state.shots.length){ list.innerHTML='<div class="note">还没有场次。去「剧本」生成，或点「添加场次」。</div>'; return; }
+  list.innerHTML=state.shots.map(s=>{
+    const st = s.videoUrl?'vid':(s.imageUrl?'img':'none');
+    const stxt = s.videoUrl?'已生成视频':(s.imageUrl?'已生成图片':'未生成');
+    const charOpts=state.characters.map(c=>`<option value="${c.id}" ${s.characterId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
+    return `<div class="shot-item" draggable="true" data-id="${s.id}" ondragstart="onDrag(event,'${s.id}')" ondragover="onDragOver(event)" ondrop="onDrop(event,'${s.id}')" ondragend="onDragEnd()">
+      <div class="shot-handle">⠿</div>
+      <div class="shot-main">
+        <span class="shot-num">${esc(s.num)}</span>
+        <span class="badge ${st}">${stxt}</span>
+        <div class="shot-field"><b>生图提示词：</b><input class="inp" style="margin-top:4px" value="${esc(s.imagePrompt)}" onchange="updateShot('${s.id}','imagePrompt',this.value)"></div>
+        <div class="shot-field"><b>动效提示词：</b><input class="inp" style="margin-top:4px" value="${esc(s.animationPrompt)}" onchange="updateShot('${s.id}','animationPrompt',this.value)"></div>
+        <div class="shot-field"><b>关联人物：</b><select class="inp" style="margin-top:4px" onchange="updateShot('${s.id}','characterId',this.value)"><option value="">—</option>${charOpts}</select></div>
+      </div>
+      <div class="shot-actions">
+        <button class="btn btn-sm" onclick="dupShot('${s.id}')">复制</button>
+        <button class="btn btn-sm btn-danger" onclick="delShot('${s.id}')">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function dupShot(id){ const s=state.shots.find(x=>x.id===id); if(!s) return; const c=JSON.parse(JSON.stringify(s)); c.id=uid(); c.imageUrl=''; c.videoUrl=''; const i=state.shots.findIndex(x=>x.id===id); state.shots.splice(i+1,0,c); save(); renderShots(); }
+function onDrag(e,id){ dragId=id; e.currentTarget.classList.add('dragging'); }
+function onDragOver(e){ e.preventDefault(); const t=e.currentTarget; if(t.classList.contains('shot-item')) t.classList.add('drop-target'); }
+function onDragEnd(){ dragId=null; document.querySelectorAll('.shot-item').forEach(x=>x.classList.remove('dragging','drop-target')); }
+function onDrop(e,id){ e.preventDefault(); const t=e.currentTarget; t.classList.remove('drop-target'); if(!dragId||dragId===id) return; const from=state.shots.findIndex(x=>x.id===dragId); const to=state.shots.findIndex(x=>x.id===id); if(from<0||to<0) return; const [m]=state.shots.splice(from,1); state.shots.splice(to,0,m); dragId=null; save(); renderShots(); }
+
+/* ============ 占位图生成 ============ */
+function demoImage(shot){
+  const h=hashStr(shot.imagePrompt||shot.num||'x');
+  const c1=`hsl(${h%360},58%,46%)`, c2=`hsl(${(h*2)%360},52%,28%)`;
+  const txt=esc((shot.imagePrompt||'演示分镜').slice(0,46));
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='512' height='288' viewBox='0 0 512 288'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
+    <rect width='512' height='288' fill='url(#g)'/>
+    <rect x='16' y='16' width='120' height='34' rx='8' fill='rgba(0,0,0,.35)'/>
+    <text x='30' y='39' fill='#fff' font-size='18' font-family='sans-serif' font-weight='bold'>${esc(shot.num||'SC')}</text>
+    <text x='24' y='258' fill='rgba(255,255,255,.92)' font-size='15' font-family='sans-serif'>${txt}</text>
+    <text x='408' y='272' fill='rgba(255,255,255,.55)' font-size='12' font-family='sans-serif'>演示图</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+
+/* ============ 生图 ============ */
+function fillShotSelect(selId){
+  const sel=document.getElementById(selId); if(!sel) return;
+  sel.innerHTML=state.shots.map(s=>`<option value="${s.id}">${esc(s.num)} · ${(s.imagePrompt||'未填提示词').slice(0,18)}</option>`).join('');
+}
+async function genImage(){
+  const sel=document.getElementById('imgShotSel'); if(!sel.value){ toast('先添加场次'); return; }
+  await genImageFor(sel.value);
+}
+async function genAllImages(){
+  for(const s of state.shots){ await genImageFor(s.id,true); }
+  toast('全部场次已生成（演示/真实依配置）');
+}
+async function genImageFor(id,silent){
+  const shot=state.shots.find(s=>s.id===id); if(!shot) return;
+  const st=document.getElementById('imgStatus');
+  if(!silent) st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」图片…</div>';
+  try{
+    if(state.config.workrallyKey && shot.imagePrompt){
+      try{
+        const r=await workrallyCall('generate_image',{prompt:shot.imagePrompt,aspect_ratio:'16:9'},state.config,false);
+        const url=extractURL(r);
+        if(url){ shot.imageUrl=url; shot.videoUrl=''; save(); if(!silent){ st.innerHTML='<div class="note ok">✅ 真实生图完成。</div>'; } renderImgGrid(); renderShots(); return; }
+        throw new Error('端点未返回可用图片 URL');
+      }catch(e){
+        // 回退：命令 + 占位
+        shot.imageUrl=demoImage(shot); save();
+        if(!silent) st.innerHTML='<div class="note warn">⚠️ 真实生图直连失败（'+esc(e.message)+'），已用占位图，可本地运行：<br><code class="cmd">'+esc(buildImageCmd(shot))+'</code><button class="btn btn-sm" onclick="copyText(\`'+esc(buildImageCmd(shot))+'\`)">复制命令</button></div>';
+        renderImgGrid(); renderShots(); return;
+      }
+    } else {
+      shot.imageUrl=demoImage(shot); shot.videoUrl=''; save();
+      if(!silent) st.innerHTML='<div class="note">🎭 演示模式已生成占位图（填 WorkRally Key 可生成真实图）。</div>';
+      renderImgGrid(); renderShots();
+    }
+  }catch(e){ if(!silent) st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
+}
+function copyText(t){ navigator.clipboard?.writeText(t).then(()=>toast('已复制命令')); }
+function renderImgGrid(){
+  const g=document.getElementById('imgGrid');
+  if(!state.shots.length){ g.innerHTML='<div class="note">还没有场次。</div>'; return; }
+  g.innerHTML=state.shots.map(s=>`
+    <div class="cell">
+      ${s.imageUrl?`<img src="${esc(s.imageUrl)}" alt="${esc(s.num)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'图 unavailable'}))">`:`<div class="ph">未生成<br>去「分镜」填提示词后点生成</div>`}
+      <div class="meta"><b>${esc(s.num)}</b><br>${(s.imagePrompt||'—').slice(0,40)}</div>
+    </div>`).join('');
+}
+
+/* ============ 生视频 ============ */
+async function genVideo(){
+  const sel=document.getElementById('vidShotSel'); if(!sel.value){ toast('先选择场次'); return; }
+  const shot=state.shots.find(s=>s.id===sel.value);
+  if(!shot.imageUrl){ toast('该场还没图，先去生图'); return; }
+  const st=document.getElementById('vidStatus');
+  st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」视频…</div>';
+  try{
+    if(state.config.workrallyKey){
+      try{
+        const args={prompt:shot.animationPrompt||shot.imagePrompt};
+        if(shot.imageUrl.startsWith('http')) args.single_image_url=shot.imageUrl;
+        const r=await workrallyCall('generate_video',args,state.config,false);
+        const url=extractURL(r);
+        if(url){ shot.videoUrl=url; save(); st.innerHTML='<div class="note ok">✅ 真实生视频完成。</div>'; renderVidGrid(); renderShots(); return; }
+        throw new Error('端点未返回可用视频 URL');
+      }catch(e){
+        shot.videoUrl='demo:'+shot.imageUrl; save();
+        st.innerHTML='<div class="note warn">⚠️ 真实生视频直连失败（'+esc(e.message)+'），已用占位播放框，可本地运行：<br><code class="cmd">'+esc(buildVideoCmd(shot))+'</code><button class="btn btn-sm" onclick="copyText(\`'+esc(buildVideoCmd(shot))+'\`)">复制命令</button></div>';
+        renderVidGrid(); renderShots(); return;
+      }
+    } else {
+      shot.videoUrl='demo:'+shot.imageUrl; save();
+      st.innerHTML='<div class="note">🎭 演示模式已生成占位播放框（填 WorkRally Key 可生成真实视频）。</div>';
+      renderVidGrid(); renderShots();
+    }
+  }catch(e){ st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
+}
+function renderVidGrid(){
+  const g=document.getElementById('vidGrid');
+  const withImg=state.shots.filter(s=>s.imageUrl);
+  if(!withImg.length){ g.innerHTML='<div class="note">还没有带图的场次。去「生图」生成后回来。</div>'; return; }
+  g.innerHTML=withImg.map(s=>`
+    <div class="cell">
+      <div class="play"><img src="${esc(s.imageUrl)}" alt="${esc(s.num)}" onerror="this.style.display='none'"></div>
+      <span class="vidtag">${s.videoUrl&&s.videoUrl.startsWith('http')?'真实视频':'演示占位'}</span>
+      <div class="meta"><b>${esc(s.num)}</b><br>${(s.animationPrompt||s.imagePrompt||'—').slice(0,40)}</div>
+    </div>`).join('');
+}
+
+/* ============ 导入导出 ============ */
+function exportProject(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sagebook-短剧项目.json'; a.click();
+  toast('已导出项目 JSON');
+}
+function importProject(input){
+  const f=input.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
+  rd.readAsText(f); input.value='';
+}
+
+/* ============ 初始化 ============ */
+applyWRConfigToUI(); updateModePill(); renderShots(); renderChars();
+</script>
+
+<script src="text-pressure.js"></script>
+<script>
+(function(){
+  function initBrandText(){
+    document.querySelectorAll('.brand-text').forEach(function(el){
+      if(window.initTextPressure && !el.__btInited){
+        el.__btInited = true;
+        try {
+          initTextPressure(el, { text: el.dataset.text, minFontSize:18, maxFontSize:28, flex:false, scale:false, textColor: (getComputedStyle(el).color || '#f0eee6') });
+        } catch(e){ console.error('brand-text init failed', e); }
+      }
+    });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initBrandText);
+  else initBrandText();
+})();
+</script>
+</body>
+</html>
