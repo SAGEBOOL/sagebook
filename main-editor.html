@@ -221,6 +221,8 @@ body {
 .main-header .header-actions button.ai-btn:hover { background:var(--accent-dim); }
 .main-header .header-actions button.sync-btn { border-color:var(--border-primary); color:var(--fg-secondary); }
 .main-header .header-actions button.sync-btn:hover { background:var(--accent-dim); border-color:var(--accent); color:var(--accent); }
+.main-header .header-actions .import-label { background:none; border:1px solid var(--border-primary); color:var(--fg-tertiary); cursor:pointer; padding:6px 12px; border-radius:var(--radius-md); font-size:var(--font-size-xs); transition:all var(--transition-fast); display:flex; align-items:center; gap:4px; user-select:none; -webkit-user-select:none; }
+.main-header .header-actions .import-label:hover { color:var(--fg-primary); border-color:var(--fg-tertiary); }
 .main-header .header-actions .sync-status { font-size:11px; color:var(--fg-secondary); opacity:.65; white-space:nowrap; padding:0 4px; align-self:center; }
 .main-header .header-actions .sync-status.idle { opacity:1; color:#c9a84c; }
 
@@ -547,7 +549,7 @@ body {
           <span class="ai-status connecting" id="aiHeaderDot"></span> AI 续写
         </button>
         <button onclick="runAudit()" title="运行审查">🔍 审查</button>
-        <button onclick="openImportPicker()" title="导入文本文件（.txt / .md）">📥 导入</button>
+        <label class="import-label" for="importFile" title="导入文本文件（.txt / .md）">📥 导入</label>
         <button class="primary" onclick="saveFile()">💾 保存</button>
         <span class="sync-status" id="syncStatus">尚未同步</span>
         <button class="sync-btn" onclick="syncUpload()" title="同步到云端（上传本地→Gist）">☁ 同步</button>
@@ -1343,10 +1345,13 @@ function saveCurrentToNovel() {
 // ============================================
 let pendingImports = [];  // [{name, title, content}]
 
-function openImportPicker() {
-  const inp = document.getElementById('importFile');
-  inp.value = '';
-  inp.click();
+function readFileText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result || '');
+    reader.onerror = () => reject(reader.error || new Error('read error'));
+    reader.readAsText(file, 'UTF-8');
+  });
 }
 
 async function handleImportFiles(input) {
@@ -1355,7 +1360,7 @@ async function handleImportFiles(input) {
   pendingImports = [];
   for (const f of files) {
     let text = '';
-    try { text = await f.text(); } catch (e) { text = ''; }
+    try { text = await readFileText(f); } catch (e) { text = ''; }
     const base = (f.name || '未命名').replace(/\.(txt|md|markdown)$/i, '');
     pendingImports.push({ name: f.name, title: base + '.md', content: text });
   }
