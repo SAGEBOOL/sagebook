@@ -61,3 +61,18 @@
 .brand-text.text-pressure h1.flex {
     justify-content: flex-start;
 }
+
+/* ===== 品牌 logo 对齐修复（📚 与 SAGEBOOK 文字垂直居中对齐）=====
+   根因：initTextPressure 把 .brand-text 的行内文本替换成块级 <h1>，
+   而 .logo-link / .brand 是行内 <a>，块级 h1 破坏了 emoji 与文字的同行基线。
+   修复：① 容器改为 inline-flex 居中 ② h1 改为 inline-block 去默认外边距 */
+.logo-link,
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.brand-text.text-pressure h1 {
+    display: inline-block;
+    margin: 0;
+}
