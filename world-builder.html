@@ -468,14 +468,40 @@
             const recs=[];
             for(const block of blocks){
                 const lines=block.split('\n').map(l=>l.trim()).filter(l=>l);
-                if(!lines.length) continue;
-                // 扁平列表：- 内容（无键值）→ 每条作为简单项
-                if(lines.every(l=>/^[-*]\s+/.test(l)) && !block.includes('：') && !block.includes(':')){
-                    lines.forEach(l=>{ const v=l.replace(/^[-*]\s+/,'').trim(); if(v) recs.push(cfg.listItem?cfg.listItem(v):v); });
+                // 过滤掉整个块是表格的情况
+                if(lines.length>1 && lines.every(l=>/^\|.*\|.+\|/.test(l))) continue;
+                // 逐行过滤表格行
+                const cleanLines=lines.filter(l=>!/^\|.*\|.+?\|/.test(l));
+                if(!cleanLines.length) continue;
+                // 纯扁平列表：每条作为独立记录
+                if(cleanLines.every(l=>/^[-*]\s+/.test(l)) && !block.includes('：') && !block.includes(':')){
+                    cleanLines.forEach(l=>{ const v=l.replace(/^[-*]\s+/,'').trim(); if(v) recs.push(cfg.listItem?cfg.listItem(v):v); });
                     continue;
                 }
+                // 混合块：标题/小节头 + 列表项 → 每个列表项作为独立记录
+                const headLines=cleanLines.filter(l=>/^#{1,6}\s/.test(l));
+                const listItems=cleanLines.filter(l=>/^[-*]\s+/.test(l));
+                const kvLines=cleanLines.filter(l=>!/^#{1,6}\s/.test(l) && !/^[-*]\s+/.test(l) && /[：:]/.test(l));
+                if((headLines.length>0 && (listItems.length>0 || kvLines.length>0)) || (listItems.length>0 && kvLines.length>0)){
+                    const ctx=headLines[0]?headLines[0].replace(/^#+\s*/,'').trim():'';
+                    // 列表项
+                    listItems.forEach(li=>{
+                        const v=li.replace(/^[-*]\s+/,'').trim(); if(!v) return;
+                        const kv=v.match(/^(.+?)[：:]\s*(.+)$/);
+                        if(kv){ recs.push({title:kv[1].trim(), content:kv[2].trim()}); }
+                        else { recs.push({title:v, content:''}); }
+                    });
+                    // 纯 KV 行（无列表前缀）
+                    kvLines.forEach(line=>{
+                        const m=line.match(/^(.+?)[：:]\s*(.+)$/);
+                        if(m){ recs.push({title:m[1].trim(), content:m[2].trim()}); }
+                        else { recs.push({title:line.replace(/^#+\s*/,'').trim(), content:''}); }
+                    });
+                    continue;
+                }
+                // 标准 KV 块
                 const rec={}; let firstTitle=null;
-                for(const line of lines){
+                for(const line of cleanLines){
                     const m=line.match(/^[-*]?\s*([^：:]+)[：:]\s*(.+)$/);
                     if(m){ rec[normKey(m[1])]=m[2].trim(); }
                     else { const v=line.replace(/^#+\s*/,'').replace(/^[-*]\s+/,'').trim(); if(v && !firstTitle) firstTitle=v; }
