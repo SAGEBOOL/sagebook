@@ -159,7 +159,7 @@
                     <span id="exportInfo" style="font-size:13px;color:var(--text-secondary)"></span>
                 </div>
                 <div class="platform-grid" id="platformGrid" style="margin-top:12px"></div>
-                <div style="font-size:12px;color:var(--text-secondary);margin-top:8px">点击平台卡片可选定导出模板（如起点会附加章节签名）。导出内容来自主编辑器的真实文稿。</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:8px">点选平台卡片即套用对应排版规则：起点（首行缩进）、番茄／七猫（短段落、七猫对话独立成段）、塔读／纵横（标准排版）、晋江（全角引号＋独家首发标记）；含「字数适配」的平台另附字数提示。导出内容来自主编辑器的真实文稿。</div>
             </div>
         </div>
 
@@ -313,14 +313,92 @@
             const fmt=document.getElementById('exportFormat').value;
             const c=getContent();
             if(!c.trim()){ alert('请先在主编辑器中写入内容'); return; }
-            let content=c, ext=fmt;
-            if(fmt==='markdown'){ content='# 我的小说\n\n'+c.replace(/\n\s*\n/g,'\n\n'); }
-            else if(fmt==='html'){ content='<h1>章节</h1>'+c.replace(/\n\s*\n/g,'</p><p>'); content='<html><body>'+content+'</p></body></html>'; }
             const plat=PLATFORMS.find(p=>p.key===selectedPlatform);
-            if(plat && plat.sig) content+=plat.sig;
+            // 1) 平台化转换（纯文本阶段，让各平台真正有区别）
+            const transformed=platformTransform(c, plat);
+            let content=transformed, ext=fmt;
+            if(fmt==='markdown'){
+                content='# 我的小说\n\n'+transformed;
+            } else if(fmt==='html'){
+                const ps=transformed.split(/\n\s*\n/).map(s=>s.trim()).filter(s=>s)
+                    .map(s=>`<p>${s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</p>`).join('\n');
+                content=`<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="utf-8">\n<title>章节</title>\n</head>\n<body>\n<h1>章节</h1>\n${ps}\n</body>\n</html>`;
+            }
             const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
             const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
-            a.download='章节导出.'+ext; a.click();
+            a.download='章节导出_'+plat.key+'.'+ext; a.click();
+            const info=document.getElementById('exportInfo');
+            if(info) info.textContent='已按「'+plat.name+'」格式导出 · '+ext.toUpperCase();
+        }
+
+        // 各平台真实导出差异（基于卡片上的 req 标签落地，不再只是装饰）
+        function platformTransform(text, plat){
+            let paras=text.split(/\n\s*\n/).map(s=>s.trim()).filter(s=>s.length>0);
+            // 把过长段落按句拆分，便于实现「短段落」类需求
+            const splitBySentence=(p,maxLen)=>{
+                const s=(p||'').replace(/\n/g,'');
+                if(!s) return [];
+                if(s.length<=maxLen) return [s];
+                const parts=[]; let cur='';
+                for(const ch of s){
+                    cur+=ch;
+                    if(/[。！？!?；;]/.test(ch) && cur.length>=Math.floor(maxLen*0.6)){ parts.push(cur); cur=''; }
+                }
+                if(cur) parts.push(cur);
+                return parts.length?parts:[s];
+            };
+            switch(plat.key){
+                case 'qidian': // 起点：首行缩进（全角两格）
+                    paras=paras.map(p=>'　　'+p.replace(/\n/g,''));
+                    break;
+                case 'fanqie': // 番茄：短段落、紧凑快节奏
+                    paras=paras.flatMap(p=>splitBySentence(p,50));
+                    break;
+                case 'qimao': // 七猫：短段落 + 对话独立成段（对话密集）
+                    paras=paras.flatMap(p=>{
+                        const flat=(p||'').replace(/\n/g,'');
+                        // 同时支持半角("')与全角(“”‘’「」)引号配对
+                        const q=String.fromCharCode(34)+String.fromCharCode(39)+'“”“’‘’「」';
+                        const re=new RegExp('(['+q+'])[^'+q+']*\\1','g');
+                        const segs=[]; let last=0; let m;
+                        while((m=re.exec(flat))){ if(m.index>last) segs.push(flat.slice(last,m.index).trim()); segs.push(m[0]); last=m.index+m[0].length; }
+                        if(last<flat.length) segs.push(flat.slice(last).trim());
+                        const cleaned=segs.filter(s=>s);
+                        if(!cleaned.length) return splitBySentence(flat,70);
+                        const res=[]; cleaned.forEach(s=>splitBySentence(s,70).forEach(x=>res.push(x))); return res;
+                    });
+                    break;
+                case 'tadu': // 塔读：标准排版（无缩进）
+                    paras=paras.map(p=>p.replace(/\n/g,''));
+                    break;
+                case 'jj': // 晋江：保持段落（靠独家签名区分），对话全角化
+                    paras=paras.map(p=>jjDialog(p.replace(/\n/g,'')));
+                    break;
+                case 'zh': // 纵横：标准排版（无缩进）
+                    paras=paras.map(p=>p.replace(/\n/g,''));
+                    break;
+            }
+            let out=paras.join('\n\n');
+            // 平台签名（各平台文末标记不同）
+            let sig;
+            if(plat.key==='jj') sig='\n\n【晋江文学城 独家首发 · 谢绝转载】';
+            else sig='\n\n—— 首发 '+plat.name;
+            out+=sig;
+            // 含「字数适配」的平台附加字数提示
+            if(plat.req.indexOf('字数适配')>=0){
+                const wc=text.replace(/\s/g,'').length;
+                out+='\n（全文约 '+wc+' 字，建议单章 ≥ 2000 字）';
+            }
+            return out;
+        }
+        function jjDialog(s){
+            // 半角引号 → 全角（晋江风格），按出现奇偶正确配对左右引号
+            const DQ=String.fromCharCode(34), SQ=String.fromCharCode(39);
+            let dq=0, sq=0;
+            return s.replace(new RegExp('['+DQ+SQ+']','g'), m=>{
+                if(m===DQ) return (dq++%2===0)?'“':'”';
+                return (sq++%2===0)?'‘':'’';
+            });
         }
 
         // ===== 钩子分析（真实）=====
