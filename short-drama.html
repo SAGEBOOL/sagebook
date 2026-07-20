@@ -142,37 +142,36 @@
     <!-- WorkRally 设置 -->
     <div class="settings-card" id="wrSettings">
         <div class="settings-head" onclick="toggleSettings()">
-            <span class="st">⚙️ WorkRally 设置（接入真实生图 / 生视频）</span>
+            <span class="st">⚙️ WorkRally 结构（仅示意，不实际调用）</span>
             <span class="chev">⌄</span>
         </div>
         <div class="settings-body">
             <div class="note">
-                默认「演示模式」：生图用本地生成的占位图、生视频用占位播放框，无需任何 Key 即可跑通全流程。<br>
-                填入下方 <b>API Key</b> 后，生图/生视频将尝试直连 WorkRally 真实生成；若浏览器因跨域(CORS)或网络无法直连，会自动回退为「复制命令本地运行」或跳转 WorkRally 网页端，演示不受影响。
+                本页复用 <b>WorkRally 的场次 / 分镜结构</b>（shot、series 模型），但 <b>不实际调用</b>其生图 / 生视频接口。<br>
+                生图、生视频均为本地占位演示，无需任何 Key 即可跑通全流程。下方配置字段仅作为结构示意保留，便于你日后对接，不会被发送到任何服务器。
             </div>
             <div class="field">
-                <label>WorkRally API Key（Bearer Token）</label>
-                <input type="password" id="wrKey" placeholder="粘贴你的 WorkRally API Key，留空即演示模式" autocomplete="off">
-                <div class="hint">申请：workrally.qq.com/open-api · 仅存于你本机浏览器 localStorage</div>
+                <label>WorkRally API Key（结构示意字段）</label>
+                <input type="password" id="wrKey" placeholder="结构示意，留空即用本地演示" autocomplete="off">
+                <div class="hint">本页不实际调用，字段仅保留结构，存于你本机浏览器 localStorage</div>
             </div>
             <div class="field">
-                <label>MCP 端点（Endpoint）</label>
+                <label>MCP 端点（Endpoint，结构示意）</label>
                 <input type="text" id="wrEndpoint" value="https://workrally.qq.com/zenstudio/api/mcp">
             </div>
             <div class="grid2">
                 <div class="field">
-                    <label>图片模型 ID（可选，用于命令模板）</label>
-                    <input type="text" id="wrImgModel" placeholder="如填写前先运行 workrally generate image-models">
+                    <label>图片模型 ID（结构示意）</label>
+                    <input type="text" id="wrImgModel" placeholder="对接时填入">
                 </div>
                 <div class="field">
-                    <label>视频模型 ID（可选，用于命令模板）</label>
-                    <input type="text" id="wrVidModel" placeholder="如填写前先运行 workrally generate video-models">
+                    <label>视频模型 ID（结构示意）</label>
+                    <input type="text" id="wrVidModel" placeholder="对接时填入">
                 </div>
             </div>
             <div class="row">
                 <button class="btn btn-primary" onclick="saveWRConfig()">💾 保存配置</button>
-                <button class="btn" onclick="testWRConnection()">🔌 测试连接</button>
-                <button class="btn btn-ghost" onclick="clearWRConfig()">🧹 清空（回演示模式）</button>
+                <button class="btn btn-ghost" onclick="clearWRConfig()">🧹 清空</button>
             </div>
             <div id="wrStatus"></div>
         </div>
@@ -246,7 +245,7 @@
     <div class="tab-content" id="tab-image">
         <div class="card">
             <div class="card-title">🖼️ AI 生图</div>
-            <div class="note">选择场次后即可生成该场的视觉图。演示模式生成本地占位图；填了 WorkRally Key 会尝试真实生成。</div>
+            <div class="note">选择场次后即可生成该场的视觉图。本页不调用外部接口，生成本地占位演示图（复用 WorkRally 分镜结构）。</div>
             <div class="row">
                 <select class="inp" id="imgShotSel"></select>
                 <button class="btn btn-primary" id="genImgBtn" onclick="genImage()">🖼️ 生成图片</button>
@@ -261,7 +260,7 @@
     <div class="tab-content" id="tab-video">
         <div class="card">
             <div class="card-title">🎬 AI 生视频</div>
-            <div class="note">需先有该场的图片（去「生图」标签生成）。演示模式显示占位播放框；填了 WorkRally Key 会尝试真实生成（文生/图生视频）。</div>
+            <div class="note">需先有该场的图片（去「生图」标签生成）。本页不调用外部接口，仅显示占位播放框（复用 WorkRally 分镜结构）。</div>
             <div class="row">
                 <select class="inp" id="vidShotSel"></select>
                 <button class="btn btn-primary" id="genVidBtn" onclick="genVideo()">🎬 生成视频</button>
@@ -353,13 +352,13 @@ function saveWRConfig(){
   state.config.imageModel=document.getElementById('wrImgModel').value.trim();
   state.config.videoModel=document.getElementById('wrVidModel').value.trim();
   save(); updateModePill();
-  toast(state.config.workrallyKey? '已保存 · 将尝试真实生成':'已保存 · 演示模式');
+  toast('已保存（结构示意 · 生图/生视频均为本地演示）');
 }
 function clearWRConfig(){
   document.getElementById('wrKey').value='';
   state.config.workrallyKey=''; save(); updateModePill();
-  document.getElementById('wrStatus').innerHTML='<div class="note">已清空 Key，回到演示模式。</div>';
-  toast('已回演示模式');
+  document.getElementById('wrStatus').innerHTML='<div class="note">已清空结构字段。</div>';
+  toast('已清空');
 }
 function applyWRConfigToUI(){
   document.getElementById('wrKey').value=state.config.workrallyKey||'';
@@ -369,53 +368,11 @@ function applyWRConfigToUI(){
 }
 function updateModePill(){
   const pill=document.getElementById('modePill');
-  if(state.config.workrallyKey){ pill.className='mode-pill live'; pill.textContent='🔑 已配置 WorkRally Key（真实生成优先）'; }
-  else { pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（开放占位，无需 Key）'; }
+  if(state.config.workrallyKey){ pill.className='mode-pill live'; pill.textContent='🔑 WorkRally 结构已配置（仅本地演示，不调用）'; }
+  else { pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（本地占位，无需 Key）'; }
 }
-async function testWRConnection(){
-  const st=document.getElementById('wrStatus');
-  if(!state.config.workrallyKey){ st.innerHTML='<div class="note warn">未填写 Key，当前为演示模式，无需测试连接。</div>'; return; }
-  st.innerHTML='<div class="note"><span class="spinner"></span>正在尝试连接 WorkRally 端点…</div>';
-  try{
-    const r=await workrallyCall('tools/list',{},state.config,true);
-    st.innerHTML='<div class="note ok">✅ 连接成功，端点可用。可用工具已返回（'+ (r?.result?.tools?.length||'?') +' 项）。</div>';
-  }catch(e){
-    st.innerHTML='<div class="note err">⚠️ 直连失败：'+esc(e.message)+'。<br>多为浏览器跨域(CORS)限制——不影响演示模式，真实生成将自动回退为「复制命令本地运行」。</div>';
-  }
-}
-/* 最佳努力的 MCP JSON-RPC 调用；失败抛出，由调用方回退 */
-async function workrallyCall(tool, args, config, isTest){
-  const endpoint=config.workrallyEndpoint||'https://workrally.qq.com/zenstudio/api/mcp';
-  const headers={'Content-Type':'application/json','Authorization':'Bearer '+(config.workrallyKey||''),'Accept':'application/json, text/event-stream'};
-  const post=async(body)=>{
-    const res=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const txt=await res.text();
-    try{ return JSON.parse(txt); }catch{ return {raw:txt}; }
-  };
-  if(!isTest){
-    await post({jsonrpc:'2.0',id:1,method:'initialize',params:{protocolVersion:'2024-11-05',capabilities:{},clientInfo:{name:'sagebook',version:'1.0'}}});
-    await post({jsonrpc:'2.0',method:'notifications/initialized'});
-  }
-  return await post({jsonrpc:'2.0',id:2,method:isTest?'tools/list':'tools/call',params:isTest?{}:{name:tool,arguments:args}});
-}
-function extractURL(r){
-  try{
-    const c=r?.result?.content;
-    if(Array.isArray(c)){ for(const it of c){ if(it?.text && /https?:\/\//.test(it.text)){ const m=it.text.match(/https?:\/\/[^\s"',)]+/); if(m) return m[0]; } } }
-    if(r?.result?.data?.url) return r.result.data.url;
-  }catch(e){}
-  return null;
-}
-function buildImageCmd(shot){
-  const m=state.config.imageModel||'<图片模型ID>';
-  return `workrally generate image --prompt "${shot.imagePrompt}" --model ${m} --aspect-ratio 16:9 --poll`;
-}
-function buildVideoCmd(shot){
-  const m=state.config.videoModel||'<视频模型ID>';
-  const ref=(shot.imageUrl&&shot.imageUrl.startsWith('http'))?` --single-image-url "${shot.imageUrl}"`:'';
-  return `workrally generate video --prompt "${shot.animationPrompt||shot.imagePrompt}" --model ${m}${ref} --poll`;
-}
+/* 本页仅复用 WorkRally 的场次 / 分镜结构，不实际调用其生图 / 生视频接口 */
+
 
 /* ============ Tab 切换 ============ */
 function switchTab(name){
@@ -564,33 +521,18 @@ async function genImage(){
 }
 async function genAllImages(){
   for(const s of state.shots){ await genImageFor(s.id,true); }
-  toast('全部场次已生成（演示/真实依配置）');
+  toast('全部场次已生成（本地演示）');
 }
 async function genImageFor(id,silent){
   const shot=state.shots.find(s=>s.id===id); if(!shot) return;
   const st=document.getElementById('imgStatus');
   if(!silent) st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」图片…</div>';
   try{
-    if(state.config.workrallyKey && shot.imagePrompt){
-      try{
-        const r=await workrallyCall('generate_image',{prompt:shot.imagePrompt,aspect_ratio:'16:9'},state.config,false);
-        const url=extractURL(r);
-        if(url){ shot.imageUrl=url; shot.videoUrl=''; save(); if(!silent){ st.innerHTML='<div class="note ok">✅ 真实生图完成。</div>'; } renderImgGrid(); renderShots(); return; }
-        throw new Error('端点未返回可用图片 URL');
-      }catch(e){
-        // 回退：命令 + 占位
-        shot.imageUrl=demoImage(shot); save();
-        if(!silent) st.innerHTML='<div class="note warn">⚠️ 真实生图直连失败（'+esc(e.message)+'），已用占位图，可本地运行：<br><code class="cmd">'+esc(buildImageCmd(shot))+'</code><button class="btn btn-sm" onclick="copyText(\`'+esc(buildImageCmd(shot))+'\`)">复制命令</button></div>';
-        renderImgGrid(); renderShots(); return;
-      }
-    } else {
-      shot.imageUrl=demoImage(shot); shot.videoUrl=''; save();
-      if(!silent) st.innerHTML='<div class="note">🎭 演示模式已生成占位图（填 WorkRally Key 可生成真实图）。</div>';
-      renderImgGrid(); renderShots();
-    }
+    shot.imageUrl=demoImage(shot); shot.videoUrl=''; save();
+    if(!silent) st.innerHTML='<div class="note">🎭 已生成占位图（本地演示，不调用外部接口）。</div>';
+    renderImgGrid(); renderShots();
   }catch(e){ if(!silent) st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
 }
-function copyText(t){ navigator.clipboard?.writeText(t).then(()=>toast('已复制命令')); }
 function renderImgGrid(){
   const g=document.getElementById('imgGrid');
   if(!state.shots.length){ g.innerHTML='<div class="note">还没有场次。</div>'; return; }
@@ -609,24 +551,9 @@ async function genVideo(){
   const st=document.getElementById('vidStatus');
   st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」视频…</div>';
   try{
-    if(state.config.workrallyKey){
-      try{
-        const args={prompt:shot.animationPrompt||shot.imagePrompt};
-        if(shot.imageUrl.startsWith('http')) args.single_image_url=shot.imageUrl;
-        const r=await workrallyCall('generate_video',args,state.config,false);
-        const url=extractURL(r);
-        if(url){ shot.videoUrl=url; save(); st.innerHTML='<div class="note ok">✅ 真实生视频完成。</div>'; renderVidGrid(); renderShots(); return; }
-        throw new Error('端点未返回可用视频 URL');
-      }catch(e){
-        shot.videoUrl='demo:'+shot.imageUrl; save();
-        st.innerHTML='<div class="note warn">⚠️ 真实生视频直连失败（'+esc(e.message)+'），已用占位播放框，可本地运行：<br><code class="cmd">'+esc(buildVideoCmd(shot))+'</code><button class="btn btn-sm" onclick="copyText(\`'+esc(buildVideoCmd(shot))+'\`)">复制命令</button></div>';
-        renderVidGrid(); renderShots(); return;
-      }
-    } else {
-      shot.videoUrl='demo:'+shot.imageUrl; save();
-      st.innerHTML='<div class="note">🎭 演示模式已生成占位播放框（填 WorkRally Key 可生成真实视频）。</div>';
-      renderVidGrid(); renderShots();
-    }
+    shot.videoUrl='demo:'+shot.imageUrl; save();
+    st.innerHTML='<div class="note">🎭 已生成占位播放框（本地演示，不调用外部接口）。</div>';
+    renderVidGrid(); renderShots();
   }catch(e){ st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
 }
 function renderVidGrid(){
