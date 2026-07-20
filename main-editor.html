@@ -1494,7 +1494,7 @@ function renderFileTree() {
     el.style.paddingLeft = (8 + depth * 16) + 'px';
     el.innerHTML =
       `<span class="arrow">▶</span>` +
-      `<span class="folder-ico">${isCollapsed ? '📁' : '📂'}</span>` +
+      `<span class="folder-ico">📚</span>` +
       `<span class="name">${escapeHtml(name)}</span>` +
       `<span class="folder-actions">` +
         `<button title="在此新建子文件夹" onclick="event.stopPropagation();newSubFolder('${encodeURIComponent(path)}')">＋</button>` +
@@ -1541,7 +1541,7 @@ function renderFileTree() {
     file.style.paddingLeft = (8 + depth * 16) + 'px';
     const words = (item.content || '').replace(/\s/g, '').length;
     file.innerHTML =
-      `<span class="file-ico">📄</span>` +
+      `<span class="file-ico">📒</span>` +
       `<span class="name">${escapeHtml(title)}</span>` +
       `<span class="file-words">${words}字</span>` +
       `<span class="chapter-actions">` +
