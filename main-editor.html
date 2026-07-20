@@ -191,6 +191,17 @@ body {
 .tree-folder.active { background:var(--accent-dim); color:var(--accent); }
 .tree-folder.active .name { color:var(--accent); }
 
+/* 拖拽反馈 */
+.tree-file { cursor:grab; }
+.tree-file[draggable="true"]:active { cursor:grabbing; }
+.tree-file.dragging { opacity:0.4; }
+.tree-folder.drop-target, .tree-file.drop-target {
+  background:var(--accent-dim);
+  outline:1.5px dashed var(--accent);
+  outline-offset:-2px;
+  border-radius:6px;
+}
+
 /* 文件夹悬浮操作（与文件操作一致） */
 .tree-folder { position:relative; }
 .tree-folder:hover .folder-actions { opacity:1; }
@@ -1422,6 +1433,8 @@ function buildFolderTree(novel) {
   return { tree, rootFiles };
 }
 
+let draggedChapterId = null;
+
 function renderFileTree() {
   const novel = getNovel();
   if (!novel.folders) novel.folders = [];
@@ -1458,6 +1471,18 @@ function renderFileTree() {
 
   const container = document.getElementById('fileTree');
   container.innerHTML = '';
+  // 拖到侧栏空白处 → 回到根目录（文件夹/文件已 stopPropagation，不会到这里）
+  container.ondragover = (e) => {
+    if (!draggedChapterId) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  container.ondrop = (e) => {
+    if (!draggedChapterId) return;
+    e.preventDefault();
+    const id = draggedChapterId || e.dataTransfer.getData('text/plain');
+    if (id) setChapterFolder(id, '');
+  };
 
   function renderFolder(path, depth) {
     if (ql && !matchFolders.has(path)) return;
@@ -1479,6 +1504,24 @@ function renderFileTree() {
     el.addEventListener('click', (e) => {
       if (e.target.closest('.folder-actions') || e.target.closest('.rename-input')) return;
       toggleFolder(decodeURIComponent(path));
+    });
+    // 拖放目标：文件拖到文件夹即归入该文件夹
+    el.addEventListener('dragover', (e) => {
+      if (!draggedChapterId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.classList.add('drop-target');
+    });
+    el.addEventListener('dragleave', (e) => {
+      if (!el.contains(e.relatedTarget)) el.classList.remove('drop-target');
+    });
+    el.addEventListener('drop', (e) => {
+      if (!draggedChapterId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const id = draggedChapterId || e.dataTransfer.getData('text/plain');
+      el.classList.remove('drop-target');
+      if (id) setChapterFolder(id, decodeURIComponent(path));
     });
     container.appendChild(el);
 
@@ -1510,6 +1553,36 @@ function renderFileTree() {
     file.addEventListener('click', (e) => {
       if (e.target.closest('.chapter-actions') || e.target.closest('.rename-input')) return;
       openFile(id);
+    });
+    // 可拖拽：拖到文件夹即移动
+    file.setAttribute('draggable', 'true');
+    file.addEventListener('dragstart', (e) => {
+      draggedChapterId = id;
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', id); } catch (_) {}
+      setTimeout(() => file.classList.add('dragging'), 0);
+    });
+    file.addEventListener('dragend', () => {
+      file.classList.remove('dragging');
+      document.querySelectorAll('.tree-folder.drop-target,.tree-file.drop-target')
+        .forEach(f => f.classList.remove('drop-target'));
+      draggedChapterId = null;
+    });
+    // 拖到某文件上 → 归入该文件所在文件夹
+    file.addEventListener('dragover', (e) => {
+      if (!draggedChapterId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      file.classList.add('drop-target');
+    });
+    file.addEventListener('dragleave', () => file.classList.remove('drop-target'));
+    file.addEventListener('drop', (e) => {
+      if (!draggedChapterId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const id = draggedChapterId || e.dataTransfer.getData('text/plain');
+      file.classList.remove('drop-target');
+      if (id) setChapterFolder(id, item.folder || '');
     });
     container.appendChild(file);
   }
@@ -1660,6 +1733,22 @@ function moveChapter(id) {
     const parts = path.split('/').filter(Boolean);
     let cur2 = '';
     parts.forEach(p => { cur2 = cur2 ? cur2 + '/' + p : p; if (!novel.folders.includes(cur2)) novel.folders.push(cur2); });
+  }
+  novel.chapters[id].folder = path;
+  saveNovel(novel);
+  renderFileTree();
+  toast(path ? '已移至「' + path + '」' : '已移至根目录', 'success');
+}
+
+function setChapterFolder(id, path) {
+  const novel = getNovel();
+  if (!novel.folders) novel.folders = [];
+  if (!novel.chapters[id]) return;
+  path = (path || '').trim().replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+  if (path) {
+    const parts = path.split('/').filter(Boolean);
+    let cur = '';
+    parts.forEach(p => { cur = cur ? cur + '/' + p : p; if (!novel.folders.includes(cur)) novel.folders.push(cur); });
   }
   novel.chapters[id].folder = path;
   saveNovel(novel);
