@@ -324,6 +324,22 @@ body {
 }
 .panel.collapsed { margin-right:calc(-1 * var(--panel-width)); }
 
+/* ---------- 拖拽分隔条（自由调节左右栏宽窄） ---------- */
+.resizer {
+  flex-shrink:0; width:6px; cursor:col-resize; background:transparent;
+  position:relative; z-index:5; user-select:none; -webkit-user-select:none;
+}
+.resizer::after {
+  content:""; position:absolute; top:0; bottom:0; left:50%;
+  transform:translateX(-50%); width:2px; background:var(--border-primary);
+  transition:background var(--transition-fast), width var(--transition-fast);
+}
+.resizer:hover::after, .resizer.dragging::after { width:3px; background:var(--accent); }
+.resizer.dragging { cursor:col-resize; }
+/* 收起对应栏时隐藏分隔条 */
+.app.left-collapsed .resizer-left { display:none; }
+.app.right-collapsed .resizer-right { display:none; }
+
 .panel-tabs { display:flex; border-bottom:1px solid var(--border-primary); }
 .panel-tab {
   flex:1; padding:10px 8px; text-align:center;
@@ -481,6 +497,8 @@ body {
   /* 顶栏浮于抽屉之上，保证切换按钮始终可点 */
   .main-header { position:relative; z-index:101; }
   .preview-pane { display:none; }
+  /* 手机/平板上左右栏是浮层，分隔条不适用 */
+  .resizer { display:none; }
 }
 
 /* 全站通用页脚 */
@@ -577,6 +595,9 @@ body {
     <nav class="file-tree" id="fileTree"></nav>
   </aside>
 
+  <!-- 左栏拖拽分隔条：拖动调节文件树宽度 -->
+  <div class="resizer resizer-left" id="resizerLeft" title="拖动调节文件树宽度"></div>
+
   <!-- 主区 -->
   <main class="main">
     <div class="main-header">
@@ -637,6 +658,9 @@ body {
       <div class="preview-pane" id="preview" style="display:none;"></div>
     </div>
   </main>
+
+  <!-- 右栏拖拽分隔条：拖动调节面板宽度 -->
+  <div class="resizer resizer-right" id="resizerRight" title="拖动调节面板宽度"></div>
 
   <!-- 右侧面板 -->
   <aside class="panel" id="panel">
@@ -1925,8 +1949,15 @@ function renderPreview() {
   preview.innerHTML = '<p>' + html + '</p>';
 }
 
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
-function togglePanel() { document.getElementById('panel').classList.toggle('collapsed'); }
+var appEl = document.querySelector('.app');
+function toggleSidebar() {
+  var c = document.getElementById('sidebar').classList.toggle('collapsed');
+  if (appEl) appEl.classList.toggle('left-collapsed', c);
+}
+function togglePanel() {
+  var c = document.getElementById('panel').classList.toggle('collapsed');
+  if (appEl) appEl.classList.toggle('right-collapsed', c);
+}
 
 // 窄屏默认收起左右抽屉，避免遮挡写作区（点击切换按钮再展开）
 (function(){
@@ -1934,7 +1965,54 @@ function togglePanel() { document.getElementById('panel').classList.toggle('coll
     var s = document.getElementById('sidebar'), p = document.getElementById('panel');
     if (s) s.classList.add('collapsed');
     if (p) p.classList.add('collapsed');
+    if (appEl) { appEl.classList.add('left-collapsed'); appEl.classList.add('right-collapsed'); }
   }
+})();
+
+// ---------- 拖拽分隔条：自由调节左右栏宽窄（鼠标 / 触屏通用） ----------
+(function(){
+  var rootStyle = document.documentElement.style;
+  var KEY_SB = 'sagebook_sidebar_width', KEY_PN = 'sagebook_panel_width';
+  // 还原上次记忆的宽度
+  try {
+    var sw = localStorage.getItem(KEY_SB);
+    if (sw) rootStyle.setProperty('--sidebar-width', sw);
+    var pw = localStorage.getItem(KEY_PN);
+    if (pw) rootStyle.setProperty('--panel-width', pw);
+  } catch(e){}
+
+  function startDrag(resizer, side, e) {
+    // 收起的栏不参与拖拽
+    if (resizer.classList.contains('dragging')) return;
+    e.preventDefault();
+    resizer.classList.add('dragging');
+    var startX = e.clientX;
+    var cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(side === 'left' ? '--sidebar-width' : '--panel-width')) || (side === 'left' ? 260 : 340);
+    var min = side === 'left' ? 180 : 260;
+    var max = side === 'left' ? 460 : 560;
+
+    function onMove(ev) {
+      var dx = ev.clientX - startX;
+      var w = side === 'left' ? cur + dx : cur - dx;
+      w = Math.max(min, Math.min(max, w));
+      rootStyle.setProperty(side === 'left' ? '--sidebar-width' : '--panel-width', w.toFixed(0) + 'px');
+    }
+    function onUp() {
+      resizer.classList.remove('dragging');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      try {
+        localStorage.setItem(side === 'left' ? KEY_SB : KEY_PN, getComputedStyle(document.documentElement).getPropertyValue(side === 'left' ? '--sidebar-width' : '--panel-width'));
+      } catch(e){}
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+  }
+
+  var rl = document.getElementById('resizerLeft');
+  var rr = document.getElementById('resizerRight');
+  if (rl) rl.addEventListener('pointerdown', function(e){ startDrag(rl, 'left', e); });
+  if (rr) rr.addEventListener('pointerdown', function(e){ startDrag(rr, 'right', e); });
 })();
 
 function switchPanelTab(tab) {
