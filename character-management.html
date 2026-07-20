@@ -1050,6 +1050,7 @@
                 role: 'protagonist',
                 age: '21',
                 gender: 'male',
+                avatar: randomAvatar('male', '张三'),
                 occupation: '大三学生',
                 description: '普通的大学生，意外觉醒了神秘系统，开始了非凡的人生旅程。',
                 personality: '善良、有些宅、爱思考、偶尔冲动',
@@ -1070,6 +1071,7 @@
                 role: 'supporting',
                 age: '22',
                 gender: 'male',
+                avatar: randomAvatar('male', '李四'),
                 occupation: '张三的室友',
                 description: '张三的大学室友，性格开朗，是张三最好的朋友。',
                 personality: '开朗、幽默、讲义气',
@@ -1089,6 +1091,7 @@
                 role: 'antagonist',
                 age: '35',
                 gender: 'male',
+                avatar: randomAvatar('male', '王五'),
                 occupation: '神秘组织首领',
                 description: '神秘组织的高层，对张三的系统能力虎视眈眈。',
                 personality: '阴险、狡诈、冷酷',
@@ -1108,6 +1111,7 @@
                 role: 'protagonist',
                 age: '25',
                 gender: 'female',
+                avatar: randomAvatar('female', '苏婉'),
                 occupation: '考古学博士',
                 description: '年轻的考古学博士，在研究古文明时发现了系统的秘密。',
                 personality: '聪明、独立、温柔',
@@ -1196,7 +1200,7 @@
                 <div class="character-item ${selectedCharacter && selectedCharacter.id === char.id ? 'selected' : ''}"
                      onclick="selectCharacter(${char.id})">
                     <div class="character-avatar" style="background: ${getAvatarColor(char.role)}">
-                        ${roleIcons[char.role]}
+                        ${char.avatar || roleIcons[char.role]}
                     </div>
                     <div class="character-name">${char.name}</div>
                     <div class="character-role">${getRoleName(char.role)} · ${char.occupation || '未设定'}</div>
@@ -1227,7 +1231,7 @@
                     <div class="character-card" onclick="selectCharacter(${char.id})">
                         <div class="card-header">
                             <div class="avatar avatar-${char.role}">
-                                ${getRoleIcon(char.role)}
+                                ${char.avatar || getRoleIcon(char.role)}
                             </div>
                             <div class="card-info">
                                 <div class="card-name">${char.name}</div>
@@ -1368,7 +1372,7 @@
                                 return relatedChar ? `
                                     <div class="relationship-item" onclick="selectCharacter(${rel.charId})">
                                         <div class="relationship-avatar" style="background: ${getAvatarColor(relatedChar.role)}">
-                                            ${getRoleIcon(relatedChar.role)}
+                                            ${relatedChar.avatar || getRoleIcon(relatedChar.role)}
                                         </div>
                                         <div class="relationship-info">
                                             <div class="relationship-name">${relatedChar.name}</div>
@@ -1425,6 +1429,15 @@
                 antagonist: 'linear-gradient(135deg, #ef4444, #f87171)'
             };
             return colors[role] || 'var(--bg-hover)';
+        }
+
+        // 按性别随机分配头像；巴彦巨龙专属 🐉
+        function randomAvatar(gender, name) {
+            if (name && typeof name === 'string' && name.indexOf('巴彦巨龙') !== -1) return '🐉';
+            const female = ['💃', '🧛‍♀️', '🧝🏻‍♀️', '🧚🏻‍♀️', '🧞‍♀️'];
+            const male = ['🦹‍♂️', '🧛‍♂️', '🧙‍♂️'];
+            const pool = gender === 'female' ? female : male;
+            return pool[Math.floor(Math.random() * pool.length)];
         }
 
         // ===== CRUD 操作 =====
@@ -1494,10 +1507,16 @@
                 appearance: document.getElementById('charAppearance').value,
                 tags: document.getElementById('charTags').value.split(',').map(t => t.trim()).filter(t => t),
                 extras: parseExtrasFromText(document.getElementById('charExtras').value),
-                relationships: [],
+                // 编辑时保留已有「人物关系」，避免保存后被清空
+                relationships: editingCharacter ? (editingCharacter.relationships || []) : [],
                 chapters: 0,
                 words: 0
             };
+
+            // 头像：性别不变则沿用原头像，变了或新建则随机分配（巴彦巨龙专属🐉）
+            charData.avatar = (editingCharacter && editingCharacter.avatar && editingCharacter.gender === charData.gender)
+                ? editingCharacter.avatar
+                : randomAvatar(charData.gender, name);
 
             if (editingCharacter) {
                 // 更新
@@ -1608,12 +1627,13 @@
         }
 
         function saveRelationship() {
-            const charId = parseInt(document.getElementById('relatedChar').dataset.charId);
-            const relatedId = parseInt(document.getElementById('relatedChar').value);
+            const charId = document.getElementById('relatedChar').dataset.charId;
+            const relatedId = document.getElementById('relatedChar').value;
             const type = document.getElementById('relationType').value;
             const desc = document.getElementById('relationDesc').value;
 
-            const char = characters.find(c => c.id === charId);
+            // 用字符串比对，兼容导入角色的浮点 id（避免 parseInt 截断导致匹配失败）
+            const char = characters.find(c => String(c.id) === String(charId));
             if (!char) return;
 
             if (!char.relationships) char.relationships = [];
@@ -1632,7 +1652,7 @@
             }
 
             // 双向关系
-            const relatedChar = characters.find(c => c.id === relatedId);
+            const relatedChar = characters.find(c => String(c.id) === String(relatedId));
             if (relatedChar) {
                 if (!relatedChar.relationships) relatedChar.relationships = [];
 
@@ -1700,9 +1720,12 @@
                         chars.forEach(charMd => {
                             const existing = characters.findIndex(c => c.name === charMd.name);
                             if (existing >= 0) {
+                                // 更新已有角色：沿用其原头像，避免每次导入都变
+                                charMd.avatar = characters[existing].avatar || randomAvatar(charMd.gender, charMd.name);
                                 Object.assign(characters[existing], charMd);
                             } else {
                                 charMd.id = Date.now() + Math.random();
+                                charMd.avatar = randomAvatar(charMd.gender, charMd.name);
                                 characters.push(charMd);
                             }
                         });
@@ -1806,6 +1829,7 @@
                 goal: '',
                 appearance: '',
                 tags: [],
+                relationships: [],   // 人物关系（导入的角色也需要此字段，否则无法添加关系）
                 // 额外字段
                 race: '',          // 种族
                 nineRealms: '',    // 九界归属
