@@ -41,3 +41,23 @@
     flex: 1 1 auto;
     min-width: 0.12em;
 }
+
+/* ===== 二级页面左上角品牌 logo（📚SAGEBOOK）的小尺寸适配 =====
+   复用同一套 text-pressure 字形压力效果，但收紧布局，避免占满整行 */
+.brand-text.text-pressure {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    min-height: 0;
+    background: transparent;
+}
+.brand-text.text-pressure h1 {
+    font-size: 22px;
+    text-align: left;
+    width: auto;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+.brand-text.text-pressure h1.flex {
+    justify-content: flex-start;
+}

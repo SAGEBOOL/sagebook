@@ -36,9 +36,13 @@
 @media (max-width:640px){.site-footer{margin-top:32px;padding:18px 14px 22px;font-size:12px;}.site-footer .sf-links a,.site-footer .sf-friends a{display:inline-block;margin:2px 3px;}.site-footer .sf-sep{display:none;}}
 
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="text-pressure.css">
 </head>
 <body>
-  <a class="brand" href="index.html"><span class="ico">📚</span> SAGEBOOK</a>
+  <a class="brand" href="index.html"><span class="ico">📚</span><span class="brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
   <div class="wrap">
     <h1>隐私条款</h1>
     <div class="sub">最后更新：2026 年 7 月</div>
@@ -70,5 +74,22 @@
     <div class="sf-home"><a href="index.html">📚 返回 SAGEBOOK 首页</a></div>
 </footer>
 
+<script src="text-pressure.js"></script>
+    <script>
+    (function(){
+      function initBrandText(){
+        document.querySelectorAll('.brand-text').forEach(function(el){
+          if(window.initTextPressure && !el.__btInited){
+            el.__btInited = true;
+            try {
+              initTextPressure(el, { text: el.dataset.text, minFontSize:18, maxFontSize:28, flex:false, scale:false, textColor: (getComputedStyle(el).color || '#f0eee6') });
+            } catch(e){ console.error('brand-text init failed', e); }
+          }
+        });
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initBrandText);
+      else initBrandText();
+    })();
+    </script>
 </body>
 </html>

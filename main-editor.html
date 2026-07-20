@@ -616,6 +616,10 @@ body {
 }
 
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="text-pressure.css">
 </head>
 <body>
 
@@ -623,7 +627,7 @@ body {
   <!-- 左侧边栏：文件树（真实数据，来自 sagebook_novel） -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <a href="index.html" class="brand-link sb-brand"><span class="sb-brand-ico">📚</span><span>SAGEBOOK</span></a>
+      <a href="index.html" class="brand-link sb-brand"><span class="sb-brand-ico">📚</span><span class="brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
       <div class="actions">
         <button title="新建章节（建在当前文件夹）" onclick="newFile()">＋</button>
         <button title="新建文件夹" onclick="newFolder()">📁</button>
@@ -2557,5 +2561,22 @@ document.addEventListener('DOMContentLoaded', () => {
     <div class="sf-home"><a href="index.html">📚 返回 SAGEBOOK 首页</a></div>
 </footer>
 
+<script src="text-pressure.js"></script>
+    <script>
+    (function(){
+      function initBrandText(){
+        document.querySelectorAll('.brand-text').forEach(function(el){
+          if(window.initTextPressure && !el.__btInited){
+            el.__btInited = true;
+            try {
+              initTextPressure(el, { text: el.dataset.text, minFontSize:18, maxFontSize:28, flex:false, scale:false, textColor: (getComputedStyle(el).color || '#f0eee6') });
+            } catch(e){ console.error('brand-text init failed', e); }
+          }
+        });
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initBrandText);
+      else initBrandText();
+    })();
+    </script>
 </body>
 </html>
