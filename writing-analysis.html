@@ -142,6 +142,11 @@
             <div class="stats-grid" id="fsStats"></div>
             <div class="analysis-section">
                 <div class="section-title">🔮 伏笔管理（点击回收 / 删除）</div>
+                <div class="btn-group" style="margin-bottom:12px">
+                    <button class="btn btn-primary" onclick="scanForeshadows()">🔍 自动扫描伏笔</button>
+                    <label class="btn" for="fsImportFile" style="cursor:pointer">📥 导入文件</label>
+                    <input type="file" id="fsImportFile" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleFsImportFiles(this.files)">
+                </div>
                 <div class="row">
                     <input id="fsChapter" placeholder="所在章节，如 第3章">
                     <input id="fsDesc" placeholder="伏笔内容描述">
@@ -318,8 +323,9 @@
             if(!list.length){ listEl.innerHTML='<div class="empty-hint">还没有伏笔。在上方填写章节与描述，随时记录并标记回收。</div>'; return; }
             listEl.innerHTML = list.map(f=>`
                 <div class="timeline-item ${f.resolved?'resolved':''}">
-                    <div class="timeline-date">${f.chapter} ${f.resolved?'· ✅已回收':''}</div>
+                    <div class="timeline-date">${f.chapter} ${f.resolved?'· ✅已回收':''} ${f.auto?'<span style="color:var(--accent);font-size:11px">🔍 自动</span>':''}</div>
                     <div class="timeline-content">${f.desc.replace(/</g,'&lt;')}</div>
+                    ${f.labels ? `<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${f.labels.map(l=>`<span style="font-size:11px;padding:1px 8px;border-radius:10px;background:var(--bg-hover);color:var(--text-secondary)">${l}</span>`).join('')}</div>` : ''}
                     <div class="btn-group" style="margin:8px 0 0">
                         <button class="btn" onclick="toggleFS(${f.id})">${f.resolved?'↩️ 撤销回收':'✅ 标记回收'}</button>
                         <button class="btn btn-danger" onclick="delFS(${f.id})">🗑️ 删除</button>
@@ -387,7 +393,194 @@
                 </div>`).join('');
         }
 
-        // ===== 风格洞察（真实）=====
+        // ===== 伏笔自动扫描（基于文稿规则引擎）=====
+        const FS_PATTERNS = [
+            // 神秘暗示 / 未解释的现象
+            { re: /(奇怪|诡异|莫名|不知为何|说不清|难以置信|匪夷所思|不可思议)/g, label: '神秘现象', weight: 3 },
+            { re: /(秘密|隐藏|隐瞒|没告诉|不曾透露|无人知晓|只有.*知道|鲜为人知)/g, label: '隐藏秘密', weight: 4 },
+            // 未解悬念
+            { re: /(究竟|到底|难道|莫非|是否|为何|怎么|什么人|谁|从何而来|去向不明|下落不明|杳无音信|生死未卜)/g, label: '未解悬念', weight: 2 },
+            // 时间线矛盾或预告
+            { re: /(多年以前|很久以前|那时|当年|从前|后来才知|直到今天|终有一天|迟早|总有一天|等到.*那天)/g, label: '时间线索', weight: 2 },
+            // 角色反常行为
+            { re: /(突然|猛然|毫无预兆|出乎意料|一反常态|反常|不对劲|有些古怪|神情异样|目光闪烁|欲言又止|吞吞吐吐)/g, label: '角色异常', weight: 3 },
+            // 特殊物品/符号
+            { re: /(玉佩|令牌|信物|遗物|传家宝|密信|血书|暗记|图腾|符文|封印|钥匙|地图|藏宝图|遗嘱|遗言)/g, label: '关键物品', weight: 4 },
+            // 人物关系暗线
+            { re: /(亲生|血缘|身世|出身|真实身份|原来竟是|竟然是|没想到.*竟|居然)/g, label: '身世谜团', weight: 5 },
+            { re: /(旧识|故人|昔日|曾经|往事|前尘|宿命|因果|缘分|命中注定)/g, label: '旧日渊源', weight: 2 },
+            // 预兆/征象
+            { re: /(预感|不祥之兆|隐隐不安|心中一动|有种感觉|直觉告诉他|仿佛预示|凶多吉少|大事不妙)/g, label: '预兆征象', weight: 3 },
+            // 对话中的暗示
+            { re: /(记住.*话|有朝一日|若是有缘|来日方长|日后自会|你总会知道|到时候你就明白)/g, label: '对话暗示', weight: 4 },
+            // 留白/中断
+            { re: /(话到嘴边又咽下|没有说下去|摇了摇头不再多说|意味深长地|似笑非笑|深意|另有深意|不言而喻)/g, label: '留白暗示', weight: 3 }
+        ];
+        function scanForeshadows(){
+            const c = getContent().trim();
+            if(!c){ alert('请先在主编辑器中写入内容'); return; }
+            const chapters = getChapters();
+            const existing = getFS();
+            const existingTexts = new Set(existing.map(f => f.desc.slice(0, 30)));
+            const found = [];
+
+            // 按段落扫描，合并同段落多次匹配
+            const paras = getParagraphs();
+            paras.forEach((para, idx) => {
+                let paraScore = 0;
+                let matchedLabels = [];
+                for(const pat of FS_PATTERNS){
+                    const m = para.match(pat.re);
+                    if(m && m.length > 0){
+                        paraScore += m.length * pat.weight;
+                        matchedLabels.push(pat.label);
+                    }
+                }
+                if(paraScore >= 4){
+                    // 定位章节
+                    let chName = '未知章节';
+                    let chIdx = 0;
+                    for(let i=0; i<chapters.length; i++){
+                        if(chapters[i].includes(para)){
+                            chName = (chapters[i].split('\n')[0] || '').replace(/^#+\s*/,'').slice(0,20) || `第${i+1}章`;
+                            chIdx = i + 1;
+                            break;
+                        }
+                    }
+                    // 去重：与已有伏笔描述前30字不重复
+                    const key = para.slice(0, 30);
+                    if(!existingTexts.has(key)){
+                        found.push({
+                            id: Date.now() + Math.random(),
+                            chapter: chName,
+                            desc: para.slice(0, 120) + (para.length>120?'…':''),
+                            resolved: false,
+                            auto: true,
+                            score: paraScore,
+                            labels: [...new Set(matchedLabels)]
+                        });
+                    }
+                }
+            });
+
+            // 批量写入
+            if(found.length === 0){
+                showToast('🔍 扫描完成：未发现明显伏笔信号（可尝试手动添加）');
+                return;
+            }
+            const list = [...existing, ...found];
+            saveFS(list);
+            showToast(`🔍 扫描完成：发现 ${found.length} 条疑似伏笔，已添加到列表`);
+        }
+
+        // ===== 伏笔文件导入 =====
+        function handleFsImportFiles(fileList){
+            if(!fileList || !fileList.length) return;
+            const file = fileList[0];
+            const reader = new FileReader();
+            reader.onload = function(){
+                try {
+                    const text = String(reader.result).trim();
+                    if(!text){ showToast('⚠️ 文件内容为空'); return; }
+                    let items = [];
+                    const name = file.name.toLowerCase();
+
+                    // JSON 检测
+                    if(name.endsWith('.json') || text.trim().startsWith('[') || text.trim().startsWith('{')){
+                        let data = JSON.parse(text);
+                        if(Array.isArray(data)) items = data;
+                        else if(data && typeof data === 'object'){
+                            // 支持 {foreshadows:[...]} 或各 key 为数组
+                            items = data.foreshadows || data.伏笔 || data.items || data.data || Object.values(data).find(Array.isArray.bind(Array)) || [];
+                        }
+                    }
+                    // CSV 检测
+                    else if(name.endsWith('.csv') || /^\s*[^,\n]+,[^,\n]+/.test(text)){
+                        const lines = text.split('\n').filter(l=>l.trim());
+                        if(lines.length < 2){ showToast('⚠️ CSV 内容不足'); return; }
+                        const hdr = lines[0].split(',').map(h=>h.trim().replace(/^["']|["']$/g,''));
+                        const chIdx = hdr.findIndex(h=>/(章|chapter|章节|回|位置)/i.test(h));
+                        const dIdx = hdr.findIndex(h=>/(描|desc|内容|伏笔|说明|描述|detail)/i);
+                        const rIdx = hdr.findIndex(h=>/(状|status|回收|resolved|状态)/i);
+                        for(let i=1; i<lines.length; i++){
+                            const cells = lines[i].split(',').map(c=>c.trim().replace(/^["']|["']$/g,''));
+                            if(!cells[dIdx>=0?dIdx:1]) continue;
+                            items.push({
+                                chapter: chIdx>=0 ? cells[chIdx] : '导入',
+                                desc: cells[dIdx>=0?dIdx:1],
+                                resolved: rIdx>=0 ? /^(✓|true|已|1|yes)$/i.test(cells[rIdx]) : false
+                            });
+                        }
+                    }
+                    // MD / TXT
+                    else {
+                        const lines = text.split('\n');
+                        let currentChapter = '导入';
+                        for(const line of lines){
+                            const l = line.trim();
+                            if(!l) continue;
+                            // 标题行 → 当章节名
+                            if(/^#{1,3}\s/.test(l)){ currentChapter = l.replace(/^#+\s*/,'').trim(); continue; }
+                            // 列表项 - 描述
+                            const m = l.match(/^[-*]\s+(.+)/);
+                            if(m){ items.push({chapter:currentChapter, desc:m[1], resolved:false}); continue; }
+                            // KV 格式
+                            const kv = l.match(/^(?:[-*]\s*)?(.+?)[：:]\s*(.+)$/);
+                            if(kv && kv[2].length > 2){
+                                const k = kv[1].trim();
+                                if(/(章|回|节|位置|chapter)/i.test(k)) currentChapter = kv[2].trim();
+                                else if(/(描|内容|伏笔|说明|desc)/i.test(k)) items.push({chapter:currentChapter, desc:kv[2], resolved:false});
+                                else items.push({chapter:currentChapter, desc:l.replace(/^[-*]\s*/,''), resolved:false});
+                            }
+                            else if(l.length > 4 && !/^#{1,6}/.test(l)){
+                                items.push({chapter:currentChapter, desc:l, resolved:false});
+                            }
+                        }
+                    }
+
+                    if(!items.length){ showToast('⚠️ 未解析到有效伏笔条目'); return; }
+
+                    // 规范化 + 去重
+                    const existing = getFS();
+                    const existKeys = new Set(existing.map(f => f.desc.slice(0,40)));
+                    let added = 0, skipped = 0;
+                    items.forEach(item => {
+                        const norm = {
+                            id: Date.now() + Math.random(),
+                            chapter: String(item.chapter||'导入').slice(0,30),
+                            desc: String(item.desc||'').trim().slice(0,500),
+                            resolved: !!item.resolved
+                        };
+                        if(!norm.desc || norm.desc.length<2){ skipped++; return; }
+                        const k = norm.desc.slice(0,40);
+                        if(existKeys.has(k)){ skipped++; return; }
+                        existKeys.add(k);
+                        existing.push(norm);
+                        added++;
+                    });
+                    saveFS(existing);
+                    showToast(`📥 导入完成：新增 ${added} 条，跳过重复 ${skipped} 条`);
+                } catch(e) {
+                    console.error('fs import error:', e);
+                    showToast('⚠️ 解析失败，请检查文件格式');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ===== Toast 提示 =====
+        var _toastTimer = null;
+        function showToast(msg){
+            let el = document.getElementById('_globalToast');
+            if(!el){
+                el = document.createElement('div');
+                el.id='_globalToast';
+                el.style.cssText='position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 22px;border-radius:10px;font-size:13px;color:#fff;background:rgba(217,119,87,0.92);box-shadow:0 4px 16px rgba(0,0,0,.35);transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center';
+                document.body.appendChild(el);
+            }
+            el.textContent=msg; el.style.opacity='1';
+            clearTimeout(_toastTimer); _toastTimer=setTimeout(()=>{el.style.opacity='0';},2500);
+        }
         function renderStyle(){
             const statsEl=document.getElementById('styleStats');
             const freqEl=document.getElementById('wordFreq');
