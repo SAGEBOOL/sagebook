@@ -91,6 +91,8 @@
         .btn-danger { color:var(--error); }
         .btn-group { display:flex;gap:8px;margin:16px 0;flex-wrap:wrap; }
         .empty-hint { text-align:center;padding:24px 16px;color:var(--text-secondary);font-size:13px;line-height:1.8; }
+        .toast { position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);padding:12px 20px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:all .3s;z-index:200;max-width:90vw;box-shadow:0 8px 24px rgba(0,0,0,.3); }
+        .toast.show { opacity:1;transform:translateX(-50%) translateY(0); }
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
         .footer a { color:var(--accent);text-decoration:none; }
         #aiCompleteOutput { white-space:pre-wrap;line-height:1.8; }
@@ -145,13 +147,14 @@
             <div class="map-grid" id="mapGrid"></div>
             <div class="row">
                 <button class="btn" onclick="clearMap()">🗑️ 清空地图</button>
+                <label class="btn" for="impMapJson">📥 导入地图</label>
                 <button class="btn btn-primary" onclick="exportWorld()">📤 导出世界观</button>
                 <button class="btn" onclick="aiComplete()">🤖 AI 补全建议</button>
             </div>
             <div id="aiCompleteOutput" class="card" style="display:none"></div>
             <div class="grid-2">
                 <div class="card">
-                    <div class="card-title">📍 地点列表</div>
+                    <div class="card-title">📍 地点列表<label class="btn" for="impLoc" style="margin-left:auto">📥 导入</label></div>
                     <div class="row">
                         <input id="locName" placeholder="地点名">
                         <button class="btn btn-primary" onclick="addLocation()">➕ 添加</button>
@@ -163,6 +166,8 @@
                     <div id="mapStats"></div>
                 </div>
             </div>
+            <input type="file" id="impLoc" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('loc',this)">
+            <input type="file" id="impMapJson" accept=".json" style="display:none" onchange="handleImportMap(this)">
         </div>
 
         <!-- 时间线 -->
@@ -181,9 +186,10 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-title">📅 故事时间线</div>
-                <div class="timeline" id="tlList"></div>
-            </div>
+                <div class="card-title">📅 故事时间线<label class="btn" for="impTL" style="margin-left:auto">📥 导入</label></div>
+            <div class="timeline" id="tlList"></div>
+            <input type="file" id="impTL" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('tl',this)">
+        </div>
         </div>
 
         <!-- 势力系统 -->
@@ -199,7 +205,9 @@
                     <button class="btn btn-primary" onclick="addFaction()">添加</button>
                 </div>
             </div>
+            <div class="row" style="justify-content:space-between"><span class="card-title" style="margin:0">⚔️ 势力列表</span><label class="btn" for="impFac">📥 导入</label></div>
             <div class="faction-list" id="facList"></div>
+            <input type="file" id="impFac" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('fac',this)">
         </div>
 
         <!-- 力量体系 -->
@@ -213,9 +221,10 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-title">💪 修炼等级体系</div>
+                <div class="card-title">💪 修炼等级体系<label class="btn" for="impLv" style="margin-left:auto">📥 导入</label></div>
                 <div id="lvList"></div>
             </div>
+            <input type="file" id="impLv" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('lv',this)">
         </div>
 
         <!-- 规则引擎 -->
@@ -231,15 +240,16 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-title">📜 全局规则</div>
+                <div class="card-title">📜 全局规则<label class="btn" for="impRule" style="margin-left:auto">📥 导入</label></div>
                 <div id="ruleList"></div>
             </div>
+            <input type="file" id="impRule" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('rule',this)">
         </div>
 
         <!-- 设定百科 -->
         <div id="tab-encyclopedia" class="tab-content">
             <div class="card">
-                <div class="card-title">➕ 新建词条</div>
+                <div class="card-title">➕ 新建词条<label class="btn" for="impEnc" style="margin-left:auto">📥 导入</label></div>
                 <div class="row">
                     <input id="encTitle" placeholder="词条名">
                     <select id="encHeat">
@@ -252,6 +262,7 @@
                 </div>
             </div>
             <div class="encyclopedia-grid" id="encGrid"></div>
+            <input type="file" id="impEnc" accept=".json,.csv,.md,.txt" style="display:none" onchange="handleImport('enc',this)">
         </div>
 
         </div>
@@ -403,6 +414,125 @@
                 if(!res.ok) throw new Error('Ollama API error: '+res.status);
                 const data=await res.json(); out.textContent=data.response;
             }catch(e){ out.innerHTML='<div style="color:var(--error)">⚠️ AI 调用失败：'+e.message+'</div>'; }
+        }
+
+        // ===== 导入本地文件（JSON / CSV / MD）=====
+        function readFileText(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(String(r.result)); r.onerror=()=>rej(r.error); r.readAsText(file); }); }
+        function detectFormat(name, text){
+            if(/\.json$/i.test(name)) return 'json';
+            if(/\.csv$/i.test(name)) return 'csv';
+            if(/\.md$/i.test(name)||/\.txt$/i.test(name)) return 'md';
+            const t=text.trim();
+            if(t.startsWith('[')||t.startsWith('{')) return 'json';
+            if(text.split('\n').some(l=>l.includes(',')||l.includes('\t'))) return 'csv';
+            return 'md';
+        }
+        function toast(msg){
+            let t=document.getElementById('wbToast');
+            if(!t){ t=document.createElement('div'); t.id='wbToast'; t.className='toast'; document.body.appendChild(t); }
+            t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),2800);
+        }
+        // 字段名归一化（去 空格/_/-/：/:, 转小写），用于中英文键匹配
+        function normKey(k){ return String(k).toLowerCase().replace(/[\s_\-：:\s]/g,''); }
+        function pick(obj, keys){
+            if(typeof obj!=='string' && typeof obj==='object' && obj!==null){
+                const lower={}; Object.keys(obj).forEach(k=>lower[normKey(k)]=obj[k]);
+                for(const k of keys){ const lk=normKey(k); if(lower[lk]!==undefined && lower[lk]!=='') return lower[lk]; }
+            }
+            return undefined;
+        }
+        function splitCSVLine(line, sep){
+            const out=[]; let cur=''; let q=false;
+            for(let i=0;i<line.length;i++){ const c=line[i];
+                if(c==='"'){ if(q && line[i+1]==='"'){ cur+='"'; i++; } else q=!q; }
+                else if(c===sep && !q){ out.push(cur); cur=''; }
+                else cur+=c;
+            }
+            out.push(cur); return out;
+        }
+        function parseJSONWorld(text){
+            const data=JSON.parse(text);
+            if(Array.isArray(data)) return data;
+            for(const k of Object.keys(data)){ if(Array.isArray(data[k])) return data[k]; }
+            return [data];
+        }
+        function parseCSVWorld(text){
+            const lines=text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
+            if(!lines.length) return [];
+            const sep=lines[0].includes('\t')?'\t':',';
+            const header=splitCSVLine(lines[0],sep).map(h=>normKey(h));
+            return lines.slice(1).map(line=>{ const cells=splitCSVLine(line,sep); const o={}; header.forEach((h,i)=>o[h]=(cells[i]||'').trim()); return o; });
+        }
+        function parseMDWorld(text, cfg){
+            const blocks=text.split(/\n\s*\n/).map(b=>b.trim()).filter(b=>b);
+            const recs=[];
+            for(const block of blocks){
+                const lines=block.split('\n').map(l=>l.trim()).filter(l=>l);
+                if(!lines.length) continue;
+                // 扁平列表：- 内容（无键值）→ 每条作为简单项
+                if(lines.every(l=>/^[-*]\s+/.test(l)) && !block.includes('：') && !block.includes(':')){
+                    lines.forEach(l=>{ const v=l.replace(/^[-*]\s+/,'').trim(); if(v) recs.push(cfg.listItem?cfg.listItem(v):v); });
+                    continue;
+                }
+                const rec={}; let firstTitle=null;
+                for(const line of lines){
+                    const m=line.match(/^[-*]?\s*([^：:]+)[：:]\s*(.+)$/);
+                    if(m){ rec[normKey(m[1])]=m[2].trim(); }
+                    else { const v=line.replace(/^#+\s*/,'').replace(/^[-*]\s+/,'').trim(); if(v && !firstTitle) firstTitle=v; }
+                }
+                if(firstTitle){ const tk=normKey(cfg.titleKey||'name'); if(!rec[tk]) rec[tk]=firstTitle; }
+                if(Object.keys(rec).length) recs.push(rec);
+            }
+            return recs;
+        }
+        const IMPORT_CFGS={
+            loc:{ key:LS_LOC, def:[], label:'地点', titleKey:'name', render:renderLocations,
+                normalize:r=> typeof r==='string'? r.trim() : (pick(r,['name','location','地点','名称'])||'').trim(),
+                dedupe:(e,it)=> e===it },
+            tl:{ key:LS_TL, def:[], label:'时间线', titleKey:'chapter', render:renderTimeline,
+                normalize:r=>{ if(typeof r==='string') return null; const content=pick(r,['content','描述','内容','事件','event']); if(!content) return null;
+                    return {chapter:pick(r,['chapter','章节','时间点','时间'])||'未注明', content, status:pick(r,['status','状态'])||'normal'}; },
+                dedupe:(e,it)=> e.chapter===it.chapter && e.content===it.content },
+            fac:{ key:LS_FAC, def:[], label:'势力', titleKey:'name', render:renderFactions,
+                normalize:r=>{ if(typeof r==='string') return null; const name=pick(r,['name','势力','名称','势力名']); if(!name) return null;
+                    let p=pick(r,['power','战力','等级','强度']); p=parseInt(p)||1; return {name, desc:pick(r,['desc','描述','简介','介绍'])||'', power:p}; },
+                dedupe:(e,it)=> e.name===it.name },
+            lv:{ key:LS_LV, def:[], label:'力量等级', titleKey:'name', render:renderLevels,
+                normalize:r=>{ if(typeof r==='string') return null; const name=pick(r,['name','等级','名称','level']); if(!name) return null;
+                    return {name, desc:pick(r,['desc','描述','说明'])||''}; },
+                dedupe:(e,it)=> e.name===it.name },
+            rule:{ key:LS_RULE, def:[], label:'规则', titleKey:'text', render:renderRules,
+                normalize:r=>{ const text=typeof r==='string'?r:pick(r,['text','规则','描述','内容']); if(!text) return null;
+                    return {text, status:pick(r,['status','状态'])||'pass'}; },
+                dedupe:(e,it)=> e.text===it.text },
+            enc:{ key:LS_ENC, def:[], label:'设定词条', titleKey:'title', render:renderEntries,
+                normalize:r=>{ if(typeof r==='string') return null; const title=pick(r,['title','词条','名称','标题']); if(!title) return null;
+                    return {title, content:pick(r,['content','内容','描述','说明'])||'', heat:pick(r,['heat','热度'])||'中热度'}; },
+                dedupe:(e,it)=> e.title===it.title },
+        };
+        async function importWorld(cfg, file){
+            try{
+                const text=await readFileText(file);
+                const fmt=detectFormat(file.name, text);
+                const recs= fmt==='json'?parseJSONWorld(text) : fmt==='csv'?parseCSVWorld(text) : parseMDWorld(text, cfg);
+                const items=recs.map(r=>cfg.normalize(r)).filter(Boolean);
+                if(!items.length){ toast('⚠️ 未从文件中解析到可导入的内容'); return; }
+                const existing=get(cfg.key, cfg.def);
+                let added=0, skipped=0;
+                items.forEach(it=>{ if(existing.some(e=>cfg.dedupe(e,it))) skipped++; else { existing.push(it); added++; } });
+                save(cfg.key, existing); cfg.render();
+                toast(`✅ ${cfg.label}：新增 ${added} 条，跳过重复 ${skipped} 条`);
+            }catch(e){ toast('❌ 导入失败：'+e.message); }
+        }
+        function handleImport(module, input){ const f=input.files&&input.files[0]; if(f) importWorld(IMPORT_CFGS[module], f); input.value=''; }
+        async function handleImportMap(input){
+            const f=input.files&&input.files[0]; input.value=''; if(!f) return;
+            try{
+                const arr=JSON.parse(await readFileText(f));
+                const valid=new Set(TERRAINS);
+                if(!Array.isArray(arr)||arr.length!==60||!arr.every(t=>valid.has(t))) throw new Error('需为长度 60 且均为合法地形的数组');
+                save(LS_MAP, arr); renderMap(); renderMapStats(); toast('✅ 地图已导入（60 格）');
+            }catch(e){ toast('❌ 地图导入失败：'+e.message); }
         }
 
         // 初始化
