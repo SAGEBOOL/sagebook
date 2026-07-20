@@ -405,6 +405,17 @@
             margin-bottom: 15px;
         }
 
+        .extras-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .extras-list .detail-field {
+            flex: 1 1 calc(50% - 6px);
+            min-width: 200px;
+            margin-bottom: 0;
+        }
+
         .detail-label {
             font-size: 12px;
             color: var(--text-muted);
@@ -973,6 +984,11 @@
                     <label class="form-label">标签（用逗号分隔）</label>
                     <input type="text" class="form-input" id="charTags" placeholder="例如：主角, 勇敢, 聪明">
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">扩展字段（每行一个，格式：键：值）</label>
+                    <textarea class="form-input form-textarea" id="charExtras" placeholder="例如：&#10;口头禅：……&#10;秘密：……&#10;专属道具：……"></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary btn" onclick="closeModal('characterModal')">取消</button>
@@ -1329,6 +1345,20 @@
                     </div>
                 </div>
 
+                ${char.extras && Object.keys(char.extras).length > 0 ? `
+                <div class="detail-section">
+                    <div class="detail-section-title">📎 扩展字段</div>
+                    <div class="extras-list">
+                        ${Object.entries(char.extras).map(([k, v]) => `
+                            <div class="detail-field">
+                                <div class="detail-label">${escapeHtml(k)}</div>
+                                <div class="detail-value">${escapeHtml(v)}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
                 <div class="detail-section">
                     <div class="detail-section-title">🔗 人物关系</div>
                     <div class="relationship-list">
@@ -1426,6 +1456,7 @@
             document.getElementById('charGoal').value = '';
             document.getElementById('charAppearance').value = '';
             document.getElementById('charTags').value = '';
+            document.getElementById('charExtras').value = '';
         }
 
         function fillCharacterForm(char) {
@@ -1440,6 +1471,7 @@
             document.getElementById('charGoal').value = char.goal || '';
             document.getElementById('charAppearance').value = char.appearance || '';
             document.getElementById('charTags').value = char.tags ? char.tags.join(', ') : '';
+            document.getElementById('charExtras').value = extrasToText(char.extras);
         }
 
         function saveCharacter() {
@@ -1461,6 +1493,7 @@
                 goal: document.getElementById('charGoal').value,
                 appearance: document.getElementById('charAppearance').value,
                 tags: document.getElementById('charTags').value.split(',').map(t => t.trim()).filter(t => t),
+                extras: parseExtrasFromText(document.getElementById('charExtras').value),
                 relationships: [],
                 chapters: 0,
                 words: 0
@@ -1486,6 +1519,40 @@
             if (selectedCharacter && editingCharacter) {
                 showCharacterDetail(editingCharacter);
             }
+        }
+
+        // 转义 HTML，避免详情渲染 extras 时产生 XSS
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // 把「键：值」多行文本解析为 extras 对象
+        function parseExtrasFromText(text) {
+            const obj = {};
+            if (!text) return obj;
+            text.split('\n').forEach(line => {
+                const t = line.trim();
+                if (!t) return;
+                const m = t.match(/^(.+?)[：:]\s*(.+)$/);
+                if (m) {
+                    const k = m[1].trim();
+                    const v = m[2].trim();
+                    if (k && k.length <= 12 && !/[，。；、！？!?；;]/.test(k)) obj[k] = v;
+                }
+            });
+            return obj;
+        }
+
+        // 把 extras 对象序列化为「键：值」多行文本（用于编辑框回填）
+        function extrasToText(extras) {
+            if (!extras) return '';
+            return Object.entries(extras).map(([k, v]) => k + '：' + v).join('\n');
         }
 
         function duplicateCharacter(id) {
@@ -1741,7 +1808,8 @@
                 existenceMeaning: '', // 存在意义
                 actionStyle: '',   // 行动风格
                 growthArc: '',     // 成长弧线
-                foreshadowing: ''  // 伏笔待解
+                foreshadowing: '',  // 伏笔待解
+                extras: {}           // 扩展字段：导入时未匹配到的自定义 键:值，避免丢失
             };
 
             // 预处理：去掉粗体标记 **，保留 *** 分割线
@@ -1934,6 +2002,12 @@
                         }
                     }
                     else {
+                        // 未匹配到任何已知字段 → 存入扩展字段，导入时不丢失自定义信息
+                        const cleanKey = key.replace(/^[-*]+\s*/, '').replace(/\*/g, '').trim();
+                        if (cleanKey.length > 0 && cleanKey.length <= 12 && !/[，。；、！？!?；;]/.test(cleanKey)) {
+                            if (!char.extras) char.extras = {};
+                            char.extras[cleanKey] = value;
+                        }
                         // 兜底：根据 section 判断
                         if (section.includes('性') || section.includes('性格')) char.personality = value;
                         else if (section.includes('背') || section.includes('故事') || section.includes('经')) char.background = value;
