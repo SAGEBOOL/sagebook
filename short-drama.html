@@ -104,12 +104,16 @@
         .cell .play::after { content:"▶"; position:absolute; inset:0; display:flex;align-items:center;justify-content:center; font-size:34px; color:rgba(255,255,255,.9); text-shadow:0 2px 8px rgba(0,0,0,.5); pointer-events:none; }
         .cell .vidtag { position:absolute; left:8px; bottom:8px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; padding:2px 8px; border-radius:8px; }
 
-        .char-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:10px 0; }
+        .char-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:10px 0; }
         .char-card { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px; }
         .char-card .nm { font-weight:700;color:var(--accent);font-size:14px; }
         .char-card .ds { font-size:12px;color:var(--text-secondary);margin-top:4px;word-break:break-word; }
         .char-card img { width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin-top:8px;background:var(--bg-tertiary); }
-        .char-card .acts { display:flex;gap:6px;margin-top:8px; }
+        .char-card img.char-img { aspect-ratio:2/3;background:#fff; }
+        .char-card .en-prompt { font-size:11px;color:var(--text-secondary);margin-top:8px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;padding:6px 8px;line-height:1.4; }
+        .char-card .en-prompt b { color:var(--text-primary); }
+        .char-card .acts { display:flex;gap:6px;margin-top:8px;flex-wrap:wrap; }
+        .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5; }
 
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
         .footer a { color:var(--accent);text-decoration:none; }
@@ -204,6 +208,27 @@
     <!-- Tab2 人物 -->
     <div class="tab-content" id="tab-chars">
         <div class="card">
+            <div class="card-title">🎨 人物形象设定生成（定型形象图片）</div>
+            <div class="note">根据「剧本 / 分镜」的场次内容，提炼 4–6 个反复出现的主要角色，统一魔幻 / 修仙 / 玄幻 / 复古国风动画风格，并生成可复制的英文角色绘图提示词（定型形象）。下方约束词可自由编辑。</div>
+            <div class="field">
+                <label>角色设定约束词（可编辑）</label>
+                <textarea id="charConstraint" rows="11" class="mono" onchange="saveCharConstraint()"></textarea>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary" id="genCharsBtn" onclick="genChars()">🤖 生成角色设定</button>
+                <button class="btn" onclick="genCharImageForAll()">🖼️ 批量生成定型形象图</button>
+                <button class="btn" onclick="updateCharPromptsOut()">🔄 刷新提示词整理</button>
+            </div>
+            <div id="charGenStatus"></div>
+            <div class="field" style="margin-top:12px">
+                <label>整理角色提示词（可直接复制 · 每个角色之间空一行）</label>
+                <textarea id="charPromptsOut" rows="8" readonly class="mono" style="background:var(--bg-tertiary)"></textarea>
+                <div class="row" style="margin-top:6px">
+                    <button class="btn btn-sm" onclick="copyCharPrompts()">📋 复制全部提示词</button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
             <div class="card-title">👤 新增人物</div>
             <div class="field">
                 <label>名称</label>
@@ -216,6 +241,10 @@
             <div class="field">
                 <label>参考图 URL（可选）</label>
                 <input type="text" id="charRef" placeholder="https://... 留空则用占位">
+            </div>
+            <div class="field">
+                <label>英文定型形象提示词（可选）</label>
+                <textarea id="charEn" rows="2" placeholder="如：Full body shot of ... pure white background, no props, cinematic nostalgic animated style"></textarea>
             </div>
             <div class="row">
                 <button class="btn btn-primary" onclick="addChar()">➕ 添加人物</button>
@@ -288,10 +317,41 @@
 <script>
 /* ============ 数据模型 ============ */
 const LS='sagebook_shortdrama';
+const CHAR_CONSTRAINT_DEFAULT = `二、角色设定（生成角色图）
+请你扮演一位漫剧风格的角色设计师和AI绘图提示词专家。
+请根据上面生成的分镜内容，提炼出4–6个会反复出现的主要角色。所有角色都要符合提供的文字描述的感觉，风格统一（魔幻、修仙、玄幻、复古国风），并且适合后续反复出现在动画场景中。
+请为每个角色输出以下内容：
+角色名字：
+故事身份：
+年龄：
+外貌特征：突出人物形象特征感，比如“复古的国风服饰、法器、魔幻感、不那么完美的真实细节”。
+穿着风格：比如铠甲、复古国风服饰、连衣裙等。
+性格特点：2–4个真实自然的性格特征。
+行为细节：惊讶的表情、有力的臂膀等。
+情绪作用：比如天真、热闹、温暖、紧张、害怕。
+出现场景：简单说明他通常会出现在哪些场景里。
+然后再为每个角色生成一段英文角色绘图提示词，要求：
+● full body
+● pure white background
+● no props
+● cinematic nostalgic animated style
+● soft lighting
+● clean silhouette
+● consistent character design
+注意：
+1.角色图里只能出现角色本人，不要背景，不要道具，不要文字。
+2.角色一定要有真实的质感，符合魔幻复古国风剧情人物。
+3.每个角色要有明显区分，但整体风格必须统一。
+4.最终请把每个角色的英文提示词单独列出来，方便我直接复制使用。
+整理角色提示词：
+请把所有角色的图片生成提示词整理到一个可直接复制的格式，每个角色提示词之间空一行。
+格式如下：
+[角色名字]
+图片生成提示词`;
 let state = load();
 function load(){
   try{ const s=JSON.parse(localStorage.getItem(LS)); if(s) return s; }catch(e){}
-  return { config:{ workrallyKey:'', workrallyEndpoint:'https://workrally.qq.com/zenstudio/api/mcp', imageModel:'', videoModel:'' }, characters:[], shots:[], script:'' };
+  return { config:{ workrallyKey:'', workrallyEndpoint:'https://workrally.qq.com/zenstudio/api/mcp', imageModel:'', videoModel:'' }, characters:[], shots:[], script:'', charConstraint:CHAR_CONSTRAINT_DEFAULT };
 }
 function save(){ localStorage.setItem(LS, JSON.stringify(state)); }
 
@@ -438,23 +498,131 @@ function fillDemoScript(){
 function addChar(){
   const name=document.getElementById('charName').value.trim();
   if(!name){ toast('填人物名称'); return; }
-  state.characters.push({ id:uid(), name, desc:document.getElementById('charDesc').value.trim(), ref:document.getElementById('charRef').value.trim() });
+  state.characters.push({ id:uid(), name, desc:document.getElementById('charDesc').value.trim(), ref:document.getElementById('charRef').value.trim(), enPrompt:document.getElementById('charEn').value.trim(), imageUrl:'' });
   save();
-  document.getElementById('charName').value=''; document.getElementById('charDesc').value=''; document.getElementById('charRef').value='';
-  renderChars(); toast('已添加：'+name);
+  document.getElementById('charName').value=''; document.getElementById('charDesc').value=''; document.getElementById('charRef').value=''; document.getElementById('charEn').value='';
+  renderChars(); updateCharPromptsOut(); toast('已添加：'+name);
 }
 function delChar(id){ state.characters=state.characters.filter(c=>c.id!==id); save(); renderChars(); }
 function renderChars(){
   const g=document.getElementById('charGrid');
-  if(!state.characters.length){ g.innerHTML='<div class="note">还没有人物，先在上方添加。</div>'; return; }
+  if(!state.characters.length){ g.innerHTML='<div class="note">还没有人物。可点上方「🤖 生成角色设定」自动提炼，或手动添加。</div>'; return; }
   g.innerHTML=state.characters.map(c=>`
     <div class="char-card">
       <div class="nm">${esc(c.name)}</div>
-      <div class="ds">${esc(c.desc)||'<span style="color:var(--text-tertiary)">无描述</span>'}</div>
-      ${c.ref?`<img src="${esc(c.ref)}" alt="${esc(c.name)}" onerror="this.style.display='none'">`:''}
-      <div class="acts"><button class="btn btn-sm btn-danger" onclick="delChar('${c.id}')">删除</button></div>
+      <div class="ds" style="white-space:pre-wrap">${esc(c.desc)||'<span style="color:var(--text-tertiary)">无描述</span>'}</div>
+      ${c.imageUrl?`<img class="char-img" src="${esc(c.imageUrl)}" alt="${esc(c.name)}" onerror="this.style.display='none'">`:''}
+      ${c.enPrompt?`<div class="en-prompt"><b>EN 提示词：</b><span>${esc(c.enPrompt)}</span></div>`:''}
+      ${c.ref?`<img src="${esc(c.ref)}" alt="${esc(c.ref?'参考图':c.name)}" onerror="this.style.display='none'">`:''}
+      <div class="acts">
+        <button class="btn btn-sm" onclick="genCharImage('${c.id}')">🖼️ 定型形象图</button>
+        ${c.enPrompt?`<button class="btn btn-sm" onclick="copyCharEn('${c.id}')">📋 复制EN</button>`:''}
+        <button class="btn btn-sm btn-danger" onclick="delChar('${c.id}')">删除</button>
+      </div>
     </div>`).join('');
 }
+
+/* ============ 角色设定生成（定型形象图片） ============ */
+function saveCharConstraint(){ state.charConstraint=document.getElementById('charConstraint').value; save(); }
+function applyCharConstraint(){ const el=document.getElementById('charConstraint'); if(el) el.value=state.charConstraint||CHAR_CONSTRAINT_DEFAULT; }
+function composeCharDesc(ch){
+  const parts=[];
+  if(ch.identity) parts.push('故事身份：'+ch.identity);
+  if(ch.age) parts.push('年龄：'+ch.age);
+  if(ch.appearance) parts.push('外貌特征：'+ch.appearance);
+  if(ch.clothing) parts.push('穿着风格：'+ch.clothing);
+  if(ch.personality) parts.push('性格特点：'+ch.personality);
+  if(ch.behavior) parts.push('行为细节：'+ch.behavior);
+  if(ch.emotion) parts.push('情绪作用：'+ch.emotion);
+  if(ch.scenes) parts.push('出现场景：'+ch.scenes);
+  return parts.join('\n');
+}
+function parseCharJSON(text){
+  try{
+    let cleaned=text.replace(/```(?:json)?\s*/gi,'').replace(/```\s*$/g,'').trim();
+    const m=cleaned.match(/\{[\s\S]*\}/);
+    if(m){ const j=JSON.parse(m[0]); if(j&&j.characters) return j; }
+  }catch(e){}
+  return { characters:[] };
+}
+async function genChars(){
+  const constraint=(document.getElementById('charConstraint').value||'').trim();
+  if(!constraint){ toast('约束词为空'); return; }
+  const btn=document.getElementById('genCharsBtn'); const st=document.getElementById('charGenStatus');
+  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在提炼角色并生成英文提示词…</div>';
+  try{
+    const shotsCtx = state.shots.length
+      ? state.shots.map(s=>s.num+': 生图='+(s.imagePrompt||'')+'; 动效='+(s.animationPrompt||'')).join('\n')
+      : (state.script ? '【故事大纲】'+state.script : '（暂无分镜，请基于通用短剧/漫剧生成，风格：魔幻复古国风）');
+    const sys='你是资深漫剧风格角色设计师与AI绘图提示词专家，擅长从分镜中提炼反复出现的主要角色，并产出风格统一、可直接用于文生图的英文角色提示词。';
+    const user='【分镜 / 故事内容】\n'+shotsCtx+'\n\n【你的任务与约束】\n'+constraint+'\n\n请只输出 JSON（不要解释）：\n{"characters":[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","en_prompt":"英文角色绘图提示词，须满足 full body / pure white background / no props / cinematic nostalgic animated style / soft lighting / clean silhouette / consistent character design"}]}\n角色数量 4–6 个。';
+    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+    const parsed=parseCharJSON(text);
+    if(parsed.characters&&parsed.characters.length){
+      const before=state.characters.length;
+      for(const ch of parsed.characters){
+        state.characters.push({
+          id:uid(),
+          name:ch.name||'未命名角色',
+          desc:composeCharDesc(ch),
+          ref:'',
+          enPrompt:ch.en_prompt||ch.enPrompt||ch.english_prompt||'',
+          imageUrl:''
+        });
+      }
+      save(); renderChars(); updateCharPromptsOut();
+      st.innerHTML='<div class="note ok">✅ 已生成 '+ (state.characters.length-before) +' 个角色，已加入「人物库」。可点「🖼️ 批量生成定型形象图」预览。</div>';
+    } else {
+      st.innerHTML='<div class="note warn">⚠️ AI 未返回可解析的角色 JSON，请检查约束词或换个创意再试。</div>';
+    }
+  }catch(e){
+    st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>';
+  }finally{ btn.disabled=false; }
+}
+function demoCharImage(c){
+  const h=hashStr((c.enPrompt||c.name||'x'));
+  const skin=`hsl(${h%360},42%,72%)`;
+  const robe=`hsl(${(h*3)%360},48%,42%)`;
+  const name=esc(c.name||'角色');
+  const tag=esc((c.enPrompt||'').slice(0,40));
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='480' viewBox='0 0 320 480'>
+    <rect width='320' height='480' fill='#ffffff'/>
+    <ellipse cx='160' cy='92' rx='44' ry='50' fill='${skin}'/>
+    <rect x='120' y='150' width='80' height='36' rx='20' fill='${skin}'/>
+    <path d='M78 188 Q160 168 242 188 L252 432 Q160 458 68 432 Z' fill='${robe}'/>
+    <rect x='150' y='150' width='20' height='286' fill='rgba(0,0,0,.06)'/>
+    <text x='160' y='40' text-anchor='middle' fill='#222' font-size='20' font-family='sans-serif' font-weight='bold'>${name}</text>
+    <text x='160' y='462' text-anchor='middle' fill='#555' font-size='13' font-family='sans-serif'>full body · white bg · no props</text>
+    ${tag?`<text x='160' y='150' text-anchor='middle' fill='#888' font-size='11' font-family='sans-serif'>${tag}</text>`:''}
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+function genCharImage(id){
+  const c=state.characters.find(x=>x.id===id); if(!c) return;
+  c.imageUrl=demoCharImage(c); save(); renderChars();
+  toast('已生成定型形象图（本地演示）');
+}
+function genCharImageForAll(){
+  if(!state.characters.length){ toast('先生成或添加角色'); return; }
+  state.characters.forEach(c=>{ c.imageUrl=demoCharImage(c); });
+  save(); renderChars(); toast('已批量生成定型形象图（本地演示）');
+}
+function compileCharPrompts(){
+  return state.characters.map(c=>'['+c.name+']\n'+(c.enPrompt||'')).filter(x=>x.trim().length>('[]'.length)).join('\n\n');
+}
+function updateCharPromptsOut(){
+  const el=document.getElementById('charPromptsOut'); if(el) el.value=compileCharPrompts();
+}
+function copyCharPrompts(){
+  const txt=compileCharPrompts();
+  if(!txt.trim()){ toast('暂无提示词'); return; }
+  navigator.clipboard?.writeText(txt).then(()=>toast('已复制全部提示词')).catch(()=>toast('复制失败，请手动选择'));
+}
+function copyCharEn(id){
+  const c=state.characters.find(x=>x.id===id); if(!c||!c.enPrompt){ toast('无提示词'); return; }
+  navigator.clipboard?.writeText(c.enPrompt).then(()=>toast('已复制：'+c.name+' 的提示词')).catch(()=>toast('复制失败'));
+}
+function copyText(t){ navigator.clipboard?.writeText(t).then(()=>toast('已复制')).catch(()=>toast('复制失败')); }
 
 /* ============ 分镜场次 ============ */
 let dragId=null;
@@ -577,12 +745,12 @@ function exportProject(){
 function importProject(input){
   const f=input.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; if(!state.charConstraint) state.charConstraint=CHAR_CONSTRAINT_DEFAULT; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
   rd.readAsText(f); input.value='';
 }
 
 /* ============ 初始化 ============ */
-applyWRConfigToUI(); updateModePill(); renderShots(); renderChars();
+applyWRConfigToUI(); updateModePill(); renderShots(); renderChars(); applyCharConstraint(); updateCharPromptsOut();
 </script>
 
 <script src="text-pressure.js"></script>
