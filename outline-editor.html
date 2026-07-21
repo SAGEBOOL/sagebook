@@ -1337,6 +1337,15 @@
                     outlineData = JSON.parse(saved);
                 } catch(e) {}
             }
+            // 同步 ID 计数器，避免新建/导入节点与已存在节点 id 撞车（否则 findNode 会命中错误节点）
+            let maxId = 0;
+            (function walk(arr) {
+                arr.forEach(n => {
+                    if (n.id > maxId) maxId = n.id;
+                    if (n.children) walk(n.children);
+                });
+            })(outlineData.nodes || []);
+            nodeIdCounter = Math.max(nodeIdCounter, maxId);
         }
 
         // ===== 工具函数 =====
