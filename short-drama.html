@@ -126,6 +126,7 @@
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="text-pressure.css">
+<script src="knowledge.js"></script>
 </head>
 <body>
 <div class="container">
@@ -210,6 +211,7 @@
         <div class="card">
             <div class="card-title">🎨 人物形象设定生成（定型形象图片）</div>
             <div class="note">根据「剧本 / 分镜」的场次内容，提炼 4–6 个反复出现的主要角色，统一魔幻 / 修仙 / 玄幻 / 复古国风动画风格，并生成可复制的英文角色绘图提示词（定型形象）。下方约束词可自由编辑。</div>
+            <div id="sdKbStat" class="note" style="color:var(--accent)">🧠 知识库关联：加载中…</div>
             <div class="field">
                 <label>角色设定约束词（可编辑）</label>
                 <textarea id="charConstraint" rows="11" class="mono" onchange="saveCharConstraint()"></textarea>
@@ -453,7 +455,12 @@ async function genScript(){
   btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在生成大纲与分镜…</div>';
   try{
     const sys='你是短剧/漫剧编剧助手。根据用户创意，输出紧凑的短剧大纲，并拆分为若干场次（建议4-8场）。用 JSON 输出：{ "outline":"大纲文字(150字内)", "shots":[ {"num":"EP01-SC01","image_prompt":"画面/角色视觉提示词(英文或中文均可，含风格)","animation_prompt":"运镜/动效提示词"} ] }。只输出 JSON，不要解释。';
-    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:premise}]);
+    // (A) 上下文注入：让生成的大纲/场次贴合既有角色与世界观
+    let userMsg=premise;
+    if(window.SageKB){
+      userMsg+='\n\n【知识库设定（请贴合，已有角色/地点/世界观勿凭空冲突）】\n'+SageKB.buildKBContext({charLimit:40,clip:60});
+    }
+    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:userMsg}]);
     const parsed=parseScriptJSON(text);
     state.script=parsed.outline||text;
     if(parsed.shots&&parsed.shots.length){
@@ -555,7 +562,13 @@ async function genChars(){
       ? state.shots.map(s=>s.num+': 生图='+(s.imagePrompt||'')+'; 动效='+(s.animationPrompt||'')).join('\n')
       : (state.script ? '【故事大纲】'+state.script : '（暂无分镜，请基于通用短剧/漫剧生成，风格：魔幻复古国风）');
     const sys='你是资深漫剧风格角色设计师与AI绘图提示词专家，擅长从分镜中提炼反复出现的主要角色，并产出风格统一、可直接用于文生图的英文角色提示词。';
-    const user='【分镜 / 故事内容】\n'+shotsCtx+'\n\n【你的任务与约束】\n'+constraint+'\n\n请只输出 JSON（不要解释）：\n{"characters":[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","en_prompt":"英文角色绘图提示词，须满足 full body / pure white background / no props / cinematic nostalgic animated style / soft lighting / clean silhouette / consistent character design"}]}\n角色数量 4–6 个。';
+    // (A) 上下文注入：避免与知识库已有角色重名/漂移世界观
+    let kbNote='';
+    if(window.SageKB){
+      kbNote='\n\n【知识库已有角色 / 世界观（重要）】\n'+SageKB.buildKBContext({charLimit:40,clip:60})+
+        '\n指令：若与知识库已有角色重名或高度雷同，请直接复用该角色而非新建；整体风格须与知识库世界观（如魔幻/修仙/玄幻/复古国风）保持统一，不得凭空冲突。';
+    }
+    const user='【分镜 / 故事内容】\n'+shotsCtx+'\n\n【你的任务与约束】\n'+constraint+kbNote+'\n\n请只输出 JSON（不要解释）：\n{"characters":[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","en_prompt":"英文角色绘图提示词，须满足 full body / pure white background / no props / cinematic nostalgic animated style / soft lighting / clean silhouette / consistent character design"}]}\n角色数量 4–6 个。';
     const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
     const parsed=parseCharJSON(text);
     if(parsed.characters&&parsed.characters.length){
@@ -617,6 +630,15 @@ function copyCharPrompts(){
   const txt=compileCharPrompts();
   if(!txt.trim()){ toast('暂无提示词'); return; }
   navigator.clipboard?.writeText(txt).then(()=>toast('已复制全部提示词')).catch(()=>toast('复制失败，请手动选择'));
+}
+
+// 刷新「🧠 知识库关联」状态（人物设定区）
+function updateSDKBStat(){
+  const el=document.getElementById('sdKbStat'); if(!el) return;
+  if(!window.SageKB){ el.textContent='🧠 知识库关联：未加载'; return; }
+  const s=SageKB.getStats();
+  if(!s.total){ el.textContent='🧠 知识库关联：暂无数据（生成时会基于通用设定）'; return; }
+  el.innerHTML='🧠 已关联知识库：角色 <b>'+s.characters+'</b> · 地点 <b>'+s.locations+'</b> · 势力 <b>'+s.factions+'</b> · 百科 <b>'+s.encyclopedia+'</b>（生成时将自动贴合，重名会复用）';
 }
 function copyCharEn(id){
   const c=state.characters.find(x=>x.id===id); if(!c||!c.enPrompt){ toast('无提示词'); return; }
@@ -745,12 +767,12 @@ function exportProject(){
 function importProject(input){
   const f=input.files[0]; if(!f) return;
   const rd=new FileReader();
-  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; if(!state.charConstraint) state.charConstraint=CHAR_CONSTRAINT_DEFAULT; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
+  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; if(!state.charConstraint) state.charConstraint=CHAR_CONSTRAINT_DEFAULT; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); updateSDKBStat(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
   rd.readAsText(f); input.value='';
 }
 
 /* ============ 初始化 ============ */
-applyWRConfigToUI(); updateModePill(); renderShots(); renderChars(); applyCharConstraint(); updateCharPromptsOut();
+applyWRConfigToUI(); updateModePill(); renderShots(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); updateSDKBStat();
 </script>
 
 <script src="text-pressure.js"></script>

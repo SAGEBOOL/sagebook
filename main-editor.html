@@ -486,6 +486,14 @@ body {
 .consistency-check.warn .check-title { color:var(--warning); }
 .consistency-check.error .check-title { color:var(--danger); }
 
+/* 知识库关联状态条 */
+.kb-bar { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+.kb-stat { font-size:var(--font-size-xs); color:var(--fg-secondary); background:var(--bg-tertiary); border:1px solid var(--border-primary); border-radius:var(--radius-sm); padding:6px 10px; flex:1 1 auto; }
+.kb-stat b { color:var(--accent); }
+.kb-scan-btn { flex:0 0 auto; font-size:var(--font-size-xs); padding:6px 12px; border-radius:var(--radius-sm); border:1px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; transition:background .15s; }
+.kb-scan-btn:hover { background:rgba(127,127,213,0.12); }
+.kb-note { font-size:var(--font-size-xs); color:var(--fg-tertiary); margin-bottom:4px; line-height:1.5; }
+
 /* Toast */
 .toast-container { position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; flex-direction:column; gap:8px; }
 .toast {
@@ -620,6 +628,7 @@ body {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="text-pressure.css">
+<script src="knowledge.js"></script>
 </head>
 <body>
 
@@ -795,7 +804,12 @@ body {
 
       <!-- 审查面板（真实 AI 结果） -->
       <div class="panel-section" id="tab-checks">
-        <p style="font-size:var(--font-size-xs);color:var(--fg-tertiary);margin-bottom:12px;">点击顶栏「🔍 审查」或技能运行后在此显示结果</p>
+        <div class="kb-bar">
+          <div class="kb-stat" id="kbStat">🧠 知识库：加载中…</div>
+          <button class="kb-scan-btn" onclick="scanConsistencyLocal()" title="将正文与知识库对照，标出未使用的库内要素与疑似库外名称">🔍 扫描一致性</button>
+        </div>
+        <div class="kb-note">把正文与「角色 / 地点 / 势力 / 世界观」知识库对照：列出已用到的角色地点（✅ 贴合），并标出疑似库外或笔误的名称（⚠️ 待确认）。</div>
+        <p style="font-size:var(--font-size-xs);color:var(--fg-tertiary);margin:12px 0;">点击顶栏「🔍 审查」或技能运行后在此显示 AI 结果</p>
       </div>
 
       <!-- 设置面板（复用 SageBook 真实配置键） -->
@@ -1236,9 +1250,11 @@ async function runSkill(skill) {
 
   try {
     const prompt = SKILL_PROMPTS[skill] || '请分析以下内容：';
+    // 一致性相关技能注入全量知识库，让 AI 对照设定而非仅片段内部
+    const kb = (skill === 'consistency-check' || skill === 'name-similarity' || skill === 'writing-auditor') ? kbFullBlock() : '';
     const messages = [
       { role: 'system', content: buildSystemPrompt() },
-      { role: 'user', content: `${prompt}\n\n内容：\n${content.substring(0, 4000)}` }
+      { role: 'user', content: `${prompt}\n\n内容：\n${content.substring(0, 4000)}${kb}` }
     ];
     let full = '';
     await callAI(messages, (chunk) => { full += chunk; });
@@ -1276,9 +1292,10 @@ async function runAudit() {
     card.innerHTML = `<div class="check-title">⏳ ${c.name} 运行中...</div><div class="check-detail">调用 AI...</div>`;
     document.getElementById('tab-checks').prepend(card);
     try {
+      const kb = kbFullBlock(); // 深度一致性检查：注入全量知识库供 AI 对照
       const messages = [
         { role: 'system', content: buildSystemPrompt() },
-        { role: 'user', content: `${c.prompt}\n\n内容：\n${content.substring(0, 3000)}` }
+        { role: 'user', content: `${c.prompt}\n\n内容：\n${content.substring(0, 3000)}${kb}` }
       ];
       let full = '';
       await callAI(messages, (chunk) => { full += chunk; });
@@ -1292,11 +1309,55 @@ async function runAudit() {
   toast('审查完成', 'success');
 }
 
+// 刷新「🧠 知识库关联」状态徽标
+function updateKBStat() {
+  const el = document.getElementById('kbStat');
+  if (!el) return;
+  if (!window.SageKB) { el.textContent = '🧠 知识库：未加载'; return; }
+  const s = SageKB.getStats();
+  if (!s.total) { el.textContent = '🧠 知识库：暂无数据'; return; }
+  el.innerHTML = `🧠 知识库已关联：角色 <b>${s.characters}</b> · 地点 <b>${s.locations}</b> · 势力 <b>${s.factions}</b> · 百科 <b>${s.encyclopedia}</b>`;
+}
+
+// 客户端轻量一致性预扫描（零网络），结果写入审查面板
+function scanConsistencyLocal() {
+  if (!window.SageKB) { toast('知识库模块未加载', 'error'); return; }
+  const editor = document.getElementById('editor');
+  const text = editor.value;
+  if (!text.trim()) { toast('编辑器为空', 'error'); return; }
+  switchPanelTab('checks');
+  const kb = SageKB.loadKB();
+  const res = SageKB.scanConsistency(text, kb);
+  const panel = document.getElementById('tab-checks');
+
+  // 已使用（✅ 贴合）
+  const used = document.createElement('div');
+  used.className = 'consistency-check pass';
+  used.innerHTML = `<div class="check-title">✅ 已贴合知识库（${res.used.length}）</div><div class="check-detail">${
+    res.used.length ? res.used.map(u => `${u.type}：${escapeHtml(u.name)}`).join('；') : '正文暂未出现知识库中的角色或地点。'
+  }</div>`;
+  panel.appendChild(used);
+
+  // 疑似库外 / 笔误（⚠️ 待确认）
+  const susp = document.createElement('div');
+  if (res.suspicious.length) {
+    susp.className = 'consistency-check warn';
+    susp.innerHTML = `<div class="check-title">⚠️ 疑似库外或笔误（${res.suspicious.length}）</div><div class="check-detail">${
+      res.suspicious.map(x => `「${escapeHtml(x.text)}」疑似与知识库「${escapeHtml(x.like)}」相近，请确认是新角色 / 新地点还是笔误`).join('<br>')
+    }</div>`;
+  } else {
+    susp.className = 'consistency-check pass';
+    susp.innerHTML = `<div class="check-title">✅ 未检测到疑似库外名称</div><div class="check-detail">正文中没有与知识库角色/地点编辑距为 1 的疑似笔误。</div>`;
+  }
+  panel.appendChild(susp);
+  toast('一致性扫描完成', 'success');
+}
+
 // ============================================
 // 系统提示词
 // ============================================
 function buildSystemPrompt() {
-  return `你是 SageBook 的专属写作助手，服务于中文小说创作。
+  let prompt = `你是 SageBook 的专属写作助手，服务于中文小说创作。
 
 ## 写作风格要求
 - 简洁有力，避免冗余副词（缓缓地、深深地、突然地等）
@@ -1306,12 +1367,31 @@ function buildSystemPrompt() {
 
 ## 你的任务
 根据用户指令续写、改写、润色或讨论情节，严格保持上述风格。`;
+
+  // (A) 上下文注入：把知识库设定写入系统提示词，让生成自动贴合角色/地点/世界观
+  if (window.SageKB) {
+    const kbText = SageKB.buildKBContext({ charLimit: 50, clip: 80 });
+    prompt += `\n\n## 世界观与角色设定（来自你的知识库，写作时务必遵循，不得凭空新增与之冲突的角色名、地名或世界观）
+${kbText}`;
+  }
+  return prompt;
+}
+
+// 知识库全量参考块（用于深度一致性检查，放宽截断）
+function kbFullBlock() {
+  if (!window.SageKB) return '';
+  return '\n\n## 知识库参考（请严格对照以下设定，发现与角色/地点/世界观冲突处请明确指出）\n' + SageKB.buildKBContext({ charLimit: 300, clip: 300 });
 }
 
 function buildContextForChat() {
   const fileName = document.getElementById('currentFileName').textContent;
   const content = document.getElementById('editor').value;
-  return `当前编辑文件：${fileName}\n\n当前内容（最近2000字）：\n${content.substring(Math.max(0, content.length - 2000))}`;
+  let ctx = `当前编辑文件：${fileName}\n\n当前内容（最近2000字）：\n${content.substring(Math.max(0, content.length - 2000))}`;
+  // 对话助手也附带知识库简要，便于就角色/设定提问
+  if (window.SageKB) {
+    ctx += '\n\n【知识库摘要】\n' + SageKB.buildKBContext({ charLimit: 20, clip: 40 });
+  }
+  return ctx;
 }
 
 // ============================================
@@ -2576,6 +2656,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initBrandText);
       else initBrandText();
+      if (window.SageKB && typeof updateKBStat === 'function') updateKBStat();
     })();
     </script>
 </body>
