@@ -636,6 +636,8 @@
                 <button class="theme-btn" onclick="setTheme('system')" id="themeSystem">💻</button>
             </div>
             <button class="btn" onclick="exportOutline()">📤 导出</button>
+            <button class="btn btn-secondary" onclick="importOutline()">📥 导入</button>
+            <input type="file" id="importFileInput" accept=".txt,.md,.text,.json,text/plain,application/json" style="display:none" onchange="handleImportFile(this)">
         </div>
     </div>
 
@@ -1192,6 +1194,136 @@
                 }
                 return text;
             }).join('\n');
+        }
+
+        // ===== 导入 =====
+        function importOutline() {
+            document.getElementById('importFileInput').click();
+        }
+
+        // 读取本地文件并导入（支持 .json 无损 / .txt .md 文本大纲回写）
+        function handleImportFile(input) {
+            const file = input.files && input.files[0];
+            input.value = ''; // 复位，允许重复选择同一文件
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = (e.target.result || '').trim();
+                if (!text) { showToast('文件内容为空', 'error'); return; }
+
+                try {
+                    const looksJson = /\.json$/i.test(file.name) || /^[\s]*[[{]/.test(text);
+                    let nodes, title;
+
+                    if (looksJson) {
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            nodes = data;
+                            title = file.name.replace(/\.[^.]+$/, '');
+                        } else if (data && Array.isArray(data.nodes)) {
+                            nodes = data.nodes;
+                            title = data.title || file.name.replace(/\.[^.]+$/, '');
+                        } else if (data && data.outlineData && Array.isArray(data.outlineData.nodes)) {
+                            nodes = data.outlineData.nodes;
+                            title = data.outlineData.title || file.name.replace(/\.[^.]+$/, '');
+                        } else {
+                            throw new Error('JSON 中未找到大纲节点数组');
+                        }
+                        nodes = nodes.map(n => normalizeNode(n, 'volume'));
+                    } else {
+                        nodes = parseOutlineText(text);
+                        title = file.name.replace(/\.[^.]+$/, '');
+                        if (nodes.length === 0) throw new Error('未解析出大纲内容');
+                    }
+
+                    if (outlineData.nodes.length > 0 && !confirm('导入将替换当前大纲，确定继续？')) return;
+
+                    outlineData.nodes = nodes;
+                    outlineData.title = title;
+
+                    // 更新 ID 计数器，避免与新节点冲突
+                    let maxId = 0;
+                    (function walk(arr) {
+                        arr.forEach(n => {
+                            if (n.id > maxId) maxId = n.id;
+                            if (n.children) walk(n.children);
+                        });
+                    })(nodes);
+                    nodeIdCounter = Math.max(nodeIdCounter, maxId);
+
+                    saveToStorage();
+                    renderOutlineTree();
+                    if (outlineData.nodes.length > 0) selectNode(outlineData.nodes[0]);
+                    showToast('已导入：' + file.name);
+                } catch (err) {
+                    console.error(err);
+                    showToast('导入失败：' + err.message, 'error');
+                }
+            };
+            reader.onerror = function() { showToast('文件读取失败', 'error'); };
+            reader.readAsText(file);
+        }
+
+        // 规整单个节点（补全字段、校验枚举、自动分配 ID）
+        function normalizeNode(raw, fallbackType) {
+            const type = ['volume', 'chapter', 'scene'].includes(raw.type) ? raw.type : fallbackType;
+            const node = {
+                id: raw.id != null ? raw.id : ++nodeIdCounter,
+                title: raw.title || '未命名节点',
+                type: type,
+                status: ['planning', 'writing', 'completed'].includes(raw.status) ? raw.status : 'planning',
+                progress: Number(raw.progress) || 0,
+                content: raw.content || '',
+                tags: Array.isArray(raw.tags) ? raw.tags : [],
+                todos: Array.isArray(raw.todos) ? raw.todos : [],
+                notes: raw.notes || '',
+                targetWords: Number(raw.targetWords) || (type === 'scene' ? 500 : type === 'chapter' ? 3000 : 50000),
+                currentWords: Number(raw.currentWords) || 0,
+                children: []
+            };
+            const childType = type === 'volume' ? 'chapter' : 'scene';
+            if (Array.isArray(raw.children)) {
+                node.children = raw.children.map(c => normalizeNode(c, childType));
+            }
+            return node;
+        }
+
+        // 解析导出的文本大纲（缩进 2 空格=层级，行尾 [NN%] 标记进度）
+        function parseOutlineText(text) {
+            const lines = text.split(/\r?\n/);
+            const root = [];
+            const stack = [];
+            const typeByLevel = ['volume', 'chapter', 'scene', 'scene'];
+
+            for (const raw of lines) {
+                if (!raw.trim()) continue;
+                const m = raw.match(/^(\s*)(.*?)(?:\s*\[(\d+)%\])?\s*$/);
+                if (!m) continue;
+
+                const indent = m[1].length;
+                const body = m[2];
+                const progress = m[3];
+                const isHeader = progress !== undefined || (stack.length === 0 && indent === 0);
+
+                if (isHeader) {
+                    const level = Math.floor(indent / 2);
+                    const rawNode = {
+                        title: body,
+                        type: typeByLevel[Math.min(level, typeByLevel.length - 1)],
+                        progress: progress ? parseInt(progress, 10) : 0
+                    };
+                    while (stack.length && stack[stack.length - 1].level >= level) stack.pop();
+                    const node = normalizeNode(rawNode, 'volume');
+                    if (stack.length === 0) root.push(node);
+                    else stack[stack.length - 1].node.children.push(node);
+                    stack.push({ level, node });
+                } else {
+                    const top = stack[stack.length - 1];
+                    if (top) top.node.content += (top.node.content ? '\n' : '') + body.trim();
+                }
+            }
+            return root;
         }
 
         // ===== 存储 =====
