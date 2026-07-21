@@ -1237,10 +1237,9 @@
                         if (nodes.length === 0) throw new Error('未解析出大纲内容');
                     }
 
-                    if (outlineData.nodes.length > 0 && !confirm('导入将替换当前大纲，确定继续？')) return;
-
-                    outlineData.nodes = nodes;
-                    outlineData.title = title;
+                    // 增量导入：将文件内大纲节点追加到现有大纲末尾，保留原有内容（不覆盖）
+                    outlineData.nodes = outlineData.nodes.concat(nodes);
+                    if (!outlineData.title) outlineData.title = title;
 
                     // 更新 ID 计数器，避免与新节点冲突
                     let maxId = 0;
@@ -1254,7 +1253,7 @@
 
                     saveToStorage();
                     renderOutlineTree();
-                    if (outlineData.nodes.length > 0) selectNode(outlineData.nodes[0]);
+                    if (nodes.length > 0) selectNode(nodes[0]);
                     showToast('已导入：' + file.name);
                 } catch (err) {
                     console.error(err);
