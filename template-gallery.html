@@ -209,6 +209,26 @@
             transform: translateY(-2px);
         }
 
+        .upload-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed var(--border);
+            background: transparent;
+            min-height: 220px;
+            text-align: center;
+        }
+        .upload-card:hover {
+            border-color: var(--accent);
+            box-shadow: none;
+            transform: translateY(-2px);
+            background: var(--bg-secondary);
+        }
+        .upload-inner { color: var(--text-secondary); }
+        .upload-icon { font-size: 40px; margin-bottom: 8px; }
+        .upload-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+        .upload-sub { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+
         .template-preview {
             height: 140px;
             background: var(--bg-tertiary);
@@ -607,7 +627,7 @@
                 <button class="theme-btn active" onclick="setTheme('dark')" id="themeDark">🌙</button>
                 <button class="theme-btn" onclick="setTheme('system')" id="themeSystem">💻</button>
             </div>
-            <button class="btn" onclick="showCreateTemplateModal()">+ 创建模板</button>
+            <button class="btn" onclick="showCreateTemplateModal()">+ 新建 / 上传模板</button>
         </div>
     </div>
 
@@ -620,25 +640,9 @@
                 <span>📋 全部模板</span>
                 <span class="category-count" id="countAll">0</span>
             </div>
-            <div class="category-item" data-category="chapter" onclick="filterTemplates('chapter')">
-                <span>📖 章节模板</span>
-                <span class="category-count" id="countChapter">0</span>
-            </div>
-            <div class="category-item" data-category="scene" onclick="filterTemplates('scene')">
-                <span>🎬 场景模板</span>
-                <span class="category-count" id="countScene">0</span>
-            </div>
-            <div class="category-item" data-category="dialogue" onclick="filterTemplates('dialogue')">
-                <span>💬 对话模板</span>
-                <span class="category-count" id="countDialogue">0</span>
-            </div>
-            <div class="category-item" data-category="character" onclick="filterTemplates('character')">
-                <span>👤 角色模板</span>
-                <span class="category-count" id="countCharacter">0</span>
-            </div>
-            <div class="category-item" data-category="world" onclick="filterTemplates('world')">
-                <span>🌍 世界观模板</span>
-                <span class="category-count" id="countWorld">0</span>
+            <div class="category-item" data-category="style" onclick="filterTemplates('style')">
+                <span>🎭 写作风格</span>
+                <span class="category-count" id="countStyle">0</span>
             </div>
             <div class="category-item" data-category="custom" onclick="filterTemplates('custom')">
                 <span>⭐ 我的模板</span>
@@ -687,36 +691,30 @@
     <div class="modal" id="createModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">创建模板</div>
+                <div class="modal-title">新建 / 上传模板</div>
                 <div class="modal-close" onclick="closeModal('createModal')">×</div>
             </div>
             <div class="modal-body">
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">模板名称</label>
-                    <input type="text" class="variable-input" id="newTemplateName" placeholder="例如：我的章节模板" style="width: 100%;">
+                    <input type="text" class="variable-input" id="newTemplateName" placeholder="例如：我的写作模版" style="width: 100%;">
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">分类</label>
-                    <select class="variable-input" id="newTemplateCategory" style="width: 100%;">
-                        <option value="custom">我的模板</option>
-                        <option value="chapter">章节模板</option>
-                        <option value="scene">场景模板</option>
-                        <option value="dialogue">对话模板</option>
-                        <option value="character">角色模板</option>
-                        <option value="world">世界观模板</option>
-                    </select>
+                    <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">上传本地模板文件（可选）</label>
+                    <input type="file" id="newTemplateFile" accept=".txt,.md,.json,.text,text/plain" onchange="handleTemplateFile(this)" style="width: 100%; font-size: 13px;">
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">支持 .txt / .md / .json 文本文件，选择后自动填充名称与内容，也可手动编辑</div>
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">模板内容</label>
                     <textarea class="variable-input" id="newTemplateContent" style="width: 100%; min-height: 200px;" placeholder="输入模板内容，可以使用 {{变量名}} 创建变量"></textarea>
                 </div>
                 <div style="background: var(--bg-tertiary); padding: 12px; border-radius: 6px; font-size: 12px; color: var(--text-secondary);">
-                    💡 提示：使用 {{变量名}} 格式创建可替换的变量，例如：{{章节名}}、{{角色名}}
+                    💡 提示：使用 {{变量名}} 格式创建可替换的变量，例如：{{章节名}}、{{角色名}}。新建的模板会归入「⭐ 我的模板」。
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary btn" onclick="closeModal('createModal')">取消</button>
-                <button class="btn" onclick="saveNewTemplate()">保存模板</button>
+                <button class="btn" onclick="saveNewTemplate()">保存到我的模板</button>
             </div>
         </div>
     </div>
@@ -728,114 +726,62 @@
 
     <script>
         // ===== 数据定义 =====
+        const TEMPLATES_VERSION = 'v2';
+
         let templates = [
             {
                 id: 1,
-                name: '标准章节',
-                category: 'chapter',
-                description: '适用于正文章节的标准格式',
-                preview: '第{{章节号}}章 {{章节标题}}\n\n【时间】{{时间}}\n【地点】{{地点}}\n【人物】{{人物}}\n\n---\n\n{{正文内容}}',
-                usage: 128,
+                name: '穿越',
+                category: 'style',
+                description: '现代人穿越异世/古代，身份反差+金手指+打脸逆袭',
+                preview: '【题材】穿越\n【核心设定】\n原身身份：{{原身身份}}\n穿越后身份：{{新身份}}\n金手指/外挂：{{金手指}}\n\n【开篇钩子】\n{{开篇冲击事件}}——一睁眼，{{主角名}}竟成了{{新身份}}。\n\n【第一章结构】\n1. 穿越瞬间 + 身份反差（{{反差描写}}）\n2. 金手指觉醒（{{金手指觉醒}}）\n3. 第一个危机（{{危机}}）\n4. 打脸 / 破局（{{破局方式}}）\n5. 埋下后续伏笔（{{伏笔}}）\n\n【风格提示】节奏明快，多用反差与打脸；现代梗穿插更讨喜。',
+                usage: 412,
                 badge: '热门'
             },
             {
                 id: 2,
-                name: '序章/引子',
-                category: 'chapter',
-                description: '用于小说开头的序章或引子',
-                preview: '序章 {{标题}}\n\n{{背景铺垫}}\n\n---\n\n{{核心事件}}\n\n---\n\n【悬念收尾】\n{{悬念描述}}',
-                usage: 45,
-                badge: null
+                name: '修仙',
+                category: 'style',
+                description: '境界体系+灵根+宗门+渡劫，仙侠长篇爽文',
+                preview: '【题材】修仙 / 仙侠\n【力量体系】{{境界体系，如炼气→筑基→金丹→元婴…}}\n【主角设定】\n灵根/资质：{{灵根}}\n出身：{{出身}}\n机缘：{{金手指/老爷爷}}\n\n【剧情骨架】\n1. 废柴/平凡开局（{{开局}}）\n2. 奇遇入门（{{入门机缘}}）\n3. 秘境夺宝（{{秘境}}）\n4. 宗门大比/打脸（{{打脸对象}}）\n5. 渡劫飞升/更大谜团（{{终极目标}}）\n\n【风格提示】铺垫境界差距制造爽感；战斗重意境与招式名。',
+                usage: 387,
+                badge: '热门'
             },
             {
                 id: 3,
-                name: '战斗场景',
-                category: 'scene',
-                description: '激烈的战斗场景描写模板',
-                preview: '⚔️ 战斗开始\n\n【战场环境】\n{{环境描写}}\n\n【对决双方】\n- {{主角}}：{{状态描述}}\n- {{对手}}：{{状态描述}}\n\n【战斗过程】\n{{战斗细节}}\n\n【战斗结果】\n{{结局}}',
-                usage: 89,
+                name: '霸总',
+                category: 'style',
+                description: '总裁豪门+契约婚姻+追妻火葬场+甜宠',
+                preview: '【题材】总裁 / 霸总豪门\n【人物关系】\n男主：{{男主名}}（{{男主标签，如冷傲总裁}}）\n女主：{{女主名}}（{{女主标签，如落魄千金}}）\n关系起点：{{关系起点，如契约婚姻}}\n\n【情绪曲线】\n1. 误会/被迫绑定（{{绑定事件}}）\n2. 先婚后爱/契约相处（{{相处名场面}}）\n3. 误会加深/女主离开（{{离开导火索}}）\n4. 追妻火葬场（{{男主追妻}}）\n5. 圆满甜宠收尾（{{圆满}}）\n\n【风格提示】情绪波动大，虐点与糖点交替；多用内心 OS 与肢体描写。',
+                usage: 356,
                 badge: '推荐'
             },
             {
                 id: 4,
-                name: '对话模板',
-                category: 'dialogue',
-                description: '标准对话格式，适合两人交谈',
-                preview: '"{{对话内容1}}"\n\n{{角色1}}说道，{{动作描写1}}。\n\n"{{对话内容2}}"\n\n{{角色2}}{{表情描写}}，回应道。',
-                usage: 234,
-                badge: '热门'
+                name: '重生',
+                category: 'style',
+                description: '重来一次+弥补遗憾+信息差逆袭',
+                preview: '【题材】重生逆袭\n【重生节点】{{重生前时间点}} → 回到{{重生后时间点}}\n【主角执念】{{最想改变的遗憾}}\n\n【爽点结构】\n1. 醒来已知结局（{{已知信息}}）\n2. 避开前世坑（{{避开的事}}）\n3. 提前布局/打脸仇人（{{报复对象}}）\n4. 事业/情感双线翻盘（{{翻盘动作}}）\n5. 圆满人生（{{新结局}}）\n\n【风格提示】金手指是"记忆"，用信息差制造爽感；对比前世今生更有力。',
+                usage: 298,
+                badge: null
             },
             {
                 id: 5,
-                name: '角色登场',
-                category: 'character',
-                description: '新角色登场的描写模板',
-                preview: '👤 角色登场\n\n【外貌】\n{{外貌描写}}\n\n【气质】\n{{气质描写}}\n\n【标志性特征】\n{{特征描写}}\n\n【初次印象】\n{{其他角色的反应}}',
-                usage: 67,
+                name: '末世',
+                category: 'style',
+                description: '灾难爆发+囤货+异能+基地求生',
+                preview: '【题材】末世求生\n【灾难类型】{{灾难，如丧尸病毒/异兽入侵}}\n【主角外挂】{{异能/空间/系统}}\n\n【生存主线】\n1. 灾难爆发前兆（{{前兆}}）\n2. 抢囤物资（{{物资清单}}）\n3. 觉醒异能/组队（{{队友}}）\n4. 基地攻防（{{危机事件}}）\n5. 新世界秩序（{{终局}}）\n\n【风格提示】紧张感靠资源匮乏与环境描写；异能设定要有边界。',
+                usage: 241,
                 badge: null
             },
             {
                 id: 6,
-                name: '城市描写',
-                category: 'world',
-                description: '城市或城镇的描写模板',
-                preview: '🏙️ {{城市名称}}\n\n【整体风貌】\n{{整体描写}}\n\n【标志性建筑】\n{{建筑描写}}\n\n【街道氛围】\n{{街道描写}}\n\n【人文特色】\n{{人文描写}}',
-                usage: 34,
+                name: '宫斗',
+                category: 'style',
+                description: '古言宅斗权谋+隐忍蓄力+上位',
+                preview: '【题材】古言 / 宫斗宅斗\n【身份】{{女主位份，如庶女/低位妃嫔}}\n【目标】{{上位/自保目标}}\n\n【权谋节奏】\n1. 入局/受打压（{{打压事件}}）\n2. 隐忍蓄力（{{蓄力手段}}）\n3. 借势反击（{{反击对象}}）\n4. 圣心/家族博弈（{{博弈关键}}）\n5. 上位/守成（{{结局位份}}）\n\n【风格提示】台词含蓄留白，心思写在动作里；伏笔要密而回收。',
+                usage: 209,
                 badge: null
-            },
-            {
-                id: 7,
-                name: '心理活动',
-                category: 'scene',
-                description: '角色内心独白和心理活动',
-                preview: '💭 {{角色名}}的内心\n\n{{内心独白}}\n\n【情绪变化】\n{{情绪描写}}\n\n【决策】\n最终，{{角色名}}决定{{决策内容}}。',
-                usage: 156,
-                badge: '推荐'
-            },
-            {
-                id: 8,
-                name: '回忆/闪回',
-                category: 'scene',
-                description: '回忆过去的场景模板',
-                preview: '⏮️ 回忆\n\n【触发点】\n{{触发回忆的原因}}\n\n【回忆内容】\n{{回忆场景}}\n\n【情感】\n{{情感描写}}\n\n【回归现实】\n{{回归描写}}',
-                usage: 78,
-                badge: null
-            },
-            {
-                id: 9,
-                name: '转折点',
-                category: 'scene',
-                description: '剧情重大转折的描写模板',
-                preview: '⚡ 剧情转折\n\n【铺垫】\n{{铺垫内容}}\n\n【转折事件】\n{{转折事件}}\n\n【冲击】\n{{角色反应}}\n\n【后续影响】\n{{影响描述}}',
-                usage: 56,
-                badge: null
-            },
-            {
-                id: 10,
-                name: '组队/结盟',
-                category: 'scene',
-                description: '角色组队或结盟的场景',
-                preview: '🤝 结盟时刻\n\n【契机】\n{{结盟契机}}\n\n【谈判】\n{{谈判过程}}\n\n【约定】\n{{结盟条件}}\n\n【誓言】\n"{{誓言内容}}"',
-                usage: 23,
-                badge: null
-            },
-            {
-                id: 11,
-                name: '训练/成长',
-                category: 'scene',
-                description: '角色训练或成长的场景',
-                preview: '📈 成长之路\n\n【起点】\n{{当前状态}}\n\n【训练内容】\n{{训练描写}}\n\n【困难】\n{{遇到的困难}}\n\n【突破】\n{{突破时刻}}\n\n【成果】\n{{成长结果}}',
-                usage: 67,
-                badge: null
-            },
-            {
-                id: 12,
-                name: '伏笔设置',
-                category: 'scene',
-                description: '巧妙设置伏笔的模板',
-                preview: '🔍 伏笔\n\n【表面内容】\n{{看似普通的描述}}\n\n【隐藏含义】\n<!-- 实际暗示：{{真实含义}} -->\n\n【后续揭示】\n将在第{{章节号}}章揭示：{{揭示内容}}',
-                usage: 89,
-                badge: '推荐'
             }
         ];
 
@@ -903,8 +849,22 @@
 
         function renderTemplateCards(tpls) {
             const grid = document.getElementById('templatesGrid');
+            let html = '';
 
-            grid.innerHTML = tpls.map(t => `
+            // 「我的模板」板块：顶部提供本地文件直传入口
+            if (currentFilter === 'custom') {
+                html += `
+                <div class="template-card upload-card" onclick="document.getElementById('gridFileInput').click()">
+                    <div class="upload-inner">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-title">上传本地模板</div>
+                        <div class="upload-sub">点击选择 .txt / .md / .json</div>
+                    </div>
+                    <input type="file" id="gridFileInput" accept=".txt,.md,.json,.text,text/plain" style="display:none" onchange="addCustomTemplateFromFile(this.files[0])">
+                </div>`;
+            }
+
+            html += tpls.map(t => `
                 <div class="template-card" onclick="showTemplateDetail(${t.id})">
                     <div class="template-preview">
                         <div class="template-preview-content">${t.preview.substring(0, 150)}...</div>
@@ -920,16 +880,14 @@
                     </div>
                 </div>
             `).join('');
+
+            grid.innerHTML = html;
         }
 
         function getCategoryName(category) {
             const names = {
-                chapter: '章节',
-                scene: '场景',
-                dialogue: '对话',
-                character: '角色',
-                world: '世界观',
-                custom: '自定义'
+                style: '写作风格',
+                custom: '我的模板'
             };
             return names[category] || category;
         }
@@ -938,11 +896,7 @@
             const allTemplates = [...templates, ...customTemplates];
 
             document.getElementById('countAll').textContent = allTemplates.length;
-            document.getElementById('countChapter').textContent = allTemplates.filter(t => t.category === 'chapter').length;
-            document.getElementById('countScene').textContent = allTemplates.filter(t => t.category === 'scene').length;
-            document.getElementById('countDialogue').textContent = allTemplates.filter(t => t.category === 'dialogue').length;
-            document.getElementById('countCharacter').textContent = allTemplates.filter(t => t.category === 'character').length;
-            document.getElementById('countWorld').textContent = allTemplates.filter(t => t.category === 'world').length;
+            document.getElementById('countStyle').textContent = templates.length;
             document.getElementById('countCustom').textContent = customTemplates.length;
         }
 
@@ -1026,37 +980,77 @@
         // ===== 创建模板 =====
         function showCreateTemplateModal() {
             document.getElementById('newTemplateName').value = '';
-            document.getElementById('newTemplateCategory').value = 'custom';
             document.getElementById('newTemplateContent').value = '';
+            const fi = document.getElementById('newTemplateFile');
+            if (fi) fi.value = '';
             document.getElementById('createModal').classList.add('show');
+        }
+
+        // 从本地文件读取并预填（新建弹窗内）
+        function handleTemplateFile(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = (e.target.result || '').trim();
+                if (!text) { showToast('文件内容为空', 'error'); return; }
+                document.getElementById('newTemplateContent').value = text;
+                document.getElementById('newTemplateName').value = file.name.replace(/\.[^.]+$/, '');
+                showToast('已读取：' + file.name);
+            };
+            reader.onerror = function() { showToast('文件读取失败', 'error'); };
+            reader.readAsText(file);
+        }
+
+        // 「我的模板」中直接上传本地文件并导入
+        function addCustomTemplateFromFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = (e.target.result || '').trim();
+                if (!text) { showToast('文件内容为空', 'error'); return; }
+                customTemplates.push({
+                    id: Date.now(),
+                    name: file.name.replace(/\.[^.]+$/, ''),
+                    category: 'custom',
+                    description: '本地上传模板',
+                    preview: text,
+                    usage: 0,
+                    badge: null
+                });
+                saveToStorage();
+                renderTemplates();
+                updateCounts();
+                showToast('已导入：' + file.name);
+            };
+            reader.onerror = function() { showToast('文件读取失败', 'error'); };
+            reader.readAsText(file);
         }
 
         function saveNewTemplate() {
             const name = document.getElementById('newTemplateName').value.trim();
-            const category = document.getElementById('newTemplateCategory').value;
             const content = document.getElementById('newTemplateContent').value.trim();
 
             if (!name || !content) {
-                showToast('请填写完整信息', 'error');
+                showToast('请填写模板名称与内容', 'error');
                 return;
             }
 
-            const newTemplate = {
+            customTemplates.push({
                 id: Date.now(),
                 name: name,
-                category: category,
-                description: '自定义模板',
+                category: 'custom',
+                description: '本地/手动模板',
                 preview: content,
                 usage: 0,
                 badge: null
-            };
+            });
 
-            customTemplates.push(newTemplate);
             saveToStorage();
             renderTemplates();
             updateCounts();
             closeModal('createModal');
-            showToast('模板创建成功');
+            showToast('已保存到「我的模板」');
         }
 
         // ===== 工具函数 =====
@@ -1101,11 +1095,18 @@
                 } catch(e) {}
             }
 
-            const savedTemplates = localStorage.getItem('sagebook_templates');
-            if (savedTemplates) {
-                try {
-                    templates = JSON.parse(savedTemplates);
-                } catch(e) {}
+            // 内置「写作风格」模板：版本升级则重置为最新种子，保证老用户也能看到新模版
+            const savedVer = localStorage.getItem('sagebook_templates_version');
+            if (savedVer !== TEMPLATES_VERSION) {
+                localStorage.setItem('sagebook_templates', JSON.stringify(templates));
+                localStorage.setItem('sagebook_templates_version', TEMPLATES_VERSION);
+            } else {
+                const savedTemplates = localStorage.getItem('sagebook_templates');
+                if (savedTemplates) {
+                    try {
+                        templates = JSON.parse(savedTemplates);
+                    } catch(e) {}
+                }
             }
         }
     </script>
