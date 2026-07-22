@@ -63,6 +63,14 @@
         .result h4 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
         .result hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
+        /* 用途导引 */
+        .use-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(218px, 1fr)); gap: 14px; }
+        .use-card { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        .use-card.use-wide { grid-column: 1 / -1; }
+        .use-ico { font-size: 22px; }
+        .use-h { font-size: 15px; font-weight: 700; margin: 8px 0 6px; color: var(--text-primary); }
+        .use-b { font-size: 13px; color: var(--text-secondary); line-height: 1.75; }
+
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 200; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .footer { text-align: center; padding: 30px 20px; font-size: 13px; color: var(--text-secondary); border-top: 1px solid var(--border); margin-top: 30px; }
@@ -80,7 +88,7 @@
     <div class="container">
         <div class="header">
             <div class="title">📖 拆书技能</div>
-            <div class="subtitle">拆解优质小说，萃取结构与节奏配方 · 输出「章节骨架表 + 阶段规划」写作模板</div>
+            <div class="subtitle">拆完之后拿去干什么：给自己体检 · 偷师爆款 · 当新书素材库 · 给 AI 写书当锚 · 研究教学</div>
             <nav class="nav">
                 <a href="index.html" class="nav-link">🏠 首页</a>
                 <a href="main-editor.html" class="nav-link">编辑器</a>
@@ -113,6 +121,39 @@
             <div class="hint">「本地速览」无需联网，给出字数 / 章节 / 对话占比等基础统计；「AI 拆书」把文本拆成结构配方，并用内置技能渲染成「章节骨架表 + 阶段规划」写作模板，需先在 <a href="settings.html" style="color:var(--accent)">设置</a> 配置本地 Ollama 或云端模型。</div>
         </div>
 
+        <!-- 拆完之后怎么用 -->
+        <div class="panel use-panel">
+            <div class="panel-title">🧭 拆完之后，拿去干什么？</div>
+            <div class="use-grid">
+                <div class="use-card">
+                    <div class="use-ico">🩺</div>
+                    <div class="use-h">给自己的书写「体检」</div>
+                    <div class="use-b">写到一半拆一遍：看「多章节奏 / 单章节奏」哪几章全是铺垫没爆点、爽点密度是否前密后断、悬念钩子分布是否留得住人——用数据代替「感觉这章不对劲」。</div>
+                </div>
+                <div class="use-card">
+                    <div class="use-ico">🔬</div>
+                    <div class="use-h">拆解爆款，偷师叙事机制</div>
+                    <div class="use-b">拆一本卖得好的对标书，重点看「循环公式」（危机→探查→加点→验证→收获→更高威胁）——这是可复用的「爽文引擎」，抄节奏配方不抄剧情；再学人家的「压抑—爆发」间距。</div>
+                </div>
+                <div class="use-card">
+                    <div class="use-ico">📚</div>
+                    <div class="use-h">当新书构思的「素材库」</div>
+                    <div class="use-b">拆完的章纲、故事线、片段、爽点本身就是结构化素材：主线 / 支线结构直接套、循环公式当骨架填新内容、亮点 / 梗当参考，起点比空文档高得多。</div>
+                </div>
+                <div class="use-card">
+                    <div class="use-ico">🧷</div>
+                    <div class="use-h">给 AI 写书当「不跑偏的锚」</div>
+                    <div class="use-b">把主线 / 支线 / 循环公式喂回写作模型，等于给它一份「总谱」：每章对齐整体结构，防止人设崩、伏笔忘、节奏散——StoryAgent 产出的结构化大纲正是机器能读的那份。</div>
+                </div>
+                <div class="use-card use-wide">
+                    <div class="use-ico">🔭</div>
+                    <div class="use-h">研究 / 教学</div>
+                    <div class="use-b">拆一百本同类型书（系统文、种田文…），归纳类型叙事共性；或讲课时用「什么是好的章节节奏」当样例。把「这本书为什么好看」从玄学变成可分析的配方。</div>
+                </div>
+            </div>
+            <div class="hint" style="margin-top:14px;">工具实际产出：<b>章纲</b>（章节循环单元）· <b>节奏</b>（多章 / 单章）· <b>故事线 &amp; 悬念</b>（阶段核心悬念 / 情绪曲线）· <b>爽点</b>（阶段爽点组合）· <b>循环公式</b>（底层引擎）· <b>主线 / 支线</b>（变量轴）· <b>片段 &amp; 亮点</b>（高潮章节摘录）。下面把小说贴进去，就能得到这份结构。</div>
+        </div>
+
         <!-- 本地速览 -->
         <div class="panel" id="localPanel" style="display:none;">
             <div class="panel-title">📊 本地速览</div>
@@ -131,7 +172,7 @@
         </div>
 
         <div class="footer">
-            <p>SAGE BOOK · 拆书技能 | 分析、总结、借鉴优质小说写法</p>
+            <p>SAGE BOOK · 拆书技能 | 拆得准，更要用得上：体检 · 偷师 · 素材库 · AI 锚 · 研究</p>
             <p class="footer-legal"><a href="copyright.html">版权声明</a> · <a href="privacy.html">隐私条款</a> · <a href="terms.html">使用条款</a></p>
         </div>
     </div>
