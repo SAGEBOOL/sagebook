@@ -885,6 +885,46 @@
 
         <!-- Main Content -->
         <div class="main-content">
+            <!-- 知识库关联卡片（只读联动） -->
+            <section id="kbLinkCard" style="margin:14px 0;padding:14px 16px;background:rgba(128,128,128,0.10);border:1px solid rgba(128,128,128,0.3);border-radius:10px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <span style="font-weight:600;color:var(--text-primary,#e8e6df);">📚 知识库（基础写作资料依据）</span>
+                    <a href="outline-editor.html" target="_blank" rel="noopener" style="font-size:13px;color:var(--accent,#d97757);text-decoration:none;">打开知识库编辑器 →</a>
+                </div>
+                <div id="kbLinkBody" style="font-size:13px;color:var(--text-secondary,#bbb);">加载中…</div>
+            </section>
+            <script src="knowledge.js"></script>
+            <script>
+            (function () {
+              function esc(s) {
+                return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+                  return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+                });
+              }
+              function renderKbLinkCard() {
+                var el = document.getElementById('kbLinkBody');
+                if (!el) return;
+                if (!window.SageKB) { el.textContent = '知识库模块未加载'; return; }
+                var kb = SageKB.loadKB();
+                var nodes = kb.outlineNodes || [];
+                var title = kb.outlineTitle || '';
+                if (!nodes.length) {
+                  el.innerHTML = '<span style="color:var(--text-tertiary,#999)">知识库暂无内容。请到「知识库编辑器」上传或创建你的写作资料，作为审查与 AI 写作的基础依据。</span>';
+                  return;
+                }
+                var html = '<div style="margin-bottom:8px;color:var(--text-tertiary,#aaa)">《' + (esc(title) || '未命名知识库') + '》共 ' + nodes.length + ' 个节点（卷/章/设定）— 已作为审查与 AI 写作的依据</div>';
+                html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+                nodes.slice(0, 14).forEach(function (n) {
+                  html += '<span style="font-size:12px;padding:3px 9px;background:rgba(128,128,128,0.18);border:1px solid rgba(128,128,128,0.3);border-radius:12px;color:var(--text-secondary,#ddd)">' + esc(n.title || '(未命名)') + '</span>';
+                });
+                if (nodes.length > 14) html += '<span style="font-size:12px;color:var(--text-tertiary,#999)">…</span>';
+                html += '</div>';
+                el.innerHTML = html;
+              }
+              if (document.readyState !== 'loading') renderKbLinkCard();
+              else document.addEventListener('DOMContentLoaded', renderKbLinkCard);
+            })();
+            </script>
             <div class="content-header">
                 <div class="content-title">角色管理</div>
                 <div style="display: flex; gap: 10px;">

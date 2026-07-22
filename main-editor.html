@@ -1313,7 +1313,7 @@ function updateKBStat() {
   if (!window.SageKB) { el.textContent = '🧠 知识库：未加载'; return; }
   const s = SageKB.getStats();
   if (!s.total) { el.textContent = '🧠 知识库：暂无数据'; return; }
-  el.innerHTML = `🧠 知识库已关联：角色 <b>${s.characters}</b> · 地点 <b>${s.locations}</b> · 势力 <b>${s.factions}</b> · 百科 <b>${s.encyclopedia}</b>`;
+  el.innerHTML = `🧠 知识库已关联：角色 <b>${s.characters}</b> · 地点 <b>${s.locations}</b> · 势力 <b>${s.factions}</b> · 百科 <b>${s.encyclopedia}</b> · 大纲节点 <b>${s.outline}</b>`;
 }
 
 // 客户端轻量一致性预扫描（零网络），结果写入审查面板
