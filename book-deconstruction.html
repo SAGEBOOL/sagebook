@@ -62,6 +62,15 @@
         .tpl-table tbody tr:nth-child(even) { background: rgba(128,128,128,0.05); }
         .result h4 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
         .result hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+        /* 折叠的「填空表」 */
+        .tpl-details { margin: 14px 0; border: 1px solid var(--border); border-radius: 8px; background: rgba(128,128,128,0.04); }
+        .tpl-details > summary { cursor: pointer; padding: 10px 14px; font-size: 13px; font-weight: 700; color: var(--text-secondary); user-select: none; }
+        .tpl-details > summary:hover { color: var(--text-primary); }
+        .tpl-details[open] > summary { border-bottom: 1px solid var(--border); }
+        .tpl-details > table, .tpl-details > .hint { margin: 12px 14px; width: calc(100% - 28px); }
+        /* AI 结果高亮脉冲 */
+        @keyframes kbPulse { 0% { box-shadow: 0 0 0 0 rgba(217,119,87,0.0); } 30% { box-shadow: 0 0 0 4px rgba(217,119,87,0.45); } 100% { box-shadow: 0 0 0 0 rgba(217,119,87,0.0); } }
+        .panel.kb-flash { animation: kbPulse 1.2s ease-out 1; border-color: var(--accent); }
 
         /* 用途导引 */
         .use-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(218px, 1fr)); gap: 14px; }
@@ -127,7 +136,24 @@
             <div class="hint">「本地速览」无需联网，给出字数 / 章节 / 对话占比等基础统计；「AI 拆书」把文本拆成结构配方，并用内置技能渲染成「章节骨架表 + 阶段规划」写作模板，需先在 <a href="settings.html" style="color:var(--accent)">设置</a> 配置本地 Ollama 或云端模型。</div>
         </div>
 
-        <!-- 拆完之后怎么用 -->
+        <!-- 本地速览（已移至结果流顶部，见下方 #localPanel） -->
+        <div class="panel" id="localPanel" style="display:none;">
+            <div class="panel-title">📊 本地速览</div>
+            <div class="stats-grid" id="localStats"></div>
+        </div>
+
+        <!-- AI 结果（技能输出结构：章节骨架表 + 阶段规划） -->
+        <div class="panel" id="aiPanel" style="display:none;">
+            <div class="panel-title">🤖 拆书 · 写作模板 <span style="font-size:12px;font-weight:400;color:var(--text-tertiary);">（章节骨架表 + 阶段规划 · 仅供学习与借鉴，请尊重原作版权）</span></div>
+            <div id="aiStatus"></div>
+            <div id="aiResult" class="result" style="margin-top:12px;"></div>
+            <div class="row" id="aiActions" style="display:none;">
+                <button class="btn" onclick="copyResult()">📋 复制模板</button>
+                <button class="btn" onclick="downloadResult()">⬇️ 下载 .md</button>
+            </div>
+        </div>
+
+        <!-- 拆完之后怎么用（移到结果区下方，解除对工具流的割裂） -->
         <div class="panel use-panel">
             <div class="panel-title">🧭 拆完之后，拿去干什么？</div>
             <div class="use-grid">
@@ -157,24 +183,7 @@
                     <div class="use-b">拆一百本同类型书（系统文、种田文…），归纳类型叙事共性；或讲课时用「什么是好的章节节奏」当样例。把「这本书为什么好看」从玄学变成可分析的配方。</div>
                 </div>
             </div>
-            <div class="hint" style="margin-top:14px;">工具实际产出：<b>章纲</b>（章节循环单元）· <b>节奏</b>（多章 / 单章）· <b>故事线 &amp; 悬念</b>（阶段核心悬念 / 情绪曲线）· <b>爽点</b>（阶段爽点组合）· <b>循环公式</b>（底层引擎）· <b>主线 / 支线</b>（变量轴）· <b>片段 &amp; 亮点</b>（高潮章节摘录）。下面把小说贴进去，就能得到这份结构。</div>
-        </div>
-
-        <!-- 本地速览 -->
-        <div class="panel" id="localPanel" style="display:none;">
-            <div class="panel-title">📊 本地速览</div>
-            <div class="stats-grid" id="localStats"></div>
-        </div>
-
-        <!-- AI 结果（技能输出结构：章节骨架表 + 阶段规划） -->
-        <div class="panel" id="aiPanel" style="display:none;">
-            <div class="panel-title">🤖 拆书 · 写作模板 <span style="font-size:12px;font-weight:400;color:var(--text-tertiary);">（章节骨架表 + 阶段规划 · 仅供学习与借鉴，请尊重原作版权）</span></div>
-            <div id="aiStatus"></div>
-            <div id="aiResult" class="result" style="margin-top:12px;"></div>
-            <div class="row" id="aiActions" style="display:none;">
-                <button class="btn" onclick="copyResult()">📋 复制模板</button>
-                <button class="btn" onclick="downloadResult()">⬇️ 下载 .md</button>
-            </div>
+            <div class="hint" style="margin-top:14px;">上面把小说贴进去拆完，就能得到这份结构：<b>章纲</b>（章节循环单元）· <b>节奏</b>（多章 / 单章）· <b>故事线 &amp; 悬念</b>（阶段核心悬念 / 情绪曲线）· <b>爽点</b>（阶段爽点组合）· <b>循环公式</b>（底层引擎）· <b>主线 / 支线</b>（变量轴）· <b>片段 &amp; 亮点</b>（高潮章节摘录）。</div>
         </div>
     </div>
 
@@ -368,7 +377,11 @@
                 out.innerHTML=renderTemplateHTML(data,'AI 拆书');
                 st.innerHTML='<div class="note" style="color:var(--success)">✅ 拆书完成，已按技能结构生成「章节骨架表 + 阶段规划」写作模板。仅供学习与借鉴，请尊重原作版权。</div>';
                 document.getElementById('aiActions').style.display='flex';
-                panel.scrollIntoView({behavior:'smooth',block:'start'});
+                runLocalStats(); // 本地速览作为结果流头部，与 AI 模板形成统一「拆书结果」
+                const top=document.getElementById('localPanel');
+                top.scrollIntoView({behavior:'smooth',block:'start'});
+                panel.classList.add('kb-flash');
+                setTimeout(function(){ panel.classList.remove('kb-flash'); }, 1300);
             }catch(e){
                 st.innerHTML='<div class="note" style="color:var(--error)">⚠️ '+esc(e.message)+'</div>';
             }finally{ btn.disabled=false; }
@@ -531,12 +544,13 @@
                 steps.forEach((s,i)=>{ L.push('<tr><td>'+(i+1)+'</td><td>'+esc(s._name||'')+'</td><td>'+esc(s['叙事功能']||'')+'</td><td>'+esc(s['触发信号']||'')+'</td><td>'+esc(s['读者回报']||'')+'</td><td>☐</td></tr>'); });
                 L.push('</tbody></table>');
             }
-            L.push('<h4>章节规划表（写新书时逐章填）</h4>');
+            L.push('<details class="tpl-details"><summary>📝 章节规划表（写新书时逐章填 · 点击展开）</summary>');
             L.push('<table class="tpl-table"><thead><tr><th>章号</th><th>对应循环步骤</th><th>危机/触发信号</th><th>主体动作(叙事功能)</th><th>读者回报(爽点)</th><th>章末钩子</th></tr></thead><tbody>');
             data.micro.segment_cycle_map.slice(0,2).forEach(sm=>{ L.push('<tr><td>（例）'+esc(sm.chapters||'')+'</td><td>'+esc(sm.text||'')+'</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>'); });
             for(let i=0;i<12;i++) L.push('<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
             L.push('</tbody></table>');
             L.push('<p class="hint">用法：每写一章，先在「对应循环步骤」选本环，再填信号/动作/爽点/钩子。钩子空着 = 这章留不住人。</p>');
+            L.push('</details>');
             L.push('<hr>');
             L.push('<h3>二、阶段规划（整本书进度条）</h3>');
             const stages=data.macro.stage;
@@ -548,11 +562,12 @@
                 });
                 L.push('</tbody></table>');
             }
-            L.push('<h4>你的书·阶段规划（照上表结构填）</h4>');
+            L.push('<details class="tpl-details"><summary>📝 你的书·阶段规划（照上表结构填 · 点击展开）</summary>');
             L.push('<table class="tpl-table"><thead><tr><th>阶段</th><th>章节范围</th><th>核心剧情</th><th>主线变化</th><th>支线</th><th>爽点组合</th><th>阶段钩子</th><th>循环变体</th><th>等级/身份</th><th>资源</th><th>危机层级</th><th>阶段回报</th></tr></thead><tbody>');
             for(let i=0;i<5;i++) L.push('<tr>'+'<td></td>'.repeat(12)+'</tr>');
             L.push('</tbody></table>');
             L.push('<p class="hint">用法：动笔前先排好阶段。前 1/3 铺垫期、中段爽点密集期、后期开新地图/收线——提前定好进度条，避免写到一半节奏塌了。</p>');
+            L.push('</details>');
             if(data.micro.variable_axes.length){
                 L.push('<h4>变量轴（不同阶段替换的"料"）</h4>');
                 L.push('<ul>'+data.micro.variable_axes.map(ax=>'<li><strong>'+esc(ax._name||'')+'</strong>：'+esc(ax['变化方式']||'')+'（例：'+esc(ax['例子']||'')+'）</li>').join('')+'</ul>');
