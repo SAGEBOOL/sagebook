@@ -25,7 +25,7 @@ page_icons = {
     'ai-suite.html': '🤖 AI',
     'knowledge-graph.html': '🕸️ 图谱',
     'template-gallery.html': '📚 模板',
-    'outline-editor.html': '📋 大纲',
+    'outline-editor.html': '📋 知识库',
     'settings.html': '⚙️ 设置',
 }
 

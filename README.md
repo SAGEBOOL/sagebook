@@ -32,7 +32,7 @@ npx serve
 - **🤖 AI 深度集成** - AI 辅助写作、写作教练
 - **🕸️ 知识图谱** - 可视化故事结构
 - **📚 模板库** - 12+ 写作模板
-- **📋 大纲编辑器** - 树形大纲结构
+- **📋 知识库编辑器** - 树形知识库结构
 - **⚙️ 设置** - 配置 AI 模型
 
 ## 🛠️ 技术栈
@@ -55,7 +55,7 @@ npx serve
 | `ai-suite.html` | AI 深度集成 |
 | `knowledge-graph.html` | 知识图谱 |
 | `template-gallery.html` | 模板库 |
-| `outline-editor.html` | 大纲编辑器 |
+| `outline-editor.html` | 知识库编辑器 |
 | `platform-tools.html` | 平台工具 |
 | `settings.html` | 设置 |
 

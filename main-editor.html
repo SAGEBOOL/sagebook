@@ -736,7 +736,7 @@ body {
 • 续写 / 改写当前章节
 • 讨论角色设定和剧情
 • 检查连贯性和逻辑错误
-• 生成章节大纲
+• 生成章节知识库
 
 有什么需要帮忙的吗？</div>
             </div>
@@ -772,8 +772,8 @@ body {
           <div class="skill-status"><span class="status-dot status-ready"></span><span>就绪</span></div>
         </div>
         <div class="skill-card" onclick="runSkill('outline-generator')">
-          <div class="skill-name">🗺 大纲生成器</div>
-          <div class="skill-desc">基于当前内容自动生成 / 更新章节大纲</div>
+          <div class="skill-name">🗺 知识库生成器</div>
+          <div class="skill-desc">基于当前内容自动生成 / 更新章节知识库</div>
           <div class="skill-status"><span class="status-dot status-ready"></span><span>就绪</span></div>
         </div>
       </div>
@@ -795,7 +795,7 @@ body {
         </div>
         <div class="template-item" onclick="insertTemplate('outline')">
           <div class="t-icon outline">🗺</div>
-          <div><div style="font-weight:600;color:var(--fg-primary);">大纲模板</div><div style="font-size:var(--font-size-xs);color:var(--fg-muted);">含卷次 / 章节 / 节点事件</div></div>
+          <div><div style="font-weight:600;color:var(--fg-primary);">知识库模板</div><div style="font-size:var(--font-size-xs);color:var(--fg-muted);">含卷次 / 章节 / 节点事件</div></div>
         </div>
       </div>
 
@@ -1230,7 +1230,7 @@ const SKILL_PROMPTS = {
   'consistency-check': '请检查以下小说内容中角色、地点、设定在上下文里的一致性，列出任何前后矛盾。',
   'name-similarity': '请检测以下小说内容中过于相似的角色名/地名（防止读者混淆），列出建议。',
   'deai': '请去除以下文字的「AI 味」：套路化表达、空洞修饰、机器腔句式，改写为自然流畅的中文，保持原意。只输出改写结果。',
-  'outline-generator': '请基于以下内容提炼章节大纲：分条列出关键情节点与转折。'
+  'outline-generator': '请基于以下内容提炼章节知识库：分条列出关键情节点与转折。'
 };
 
 async function runSkill(skill) {
@@ -1264,7 +1264,7 @@ async function runSkill(skill) {
 }
 
 function skillName(s) {
-  return ({ 'writing-auditor':'写作审查器', 'consistency-check':'跨章一致性', 'name-similarity':'名称相似度', 'deai':'去 AI 味', 'outline-generator':'大纲生成器' })[s] || s;
+  return ({ 'writing-auditor':'写作审查器', 'consistency-check':'跨章一致性', 'name-similarity':'名称相似度', 'deai':'去 AI 味', 'outline-generator':'知识库生成器' })[s] || s;
 }
 
 // ============================================
@@ -2499,7 +2499,7 @@ const templates = {
   scene: `## 场景：[场景名称]\n\n**地点**：[地点描述]\n**时间**：[时间节点]\n**POV**：[视角角色]\n**冲突**：[核心冲突]\n\n---\n\n[场景正文]\n\n---\n**节点**：[关键转折]`,
   chapter: `# 第XX章 · [章节标题]\n\n> [题记/引言]\n\n---\n\n## 上 · [小标题]\n\n[正文]\n\n···\n\n## 下 · [小标题]\n\n[正文]\n\n---\n**字数**：X,XXX`,
   char: `## 角色：[姓名]\n\n**设定**：[外貌/身份/能力]\n**弧光**：[成长轨迹]\n**关键对话**：[代表性台词]`,
-  outline: `## 大纲\n\n**卷次**：[第X卷]\n**章节**：[CHxx-CHyy]\n**节点事件**：\n1. [事件一]\n2. [事件二]\n3. [事件三]`
+  outline: `## 知识库\n\n**卷次**：[第X卷]\n**章节**：[CHxx-CHyy]\n**节点事件**：\n1. [事件一]\n2. [事件二]\n3. [事件三]`
 };
 
 function insertTemplate(type) {

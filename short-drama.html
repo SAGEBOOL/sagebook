@@ -200,12 +200,12 @@
             <div class="card-title">📝 一句话创意</div>
             <textarea id="premise" rows="3" placeholder="例：女主重生回到被渣男害死前一夜，用前世记忆逆袭打脸，短剧爽点密集，共 6 场"></textarea>
             <div class="row">
-                <button class="btn btn-primary" id="genScriptBtn" onclick="genScript()">🤖 生成大纲与分镜草稿</button>
+                <button class="btn btn-primary" id="genScriptBtn" onclick="genScript()">🤖 生成知识库与分镜草稿</button>
                 <button class="btn" onclick="fillDemoScript()">✨ 填充示例剧本</button>
             </div>
             <div id="scriptStatus"></div>
-            <div class="card-title" style="margin-top:14px">📜 大纲 / 分镜文本</div>
-            <div id="scriptOut" class="note" style="white-space:pre-wrap;line-height:1.7">（点击「生成大纲」调用你已配置的 AI，或「填充示例剧本」快速体验）</div>
+            <div class="card-title" style="margin-top:14px">📜 知识库 / 分镜文本</div>
+            <div id="scriptOut" class="note" style="white-space:pre-wrap;line-height:1.7">（点击「生成知识库」调用你已配置的 AI，或「填充示例剧本」快速体验）</div>
         </div>
     </div>
 
@@ -451,10 +451,10 @@ async function genScript(){
   const premise=document.getElementById('premise').value.trim();
   if(!premise){ toast('先填一句话创意'); return; }
   const btn=document.getElementById('genScriptBtn'); const st=document.getElementById('scriptStatus');
-  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在生成大纲与分镜…</div>';
+  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在生成知识库与分镜…</div>';
   try{
-    const sys='你是短剧/漫剧编剧助手。根据用户创意，输出紧凑的短剧大纲，并拆分为若干场次（建议4-8场）。用 JSON 输出：{ "outline":"大纲文字(150字内)", "shots":[ {"num":"EP01-SC01","image_prompt":"画面/角色视觉提示词(英文或中文均可，含风格)","animation_prompt":"运镜/动效提示词"} ] }。只输出 JSON，不要解释。';
-    // (A) 上下文注入：让生成的大纲/场次贴合既有角色与世界观
+    const sys='你是短剧/漫剧编剧助手。根据用户创意，输出紧凑的短剧知识库，并拆分为若干场次（建议4-8场）。用 JSON 输出：{ "outline":"大纲文字(150字内)", "shots":[ {"num":"EP01-SC01","image_prompt":"画面/角色视觉提示词(英文或中文均可，含风格)","animation_prompt":"运镜/动效提示词"} ] }。只输出 JSON，不要解释。';
+    // (A) 上下文注入：让生成的知识库/场次贴合既有角色与世界观
     let userMsg=premise;
     if(window.SageKB){
       userMsg+='\n\n【知识库设定（请贴合，已有角色/地点/世界观勿凭空冲突）】\n'+SageKB.buildKBContext({charLimit:40,clip:60});
@@ -559,7 +559,7 @@ async function genChars(){
   try{
     const shotsCtx = state.shots.length
       ? state.shots.map(s=>s.num+': 生图='+(s.imagePrompt||'')+'; 动效='+(s.animationPrompt||'')).join('\n')
-      : (state.script ? '【故事大纲】'+state.script : '（暂无分镜，请基于通用短剧/漫剧生成，风格：魔幻复古国风）');
+      : (state.script ? '【故事知识库】'+state.script : '（暂无分镜，请基于通用短剧/漫剧生成，风格：魔幻复古国风）');
     const sys='你是资深漫剧风格角色设计师与AI绘图提示词专家，擅长从分镜中提炼反复出现的主要角色，并产出风格统一、可直接用于文生图的英文角色提示词。';
     // (A) 上下文注入：避免与知识库已有角色重名/漂移世界观
     let kbNote='';

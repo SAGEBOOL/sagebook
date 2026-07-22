@@ -190,7 +190,7 @@
       <p>与「开始写作」同款玻璃容器，位于其下方，点击进入 <a class="link" href="short-drama.html">短剧 / 漫剧创作工作台</a>。用于把创意快速拆成「剧本 → 人物 → 分镜 → 生图 → 生视频」的短剧 / 漫剧生产流，详见第十节。</p>
 
       <h3>「更多创作工具」可展开板块</h3>
-      <p>与「开始写作」同款玻璃容器，点击后向下展开 10 个工具入口（写作技能、大纲、角色、世界观、知识图谱、写作分析、平台工具、AI 集成、模板库、设置）。再点一次收起。</p>
+      <p>与「开始写作」同款玻璃容器，点击后向下展开 10 个工具入口（写作技能、知识库、角色、世界观、知识图谱、写作分析、平台工具、AI 集成、模板库、设置）。再点一次收起。</p>
 
       <h3>「官方使用帮助说明」容器</h3>
       <p>「三步开始」下方的同款玻璃容器，点击直达本说明文档（<code>docs.html</code>），随时回看功能用法。</p>
@@ -243,9 +243,9 @@
       <h3>右侧 · AI 面板（5 个标签页）</h3>
       <table>
         <tr><th>标签</th><th>功能</th></tr>
-        <tr><td>💬 AI 助手</td><td>对话式协作：续写/改写当前章、讨论角色与剧情、检查逻辑、生成大纲。输入框 <span class="kbd">Enter</span> 发送，<span class="kbd">Shift+Enter</span> 换行。</td></tr>
+        <tr><td>💬 AI 助手</td><td>对话式协作：续写/改写当前章、讨论角色与剧情、检查逻辑、生成知识库。输入框 <span class="kbd">Enter</span> 发送，<span class="kbd">Shift+Enter</span> 换行。</td></tr>
         <tr><td>⚡ 技能</td><td>一键运行 5 项内置技能（见下），结果写入「✅ 审查」面板。</td></tr>
-        <tr><td>📋 模板</td><td>点击插入：场景模板、章节模板、角色卡模板、大纲模板。</td></tr>
+        <tr><td>📋 模板</td><td>点击插入：场景模板、章节模板、角色卡模板、知识库模板。</td></tr>
         <tr><td>✅ 审查</td><td>展示「🔍 审查」与各项技能的运行结果。</td></tr>
         <tr><td>⚙ 设置</td><td>快速切换 AI 引擎（本地 Ollama / 云端）、地址、模型、API Key，与全局设置联动。</td></tr>
       </table>
@@ -282,7 +282,7 @@
         <tr><td>🔗 跨章一致性检查</td><td>检查角色、地点、设定在相邻章节间是否前后一致。</td></tr>
         <tr><td>🔍 名称相似度检查</td><td>检测过于相似的角色名/地名，防止读者混淆。</td></tr>
         <tr><td>🧹 去 AI 味</td><td>去除机器腔与套路表达，回归自然笔触。</td></tr>
-        <tr><td>🗺 大纲生成器</td><td>基于当前内容自动生成/更新章节大纲。</td></tr>
+        <tr><td>🗺 知识库生成器</td><td>基于当前内容自动生成/更新章节知识库。</td></tr>
       </table>
       <div class="example">
         <div class="ex-lbl">📌 举例 · 去 AI 味（编辑器内）</div>
@@ -368,7 +368,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
         <tr><td>✨</td><td><b>润色</b></td><td>文学性打磨，提升流畅度与节奏，不改原意与语气。</td></tr>
         <tr><td>🔍</td><td><b>扩写</b></td><td>增加感官细节、心理与氛围，篇幅扩至 1.5–2 倍，不水字数。</td></tr>
         <tr><td>➡️</td><td><b>续写</b></td><td>顺承文风往下写 200–300 字，自然推进情节。</td></tr>
-        <tr><td>📋</td><td><b>大纲生成</b></td><td>从片段提炼章节大纲（卷/章标题 + 要点 + 可展开支线）。</td></tr>
+        <tr><td>📋</td><td><b>知识库生成</b></td><td>从片段提炼章节知识库（卷/章标题 + 要点 + 可展开支线）。</td></tr>
         <tr><td>⚔️</td><td><b>矛盾冲突</b></td><td>挖掘文本张力，给出 3–5 个加强冲突/反转的切入点。</td></tr>
         <tr><td>🌍</td><td><b>设定生成</b></td><td>由片段反向推导世界观（地理/势力/力量体系/规则/历史）。</td></tr>
         <tr><td>💬</td><td><b>对话生成</b></td><td>创作自然、有潜台词与观点冲突的对话（2–4 人）。</td></tr>
@@ -405,7 +405,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
       </div>
 
       <div class="example">
-        <div class="ex-lbl">📋 大纲生成</div>
+        <div class="ex-lbl">📋 知识库生成</div>
         <div class="ex-row after"><span class="ex-tag">输入</span><pre>林默在祠堂发现裂隙，灰雾低语，归尘之力初醒。</pre></div>
         <div class="ex-row after"><span class="ex-tag">输出</span><pre>第一卷 · 裂隙初醒
   · 第1章 祠堂的门：林默返乡，推开尘封祠堂
@@ -493,7 +493,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
       <h2>七、构思 / 分析 / 发布 工具</h2>
       <p>首页「更多创作工具」展开后进入的 8 个独立模块，各自专注一类创作任务：</p>
       <div class="grid2">
-        <div class="tile"><div class="t">📋 大纲编辑器</div><div class="d">规划卷次、章节、节点事件的结构化大纲。</div></div>
+        <div class="tile"><div class="t">📋 知识库编辑器</div><div class="d">规划卷次、章节、节点事件的结构化知识库。</div></div>
         <div class="tile"><div class="t">👤 角色管理</div><div class="d">建立并维护人物档案、关系与成长弧光。</div></div>
         <div class="tile"><div class="t">🌍 世界观管理</div><div class="d">沉淀地理、势力、力量体系与社会规则等设定。</div></div>
         <div class="tile"><div class="t">🕸️ 知识图谱</div><div class="d">以图谱形式呈现人物、地点、事件之间的关联。</div></div>
@@ -505,7 +505,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
 
       <h3>📌 各工具使用示例</h3>
       <div class="example">
-        <div class="ex-lbl">📋 大纲编辑器</div>
+        <div class="ex-lbl">📋 知识库编辑器</div>
         <div class="ex-row after"><span class="ex-tag">操作</span>新建「第一卷 · 裂隙初醒」→ 加章「第1章 祠堂的门 / 第2章 地底的裂缝」→ 每章填「目标 / 冲突 / 钩子」三栏。例如第2章：目标=裂隙现身，冲突=灰雾低语诱主角靠近，钩子=归尘之力误触觉醒。</div>
       </div>
       <div class="example">
@@ -536,7 +536,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
         <div class="ex-lbl">📚 模板库</div>
         <div class="ex-row after"><span class="ex-tag">操作</span>挑「章节开头模板」→ 一键插入写作区 → 模板含「场景锚点 / 冲突切入点 / 本章钩子」占位 → 填好即是一章骨架，再交给 AI 续写 flesh out。</div>
       </div>
-      <div class="card tip"><span class="lbl tip">小建议</span>先在「大纲编辑器 / 角色管理 / 世界观管理」打底，再用主编辑器成稿，最后用「写作技能页」统一润色与审查，工作流最顺。</div>
+      <div class="card tip"><span class="lbl tip">小建议</span>先在「知识库编辑器 / 角色管理 / 世界观管理」打底，再用主编辑器成稿，最后用「写作技能页」统一润色与审查，工作流最顺。</div>
     </section>
 
     <!-- 八 -->
@@ -633,7 +633,7 @@ Token：你的 Gitee 私人令牌
       <h3>五个标签页</h3>
       <table>
         <tr><th>标签</th><th>功能</th></tr>
-        <tr><td>📝 剧本 / 提示词</td><td>点「🤖 生成大纲与分镜草稿」调用你已配置的 AI，产出故事大纲 + 多场次草稿；或点「✨ 填充示例剧本」快速体验。每场含文生图 / 动效提示词，兼容 <code>image_prompt</code> 与 <code>imagePrompt</code> 两种字段名。</td></tr>
+        <tr><td>📝 剧本 / 提示词</td><td>点「🤖 生成知识库与分镜草稿」调用你已配置的 AI，产出故事知识库 + 多场次草稿；或点「✨ 填充示例剧本」快速体验。每场含文生图 / 动效提示词，兼容 <code>image_prompt</code> 与 <code>imagePrompt</code> 两种字段名。</td></tr>
         <tr><td>👤 人物设定</td><td>「🎨 人物形象设定生成（定型形象图片）」：根据剧本 / 分镜提炼 4–6 个反复出现的主要角色，统一魔幻 / 修仙 / 玄幻 / 复古国风动画风格，生成可复制的英文角色绘图提示词（定型形象）。约束词可自由编辑。</td></tr>
         <tr><td>🎞️ 分镜 · 场次</td><td>逐场查看 / 编辑分镜；每场可独立调整文生图与动效提示词。</td></tr>
         <tr><td>🖼️ AI 生图</td><td>选择场次生成该场视觉图；本页不调用外部接口，生成本地占位演示图（复用 WorkRally 分镜结构）。</td></tr>
