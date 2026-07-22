@@ -55,7 +55,7 @@
         .result strong { color: var(--accent-light); }
         .result p { margin: 6px 0; }
         .result code, .note code { background: var(--bg-hover); padding: 1px 7px; border-radius: 5px; font-size: 12px; }
-        #tplOutput { white-space: normal; }
+        #aiResult { white-space: normal; }
         .tpl-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12.5px; }
         .tpl-table th, .tpl-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
         .tpl-table th { background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 700; }
@@ -80,7 +80,7 @@
     <div class="container">
         <div class="header">
             <div class="title">📖 拆书技能</div>
-            <div class="subtitle">拆解优质小说，萃取可借鉴的写法 · 内容总结 / 结构拆解 / 技巧借鉴</div>
+            <div class="subtitle">拆解优质小说，萃取结构与节奏配方 · 输出「章节骨架表 + 阶段规划」写作模板</div>
             <nav class="nav">
                 <a href="index.html" class="nav-link">🏠 首页</a>
                 <a href="main-editor.html" class="nav-link">编辑器</a>
@@ -108,9 +108,9 @@
             </div>
             <div class="row">
                 <button class="btn" id="localBtn" onclick="runLocalStats()">📊 本地速览（离线）</button>
-                <button class="btn btn-primary" id="aiBtn" onclick="aiDeconstruct()">🤖 AI 深度拆书</button>
+                <button class="btn btn-primary" id="aiBtn" onclick="aiDeconstruct()">🤖 AI 拆书（生成模板）</button>
             </div>
-            <div class="hint">「本地速览」无需联网，给出字数 / 章节 / 对话占比等基础统计；「AI 深度拆书」需先在 <a href="settings.html" style="color:var(--accent)">设置</a> 配置本地 Ollama 或云端模型。</div>
+            <div class="hint">「本地速览」无需联网，给出字数 / 章节 / 对话占比等基础统计；「AI 拆书」把文本拆成结构配方，并用内置技能渲染成「章节骨架表 + 阶段规划」写作模板，需先在 <a href="settings.html" style="color:var(--accent)">设置</a> 配置本地 Ollama 或云端模型。</div>
         </div>
 
         <!-- 本地速览 -->
@@ -119,39 +119,15 @@
             <div class="stats-grid" id="localStats"></div>
         </div>
 
-        <!-- AI 结果 -->
+        <!-- AI 结果（技能输出结构：章节骨架表 + 阶段规划） -->
         <div class="panel" id="aiPanel" style="display:none;">
-            <div class="panel-title">🤖 拆书报告 <span style="font-size:12px;font-weight:400;color:var(--text-tertiary);">（仅供学习与借鉴，请尊重原作版权）</span></div>
+            <div class="panel-title">🤖 拆书 · 写作模板 <span style="font-size:12px;font-weight:400;color:var(--text-tertiary);">（章节骨架表 + 阶段规划 · 仅供学习与借鉴，请尊重原作版权）</span></div>
             <div id="aiStatus"></div>
             <div id="aiResult" class="result" style="margin-top:12px;"></div>
             <div class="row" id="aiActions" style="display:none;">
-                <button class="btn" onclick="copyResult()">📋 复制报告</button>
+                <button class="btn" onclick="copyResult()">📋 复制模板</button>
+                <button class="btn" onclick="downloadResult()">⬇️ 下载 .md</button>
             </div>
-        </div>
-
-        <!-- 拆书大纲 → 写作模板（来自 story-outline-to-template 技能） -->
-        <div class="panel" id="tplInputPanel">
-            <div class="panel-title">📐 拆书大纲 → 写作模板</div>
-            <div class="note" style="margin-bottom:12px;">把 StoryAgent 拆标杆书产出的 <code>story_outline.md</code> 粘贴进来，一键转成「章节骨架表 + 阶段规划」写作模板。<strong>仅提炼结构与节奏，不抄剧情</strong>。不会用 StoryAgent？点「✨ 填入示例大纲」先体验效果。</div>
-            <textarea id="outlineText" class="editor-box" placeholder="在此粘贴 story_outline.md 内容（StoryAgent 拆解标杆书产出的结构化大纲）…"></textarea>
-            <div class="row">
-                <button class="btn" onclick="importOutline()">📂 导入文件</button>
-                <button class="btn" onclick="loadOutlineSample()">✨ 填入示例大纲</button>
-                <button class="btn" onclick="clearOutline()">🧹 清空</button>
-                <input type="file" id="outlineFile" accept=".txt,.md,.text" style="display:none" onchange="onOutlineFile(event)">
-            </div>
-            <div class="row">
-                <button class="btn btn-primary" id="tplBtn" onclick="genTemplate()">🤖 生成写作模板</button>
-            </div>
-        </div>
-
-        <div class="panel" id="tplPanel" style="display:none;">
-            <div class="panel-title">📐 写作模板（章节骨架 + 阶段规划）</div>
-            <div class="row" id="tplActions" style="display:none;">
-                <button class="btn" onclick="copyTemplate()">📋 复制模板</button>
-                <button class="btn" onclick="downloadTemplate()">⬇️ 下载 .md</button>
-            </div>
-            <div id="tplOutput" class="result" style="margin-top:12px;"></div>
         </div>
 
         <div class="footer">
@@ -255,25 +231,83 @@
             document.getElementById('localPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
         }
 
-        /* ============ AI 深度拆书 ============ */
-        const SYS_PROMPT = `你是一位资深文学编辑与写作教练。用户会贴入一段或整篇优质小说文本。请做"拆书"分析，帮助作者借鉴其写法。
-请用中文输出，严格按以下四级标题结构（不要输出标题以外的寒暄）：
+        /* ============ AI 拆书：产出技能要求的「拆书大纲」格式，再用技能渲染成模板 ============ */
+        const SYS_PROMPT = `你是一位资深"拆书专家"，擅长把优质网文 / 小说拆成可复用的「结构与节奏配方」（格式参照 StoryAgent 的 story_outline.md）。
+用户会贴入一段或整篇优质小说文本。请仔细阅读，提炼其**结构与节奏配方**（不是复述剧情），严格按下面的 Markdown 格式输出，不要输出任何前言、寒暄，也不要用代码块包裹：
 
-# 一、内容总结
-用 2-4 句话概括核心故事、主题与基调。
+# 故事大纲与细纲梳理
 
-# 二、结构拆解
-用"起·承·转·合"或"三幕"分析叙事结构，指出关键转折点与整体节奏。
+## 覆盖范围
+已入片段章节：第1-?章
+说明：基于用户提供的文本提炼。
 
-# 三、可借鉴技巧
-分点说明，每点给出原文片段与可学习的手法：
-- 人物塑造
-- 悬念设置
-- 节奏把控
-- 金句摘录（摘抄 1-3 句原文中出彩的表达）
+## 整体大纲
+一句话骨架：（用一句话概括这本书的核心循环 / 成长逻辑，例如"废柴少年绑定系统，靠X循环在多方势力夹缝中升级"）
 
-# 四、亮点与可优化
-该作的突出优点；以及作者若借鉴时需要注意或避免的地方。`;
+### 故事主线
+#### （主成长线名，如"主成长线"）
+剧情推进：（主线如何推进）
+爽点升级：（爽点如何递进）
+覆盖片段：1、2、3
+
+### 支线
+#### （支线名，如"红颜/情感支线"）
+类型：（情感/悬疑/势力…）
+功能：（该支线承担的作用）
+推进：（关系如何推进）
+回收或悬置：（是否已回收）
+
+### 剧情 + 爽点
+#### 第?-?章
+剧情：（这一段发生了什么）
+爽点：（读者爽点来自哪）
+读者获得感：（读者获得什么）
+后续钩子：（章末/段末钩子）
+
+### 阶段大纲
+#### （阶段名，如"蛰伏期"）
+章节：第?-?章
+核心剧情：（该阶段核心剧情）
+主线变化：（主角状态/地位变化）
+支线：（支线进展）
+爽点组合：（本阶段爽点组合）
+阶段钩子：（阶段结尾钩子）
+
+## 细纲/循环公式
+核心循环公式：（用"+"连接的循环步骤链，例如"危机发现 + 调查试探 + 修炼加点 + 暴力验证 + 资源收获 + 更高层威胁"）
+
+### 循环步骤
+#### （步骤名，如"危机发现"）
+叙事功能：（本环叙事功能）
+触发信号：（什么信号触发本环）
+读者回报：（读者获得什么爽点/情绪）
+
+### 变量轴
+#### （轴名，如"等级/境界"）
+变化方式：（如何随阶段变化）
+例子：（举例）
+
+### 阶段变体
+#### （阶段名，须与"阶段大纲"中的阶段名一致）
+章节：第?-?章
+循环变体：（本阶段循环公式的变体）
+等级/身份：（主角等级/身份）
+资源：（主角获得资源）
+危机层级：（对手/危机层级）
+阶段回报：（阶段回报）
+
+### 片段循环映射
+片段 1（第?-?章）：（循环步骤组合）。结果：（结果）。
+片段 2（第?-?章）：（循环步骤组合）。结果：（结果）。
+
+## 写作规律
+- （从这本书提炼 3-6 条可复用写作规律，如"每章末尾必须留钩子，否则追更断点"）
+
+硬性要求：
+1. 循环公式与循环步骤必须贴合这本小说，不要生搬硬套示例。
+2. 阶段大纲至少 2-3 个阶段；循环步骤 4-7 个。
+3. 字段名（叙事功能 / 触发信号 / 读者回报 / 核心剧情 / 主线变化 / 支线 / 爽点组合 / 阶段钩子 / 章节 / 循环变体 / 等级/身份 / 资源 / 危机层级 / 阶段回报 / 变化方式 / 例子）必须与上面完全一致，便于后续自动渲染成模板。
+4. 仅提炼结构与节奏，不抄剧情；提醒自己与用户：借鉴时请替换为自己的内容。`;
 
         async function aiDeconstruct(){
             const t=getText();
@@ -282,12 +316,14 @@
             const panel=document.getElementById('aiPanel'); const out=document.getElementById('aiResult');
             btn.disabled=true; panel.style.display='block'; out.innerHTML='';
             document.getElementById('aiActions').style.display='none';
-            st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在拆解文本，请稍候…</div>';
+            st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在拆书并渲染写作模板，请稍候…</div>';
             try{
                 const slice=t.length>8000? t.slice(0,8000)+'\n…（已截断至前 8000 字）' : t;
-                const text=await callSiteAI([{role:'system',content:SYS_PROMPT},{role:'user',content:slice}]);
-                out.innerHTML=renderMD(text);
-                st.innerHTML='<div class="note" style="color:var(--success)">✅ 拆书完成。仅供学习与借鉴，请尊重原作版权。</div>';
+                const md=await callSiteAI([{role:'system',content:SYS_PROMPT},{role:'user',content:slice}]);
+                const data=parseOutline(md);
+                lastTemplateMd=buildTemplateMarkdown(data,'AI 拆书');
+                out.innerHTML=renderTemplateHTML(data,'AI 拆书');
+                st.innerHTML='<div class="note" style="color:var(--success)">✅ 拆书完成，已按技能结构生成「章节骨架表 + 阶段规划」写作模板。仅供学习与借鉴，请尊重原作版权。</div>';
                 document.getElementById('aiActions').style.display='flex';
                 panel.scrollIntoView({behavior:'smooth',block:'start'});
             }catch(e){
@@ -295,248 +331,16 @@
             }finally{ btn.disabled=false; }
         }
 
-        /* 轻量 Markdown 渲染（标题 / 列表 / 加粗） */
-        function renderMD(md){
-            const lines=(md||'').split('\n');
-            let html=''; let inList=false;
-            const closeList=()=>{ if(inList){ html+='</ul>'; inList=false; } };
-            const inline=s=>esc(s)
-                .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-                .replace(/「(.+?)」/g,'<strong>「$1」</strong>');
-            lines.forEach(line=>{
-                const s=line.trim();
-                if(!s){ closeList(); return; }
-                if(s.startsWith('# ')){ closeList(); html+='<h2>'+inline(s.slice(2))+'</h2>'; }
-                else if(s.startsWith('## ')){ closeList(); html+='<h3>'+inline(s.slice(3))+'</h3>'; }
-                else if(s.startsWith('- ')||s.startsWith('· ')){ if(!inList){ html+='<ul>'; inList=true; } html+='<li>'+inline(s.slice(2))+'</li>'; }
-                else { closeList(); html+='<p>'+inline(s)+'</p>'; }
-            });
-            closeList();
-            return html;
-        }
-
         function copyResult(){
-            const txt=document.getElementById('aiResult').innerText;
-            if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>toast('已复制拆书报告')); }
+            if(!lastTemplateMd){ toast('暂无可复制的模板'); return; }
+            if(navigator.clipboard){ navigator.clipboard.writeText(lastTemplateMd).then(()=>toast('已复制写作模板')); }
             else toast('复制失败，请手动选择');
         }
-
-        /* ============ 拆书大纲 → 写作模板（移植自 story-outline-to-template 技能） ============ */
-        /* 内置示例大纲：与技能脚本 build_writing_template.py 的 SAMPLE 一致，便于无 story_outline.md 时演示 */
-        const OUTLINE_SAMPLE = `# 故事大纲与细纲梳理
-
-## 覆盖范围
-
-已入片段章节：第1-50章
-
-说明：本次大纲基于前50章已完成片段生成。
-
-## 整体大纲
-
-一句话骨架：废柴少年绑定"诡秘系统"，靠扮演+吸收+晋升的循环在多方势力夹缝中一路升级。
-
-### 故事主线
-
-#### 主成长线
-
-剧情推进：从被退婚的废物，到初露锋芒，再到卷入宗门大比逐步逼近真相。
-
-爽点升级：求生→碾压小反派→收获功法/地位→身份被认可→秘密逐步揭露。
-
-覆盖片段：1、2、3
-
-### 支线
-
-#### 红颜/情感支线
-
-类型：情感/关系
-
-功能：提供情绪出口与关键情报来源。
-
-推进：初遇→互助→立场冲突。
-
-回收或悬置：立场冲突仍悬置。
-
-### 剧情 + 爽点
-
-#### 第1-10章
-
-剧情：退婚受辱，绑定系统，完成第一次扮演。
-
-爽点：反杀羞辱者，读者爽感来自"打脸"。
-
-读者获得感：主角并非真废，伏笔成立。
-
-后续钩子：系统来历成谜。
-
-### 阶段大纲
-
-#### 蛰伏期
-
-章节：第1-15章
-
-核心剧情：受辱立威，熟悉系统规则。
-
-主线变化：从废物到初阶扮演者。
-
-支线：红颜初遇。
-
-爽点组合：退婚打脸 + 首次收获。
-
-阶段钩子：系统提示"你并非孤例"。
-
-#### 崛起期
-
-章节：第16-35章
-
-核心剧情：宗门小比，连续越级反杀。
-
-主线变化：身份被同门认可。
-
-支线：势力暗线浮现。
-
-爽点组合：越级碾压 + 情报收割。
-
-阶段钩子：大比背后有人做局。
-
-#### 风暴期
-
-章节：第36-50章
-
-核心剧情：做局者现身，多方势力博弈。
-
-主线变化：卷入更高层纷争。
-
-支线：情感支线立场冲突。
-
-爽点组合：以弱胜强 + 秘密揭露。
-
-阶段钩子：幕后黑手牵出更古老存在。
-
-## 细纲/循环公式
-
-核心循环公式：危机发现 + 调查试探 + 修炼加点 + 暴力验证 + 资源收获 + 更高层威胁
-
-### 循环步骤
-
-#### 危机发现
-
-叙事功能：抛出矛盾，逼主角行动。
-
-触发信号：退婚/追杀/秘境异动。
-
-读者回报：紧张感 + 期待主角翻身。
-
-#### 调查试探
-
-叙事功能：展现智斗，铺垫反杀。
-
-触发信号：获得线索/遇到关键人物。
-
-读者回报：解谜快感。
-
-#### 修炼加点
-
-叙事功能：实力增长可视化。
-
-触发信号：获得功法/系统奖励。
-
-读者回报：成长满足感。
-
-#### 暴力验证
-
-叙事功能：用实力收尾，兑现爽点。
-
-触发信号：反派逼宫/擂台开启。
-
-读者回报：碾压爽感。
-
-#### 资源收获
-
-叙事功能：沉淀成果，抬高身价。
-
-触发信号：夺得宝物/地位提升。
-
-读者回报：获得感。
-
-#### 更高层威胁
-
-叙事功能：续上悬念，防止节奏断。
-
-触发信号：幕后黑手露端倪。
-
-读者回报：追更欲。
-
-### 变量轴
-
-#### 等级/境界
-
-变化方式：每阶段整体抬一档。
-
-例子：练气→筑基→金丹
-
-#### 敌人层级
-
-变化方式：反派背景随主角升阶放大。
-
-例子：同门→长老→隐世老怪
-
-### 阶段变体
-
-#### 蛰伏期
-
-章节：第1-15章
-
-循环变体：危机发现 + 调查试探 + 修炼加点 + 暴力验证（小范围）
-
-等级/身份：练气、废柴→初阶扮演者
-
-资源：基础功法
-
-危机层级：同门欺压
-
-阶段回报：立威 + 系统初步信任
-
-#### 崛起期
-
-章节：第16-35章
-
-循环变体：危机发现 + 修炼加点 + 暴力验证 + 资源收获（越级）
-
-等级/身份：筑基、小有名气
-
-资源：宗门贡献 + 秘境宝物
-
-危机层级：长老级做局
-
-阶段回报：身份被认可
-
-#### 风暴期
-
-章节：第36-50章
-
-循环变体：危机发现 + 调查试探 + 暴力验证 + 更高层威胁（多方博弈）
-
-等级/身份：金丹、卷入高层
-
-资源：古老传承线索
-
-危机层级：隐世老怪
-
-阶段回报：秘密揭露 + 更大悬念
-
-### 片段循环映射
-
-片段 1（第1-6章）：危机发现 + 调查试探 + 资源收获。结果：完成首次扮演，系统激活。
-
-片段 2（第7-15章）：危机发现 + 修炼加点 + 暴力验证。结果：退婚打脸，立威。
-
-## 写作规律
-
-- 每章末尾必须留钩子，否则追更断点。
-- 爽点要"兑现"，不能只铺垫不收获。
-- 同一套循环靠替换变量轴升级，避免重复疲劳。
-`;
+        function downloadResult(){
+            if(!lastTemplateMd){ toast('暂无可下载的模板'); return; }
+            const blob=new Blob([lastTemplateMd],{type:'text/markdown'});
+            const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='写作模板_章节骨架+阶段规划.md'; a.click(); URL.revokeObjectURL(a.href);
+        }
 
         function parseOutline(md){
             let sec=null, sub=null, item=null;
@@ -715,24 +519,6 @@
         }
 
         let lastTemplateMd='';
-        function getOutline(){ return document.getElementById('outlineText').value.trim(); }
-        function clearOutline(){ document.getElementById('outlineText').value=''; }
-        function importOutline(){ document.getElementById('outlineFile').click(); }
-        function onOutlineFile(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ document.getElementById('outlineText').value=r.result; toast('已导入：'+f.name); }; r.readAsText(f); }
-        function loadOutlineSample(){ document.getElementById('outlineText').value=OUTLINE_SAMPLE; toast('已填入示例大纲'); }
-        function genTemplate(){
-            const md=getOutline();
-            if(!md){ toast('先粘贴 story_outline.md，或点「填入示例大纲」'); return; }
-            const data=parseOutline(md);
-            lastTemplateMd=buildTemplateMarkdown(data,'粘贴的大纲');
-            document.getElementById('tplOutput').innerHTML=renderTemplateHTML(data,'粘贴的大纲');
-            document.getElementById('tplPanel').style.display='block';
-            document.getElementById('tplActions').style.display='flex';
-            document.getElementById('tplPanel').scrollIntoView({behavior:'smooth',block:'start'});
-            toast('已生成写作模板');
-        }
-        function copyTemplate(){ if(navigator.clipboard){ navigator.clipboard.writeText(lastTemplateMd).then(()=>toast('已复制模板')); } else toast('复制失败，请手动选择'); }
-        function downloadTemplate(){ const blob=new Blob([lastTemplateMd],{type:'text/markdown'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='写作模板_章节骨架+阶段规划.md'; a.click(); URL.revokeObjectURL(a.href); }
     </script>
 </body>
 </html>
