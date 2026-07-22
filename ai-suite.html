@@ -76,6 +76,7 @@
             <a class="nav-link" href="main-editor.html">📝 主编辑器</a>
             <a class="nav-link" href="settings.html">⚙️ 设置</a>
         </div>
+        <div id="modelStatus" class="status-no" style="text-align:center;margin:8px 0 12px;font-size:13px;">⏳ 正在读取 AI 配置...</div>
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('continue')">✍️ AI 续写</button>
             <button class="tab-btn" onclick="switchTab('polish')">💅 AI 润色</button>
@@ -161,10 +162,49 @@
         // Ollama API 地址（优先使用用户自定义地址）
         function getOllamaBase(){ return localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434'; }
 
-        // 获取选中的模型
+        // 读取用户在 settings.html 中保存的 AI 配置
+        function getAIConfig(){
+            return {
+                useLocal: localStorage.getItem('useLocalAI') === 'true',
+                localModel: localStorage.getItem('localModel') || '',
+                ollamaEndpoint: localStorage.getItem('ollamaEndpoint') || 'http://localhost:11434',
+                cloudBaseUrl: localStorage.getItem('cloudBaseUrl') || '',
+                cloudModel: localStorage.getItem('cloudModel') || '',
+                cloudApiKey: localStorage.getItem('cloudApiKey') || ''
+            };
+        }
+
+        // 获取当前生效的 AI 调用配置（同时支持本地 Ollama 与云端 OpenAI 兼容接口）
         function getSelectedModel(){
-            const active = document.querySelector('.model-btn.active');
-            return active ? active.dataset.model : (localStorage.getItem('localModel') || null);
+            const cfg = getAIConfig();
+            if (cfg.useLocal && cfg.localModel) {
+                return { type: 'ollama', model: cfg.localModel, base: cfg.ollamaEndpoint };
+            }
+            if (!cfg.useLocal && cfg.cloudModel && cfg.cloudApiKey) {
+                return { type: 'cloud', model: cfg.cloudModel, base: cfg.cloudBaseUrl, key: cfg.cloudApiKey };
+            }
+            // fallback：任意一种可用即可
+            if (cfg.localModel) return { type: 'ollama', model: cfg.localModel, base: cfg.ollamaEndpoint };
+            if (cfg.cloudModel && cfg.cloudApiKey) return { type: 'cloud', model: cfg.cloudModel, base: cfg.cloudBaseUrl, key: cfg.cloudApiKey };
+            return null;
+        }
+
+        function renderModelStatus(){
+            const el = document.getElementById('modelStatus');
+            if (!el) return;
+            const cfg = getSelectedModel();
+            if (!cfg) {
+                el.innerHTML = '⚠️ 未配置 AI 模型，请先到 <a href="settings.html" style="color:var(--accent-light);text-decoration:underline;">设置页面</a> 配置并保存';
+                el.className = 'status-no';
+                return;
+            }
+            if (cfg.type === 'ollama') {
+                el.innerHTML = `💻 本地模型：<b>${cfg.model}</b>（${cfg.base}）`;
+                el.className = 'status-ok';
+            } else {
+                el.innerHTML = `☁️ 云端模型：<b>${cfg.model}</b>`;
+                el.className = 'status-ok';
+            }
         }
 
         // 自动检测 Ollama 模型列表
@@ -207,6 +247,8 @@
                         document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));
                         this.classList.add('active');
                         localStorage.setItem('localModel', this.dataset.model);
+                        localStorage.setItem('useLocalAI', 'true');
+                        renderModelStatus();
                     };
                     container.appendChild(btn);
                 });
@@ -218,8 +260,8 @@
         }
 
         // 调用 Ollama API
-        async function callOllama(prompt, model){
-            const OLLAMA_BASE = getOllamaBase();
+        async function callOllama(prompt, model, base){
+            const OLLAMA_BASE = (base || getOllamaBase()).replace(/\/+$/, '');
             const res = await fetch(OLLAMA_BASE + '/api/generate', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -229,6 +271,40 @@
             if(!res.ok) throw new Error('Ollama API error: ' + res.status);
             const data = await res.json();
             return data.response;
+        }
+
+        // 调用云端 OpenAI 兼容 API
+        async function callCloudAI(prompt, modelInfo){
+            const base = (modelInfo.base || 'https://api.openai.com/v1').replace(/\/+$/, '');
+            const endpoint = base.endsWith('/chat/completions') ? base : base + '/chat/completions';
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${modelInfo.key}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: modelInfo.model,
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.7,
+                    top_p: 0.9
+                }),
+                signal: AbortSignal.timeout(60000)
+            });
+            if (!res.ok) {
+                let msg = `HTTP ${res.status}`;
+                try { const err = await res.json(); msg = err.error?.message || err.message || msg; } catch {}
+                throw new Error(msg);
+            }
+            const data = await res.json();
+            return data.choices?.[0]?.message?.content || data.response || '';
+        }
+
+        // 统一 AI 调用入口
+        async function callAI(prompt, modelInfo){
+            if (!modelInfo) throw new Error('未选择 AI 模型');
+            if (modelInfo.type === 'cloud') return callCloudAI(prompt, modelInfo);
+            return callOllama(prompt, modelInfo.model, modelInfo.base);
         }
 
         // 构建 AI 续写 prompt
@@ -256,7 +332,7 @@ ${text}
             output.textContent = '⏳ AI 正在思考并生成中...（可能需要30秒）';
             try {
                 const prompt = buildContinuePrompt(input);
-                const result = await callOllama(prompt, model);
+                const result = await callAI(prompt, model);
                 output.className = 'ai-output';
                 output.textContent = result;
             } catch(e){
@@ -284,7 +360,7 @@ ${text}
 ${input}
 
 润色后：`;
-                const result = await callOllama(prompt, model);
+                const result = await callAI(prompt, model);
                 output.className = 'ai-output';
                 output.textContent = result;
             } catch(e){
@@ -316,7 +392,7 @@ ${input}
 ${input}
 
 分析：`;
-                const result = await callOllama(prompt, model);
+                const result = await callAI(prompt, model);
                 output.className = 'ai-output';
                 output.textContent = result;
             } catch(e){
@@ -339,7 +415,7 @@ ${input}
             const outputs = [document.getElementById('compare1'),document.getElementById('compare2'),document.getElementById('compare3')];
             outputs.forEach(o => { o.className='ai-output thinking'; o.textContent='⏳ 生成中...'; });
             try {
-                const promises = prompts.map(p => callOllama(p, model));
+                const promises = prompts.map(p => callAI(p, model));
                 const results = await Promise.all(promises);
                 outputs.forEach((o,i) => { o.className='ai-output'; o.textContent=results[i]; });
             } catch(e){
@@ -366,6 +442,7 @@ ${input}
         }
 
         // 初始化
+        renderModelStatus();
         loadOllamaModels();
     </script>
 <footer class="site-footer">
