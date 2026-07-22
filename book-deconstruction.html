@@ -54,6 +54,14 @@
         .result li { margin: 4px 0; }
         .result strong { color: var(--accent-light); }
         .result p { margin: 6px 0; }
+        .result code, .note code { background: var(--bg-hover); padding: 1px 7px; border-radius: 5px; font-size: 12px; }
+        #tplOutput { white-space: normal; }
+        .tpl-table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 12.5px; }
+        .tpl-table th, .tpl-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+        .tpl-table th { background: var(--bg-tertiary); color: var(--text-secondary); font-weight: 700; }
+        .tpl-table tbody tr:nth-child(even) { background: rgba(128,128,128,0.05); }
+        .result h4 { font-size: 14px; font-weight: 700; margin: 16px 0 6px; }
+        .result hr { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 
         .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); padding: 12px 20px; border-radius: 10px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s; z-index: 200; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -119,6 +127,31 @@
             <div class="row" id="aiActions" style="display:none;">
                 <button class="btn" onclick="copyResult()">📋 复制报告</button>
             </div>
+        </div>
+
+        <!-- 拆书大纲 → 写作模板（来自 story-outline-to-template 技能） -->
+        <div class="panel" id="tplInputPanel">
+            <div class="panel-title">📐 拆书大纲 → 写作模板</div>
+            <div class="note" style="margin-bottom:12px;">把 StoryAgent 拆标杆书产出的 <code>story_outline.md</code> 粘贴进来，一键转成「章节骨架表 + 阶段规划」写作模板。<strong>仅提炼结构与节奏，不抄剧情</strong>。不会用 StoryAgent？点「✨ 填入示例大纲」先体验效果。</div>
+            <textarea id="outlineText" class="editor-box" placeholder="在此粘贴 story_outline.md 内容（StoryAgent 拆解标杆书产出的结构化大纲）…"></textarea>
+            <div class="row">
+                <button class="btn" onclick="importOutline()">📂 导入文件</button>
+                <button class="btn" onclick="loadOutlineSample()">✨ 填入示例大纲</button>
+                <button class="btn" onclick="clearOutline()">🧹 清空</button>
+                <input type="file" id="outlineFile" accept=".txt,.md,.text" style="display:none" onchange="onOutlineFile(event)">
+            </div>
+            <div class="row">
+                <button class="btn btn-primary" id="tplBtn" onclick="genTemplate()">🤖 生成写作模板</button>
+            </div>
+        </div>
+
+        <div class="panel" id="tplPanel" style="display:none;">
+            <div class="panel-title">📐 写作模板（章节骨架 + 阶段规划）</div>
+            <div class="row" id="tplActions" style="display:none;">
+                <button class="btn" onclick="copyTemplate()">📋 复制模板</button>
+                <button class="btn" onclick="downloadTemplate()">⬇️ 下载 .md</button>
+            </div>
+            <div id="tplOutput" class="result" style="margin-top:12px;"></div>
         </div>
 
         <div class="footer">
@@ -287,6 +320,419 @@
             if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>toast('已复制拆书报告')); }
             else toast('复制失败，请手动选择');
         }
+
+        /* ============ 拆书大纲 → 写作模板（移植自 story-outline-to-template 技能） ============ */
+        /* 内置示例大纲：与技能脚本 build_writing_template.py 的 SAMPLE 一致，便于无 story_outline.md 时演示 */
+        const OUTLINE_SAMPLE = `# 故事大纲与细纲梳理
+
+## 覆盖范围
+
+已入片段章节：第1-50章
+
+说明：本次大纲基于前50章已完成片段生成。
+
+## 整体大纲
+
+一句话骨架：废柴少年绑定"诡秘系统"，靠扮演+吸收+晋升的循环在多方势力夹缝中一路升级。
+
+### 故事主线
+
+#### 主成长线
+
+剧情推进：从被退婚的废物，到初露锋芒，再到卷入宗门大比逐步逼近真相。
+
+爽点升级：求生→碾压小反派→收获功法/地位→身份被认可→秘密逐步揭露。
+
+覆盖片段：1、2、3
+
+### 支线
+
+#### 红颜/情感支线
+
+类型：情感/关系
+
+功能：提供情绪出口与关键情报来源。
+
+推进：初遇→互助→立场冲突。
+
+回收或悬置：立场冲突仍悬置。
+
+### 剧情 + 爽点
+
+#### 第1-10章
+
+剧情：退婚受辱，绑定系统，完成第一次扮演。
+
+爽点：反杀羞辱者，读者爽感来自"打脸"。
+
+读者获得感：主角并非真废，伏笔成立。
+
+后续钩子：系统来历成谜。
+
+### 阶段大纲
+
+#### 蛰伏期
+
+章节：第1-15章
+
+核心剧情：受辱立威，熟悉系统规则。
+
+主线变化：从废物到初阶扮演者。
+
+支线：红颜初遇。
+
+爽点组合：退婚打脸 + 首次收获。
+
+阶段钩子：系统提示"你并非孤例"。
+
+#### 崛起期
+
+章节：第16-35章
+
+核心剧情：宗门小比，连续越级反杀。
+
+主线变化：身份被同门认可。
+
+支线：势力暗线浮现。
+
+爽点组合：越级碾压 + 情报收割。
+
+阶段钩子：大比背后有人做局。
+
+#### 风暴期
+
+章节：第36-50章
+
+核心剧情：做局者现身，多方势力博弈。
+
+主线变化：卷入更高层纷争。
+
+支线：情感支线立场冲突。
+
+爽点组合：以弱胜强 + 秘密揭露。
+
+阶段钩子：幕后黑手牵出更古老存在。
+
+## 细纲/循环公式
+
+核心循环公式：危机发现 + 调查试探 + 修炼加点 + 暴力验证 + 资源收获 + 更高层威胁
+
+### 循环步骤
+
+#### 危机发现
+
+叙事功能：抛出矛盾，逼主角行动。
+
+触发信号：退婚/追杀/秘境异动。
+
+读者回报：紧张感 + 期待主角翻身。
+
+#### 调查试探
+
+叙事功能：展现智斗，铺垫反杀。
+
+触发信号：获得线索/遇到关键人物。
+
+读者回报：解谜快感。
+
+#### 修炼加点
+
+叙事功能：实力增长可视化。
+
+触发信号：获得功法/系统奖励。
+
+读者回报：成长满足感。
+
+#### 暴力验证
+
+叙事功能：用实力收尾，兑现爽点。
+
+触发信号：反派逼宫/擂台开启。
+
+读者回报：碾压爽感。
+
+#### 资源收获
+
+叙事功能：沉淀成果，抬高身价。
+
+触发信号：夺得宝物/地位提升。
+
+读者回报：获得感。
+
+#### 更高层威胁
+
+叙事功能：续上悬念，防止节奏断。
+
+触发信号：幕后黑手露端倪。
+
+读者回报：追更欲。
+
+### 变量轴
+
+#### 等级/境界
+
+变化方式：每阶段整体抬一档。
+
+例子：练气→筑基→金丹
+
+#### 敌人层级
+
+变化方式：反派背景随主角升阶放大。
+
+例子：同门→长老→隐世老怪
+
+### 阶段变体
+
+#### 蛰伏期
+
+章节：第1-15章
+
+循环变体：危机发现 + 调查试探 + 修炼加点 + 暴力验证（小范围）
+
+等级/身份：练气、废柴→初阶扮演者
+
+资源：基础功法
+
+危机层级：同门欺压
+
+阶段回报：立威 + 系统初步信任
+
+#### 崛起期
+
+章节：第16-35章
+
+循环变体：危机发现 + 修炼加点 + 暴力验证 + 资源收获（越级）
+
+等级/身份：筑基、小有名气
+
+资源：宗门贡献 + 秘境宝物
+
+危机层级：长老级做局
+
+阶段回报：身份被认可
+
+#### 风暴期
+
+章节：第36-50章
+
+循环变体：危机发现 + 调查试探 + 暴力验证 + 更高层威胁（多方博弈）
+
+等级/身份：金丹、卷入高层
+
+资源：古老传承线索
+
+危机层级：隐世老怪
+
+阶段回报：秘密揭露 + 更大悬念
+
+### 片段循环映射
+
+片段 1（第1-6章）：危机发现 + 调查试探 + 资源收获。结果：完成首次扮演，系统激活。
+
+片段 2（第7-15章）：危机发现 + 修炼加点 + 暴力验证。结果：退婚打脸，立威。
+
+## 写作规律
+
+- 每章末尾必须留钩子，否则追更断点。
+- 爽点要"兑现"，不能只铺垫不收获。
+- 同一套循环靠替换变量轴升级，避免重复疲劳。
+`;
+
+        function parseOutline(md){
+            let sec=null, sub=null, item=null;
+            const data={
+                coverage:{},
+                macro:{ mainline:[], branchlines:[], plotplus:[], stage:[], one_sentence:'' },
+                micro:{ cycle_formula:'', cycle_steps:[], variable_axes:[], stage_variations:[], segment_cycle_map:[] },
+                takeaways:[]
+            };
+            function flushItem(){
+                if(item===null) return;
+                if(sub==='mainline') data.macro.mainline.push(item);
+                else if(sub==='branchlines') data.macro.branchlines.push(item);
+                else if(sub==='plotplus') data.macro.plotplus.push(item);
+                else if(sub==='stage') data.macro.stage.push(item);
+                else if(sub==='cycle') data.micro.cycle_steps.push(item);
+                else if(sub==='axis') data.micro.variable_axes.push(item);
+                else if(sub==='stagevar') data.micro.stage_variations.push(item);
+                item=null;
+            }
+            md.split('\n').forEach(raw=>{
+                const line=raw.replace(/\s+$/,'');
+                if(line.startsWith('# ')){ flushItem(); sec=null; sub=null; return; }
+                if(line.startsWith('## ')){ flushItem(); sub=null; const t=line.slice(3).trim();
+                    if(t==='覆盖范围') sec='coverage';
+                    else if(t==='整体大纲') sec='macro';
+                    else if(t.startsWith('细纲')) sec='micro';
+                    else if(t==='写作规律') sec='takeaways';
+                    else sec=null;
+                    return;
+                }
+                if(line.startsWith('### ')){ flushItem(); const t=line.slice(4).trim();
+                    if(sec==='macro'){
+                        if(t.includes('主线')) sub='mainline';
+                        else if(t.includes('支线')) sub='branchlines';
+                        else if(t.includes('剧情')||t.includes('爽点')) sub='plotplus';
+                        else if(t.includes('阶段')) sub='stage';
+                    } else if(sec==='micro'){
+                        if(t.includes('循环步骤')) sub='cycle';
+                        else if(t.includes('变量轴')) sub='axis';
+                        else if(t.includes('阶段变体')) sub='stagevar';
+                        else if(t.includes('片段循环')) sub='segmap';
+                    }
+                    return;
+                }
+                if(line.startsWith('#### ')){ flushItem(); item={ '_name': line.slice(5).trim() }; return; }
+                if(sec==='micro' && sub==='segmap'){
+                    const m=line.trim().match(/^片段\s*(\S+)\s*[（(](.+?)[）)]\s*[：:]\s*(.+)$/);
+                    if(m) data.micro.segment_cycle_map.push({ seg:m[1], chapters:m[2], text:m[3] });
+                    return;
+                }
+                if(sec==='takeaways'){ if(line.trim().startsWith('-')) data.takeaways.push(line.trim().replace(/^-\s*/,'')); return; }
+                if(line.includes('：')||line.includes(':')){
+                    const sep=line.includes('：')?'：':':';
+                    const idx=line.indexOf(sep);
+                    const key=line.slice(0,idx).trim();
+                    const val=line.slice(idx+1).trim();
+                    if(sec==='coverage') data.coverage[key]=val;
+                    else if(sec==='macro' && item!==null) item[key]=val;
+                    else if(sec==='micro' && item!==null) item[key]=val;
+                    else if(sec==='micro' && key==='核心循环公式') data.micro.cycle_formula=val;
+                    else if(sec==='macro' && key==='一句话骨架') data.macro.one_sentence=val;
+                }
+            });
+            flushItem();
+            return data;
+        }
+
+        function buildTemplateMarkdown(data, src){
+            const L=[];
+            L.push('# 写作模板 · 章节骨架 + 阶段规划');
+            L.push('');
+            L.push('> 由 `'+src+'` 自动加工生成。仅提炼**结构与节奏**，剧情/人设请替换为你自己的。');
+            L.push('');
+            const one=data.macro.one_sentence||'';
+            if(one){ L.push('**标杆书一句话骨架**：'+one); L.push(''); }
+            if(data.takeaways.length){
+                L.push('## 0. 写作规律速记（写之前先看）'); L.push('');
+                data.takeaways.forEach(t=>L.push('- '+t)); L.push('');
+            }
+            L.push('---'); L.push('');
+            L.push('## 一、章节骨架表（每章必过的环节）'); L.push('');
+            const formula=data.micro.cycle_formula||'';
+            L.push('**核心循环公式**：'+(formula||'（未提取）')); L.push('');
+            L.push('把上面这条公式当成你每一章的"骨架 checklist"：写完整章后，逐格打钩确认本环是否到位。'); L.push('');
+            const steps=data.micro.cycle_steps;
+            if(steps.length){
+                L.push('| # | 循环步骤 | 叙事功能 | 触发信号 | 读者回报(爽点) | 本章写完打钩 |');
+                L.push('| - | - | - | - | - | - |');
+                steps.forEach((s,i)=>{ L.push('| '+(i+1)+' | '+(s._name||'')+' | '+(s['叙事功能']||'')+' | '+(s['触发信号']||'')+' | '+(s['读者回报']||'')+' | ☐ |'); });
+                L.push('');
+            }
+            L.push('### 章节规划表（写新书时逐章填）'); L.push('');
+            L.push('| 章号 | 对应循环步骤 | 危机/触发信号 | 主体动作(叙事功能) | 读者回报(爽点) | 章末钩子 |');
+            L.push('| - | - | - | - | - | - |');
+            data.micro.segment_cycle_map.slice(0,2).forEach(sm=>{ L.push('| （例）'+(sm.chapters||'')+' | '+(sm.text||'')+' | … | … | … | … |'); });
+            for(let i=0;i<12;i++) L.push('|  |  |  |  |  |  |');
+            L.push('');
+            L.push('> 用法：每写一章，先在「对应循环步骤」选本环，再填信号/动作/爽点/钩子。钩子空着 = 这章留不住人。'); L.push('');
+            L.push('---'); L.push('');
+            L.push('## 二、阶段规划（整本书进度条）'); L.push('');
+            const stages=data.macro.stage;
+            const variants={}; data.micro.stage_variations.forEach(v=>variants[v._name]=v);
+            if(stages.length){
+                L.push('| 阶段 | 章节范围 | 核心剧情 | 主线变化 | 支线 | 爽点组合 | 阶段钩子 | 循环变体 | 等级/身份 | 资源 | 危机层级 | 阶段回报 |');
+                L.push('| - | - | - | - | - | - | - | - | - | - | - | - |');
+                stages.forEach(st=>{ const name=st._name||''; const v=variants[name]||{};
+                    L.push('| '+name+' | '+(st['章节']||'')+' | '+(st['核心剧情']||'')+' | '+(st['主线变化']||'')+' | '+(st['支线']||'')+' | '+(st['爽点组合']||'')+' | '+(st['阶段钩子']||'')+' | '+(v['循环变体']||'')+' | '+(v['等级/身份']||'')+' | '+(v['资源']||'')+' | '+(v['危机层级']||'')+' | '+(v['阶段回报']||'')+' |');
+                });
+                L.push('');
+            }
+            L.push('### 你的书·阶段规划（照上表结构填）'); L.push('');
+            L.push('| 阶段 | 章节范围 | 核心剧情 | 主线变化 | 支线 | 爽点组合 | 阶段钩子 | 循环变体 | 等级/身份 | 资源 | 危机层级 | 阶段回报 |');
+            L.push('| - | - | - | - | - | - | - | - | - | - | - | - |');
+            for(let i=0;i<5;i++) L.push('|  |  |  |  |  |  |  |  |  |  |  |  |');
+            L.push('');
+            L.push('> 用法：动笔前先排好阶段。前 1/3 铺垫期、中段爽点密集期、后期开新地图/收线——提前定好进度条，避免写到一半节奏塌了。'); L.push('');
+            if(data.micro.variable_axes.length){
+                L.push('### 变量轴（不同阶段替换的"料"）'); L.push('');
+                data.micro.variable_axes.forEach(ax=>{ L.push('- **'+(ax._name||'')+'**：'+(ax['变化方式']||'')+'（例：'+(ax['例子']||'')+'）'); });
+                L.push('');
+                L.push('> 同一套循环，靠替换这些轴来"升级"。写续阶段时，挑 1~2 个轴往上推一档，读者就有新鲜感。'); L.push('');
+            }
+            return L.join('\n').replace(/\s+$/,'')+'\n';
+        }
+
+        function renderTemplateHTML(data, src){
+            const L=[];
+            L.push('<h2>写作模板 · 章节骨架 + 阶段规划</h2>');
+            L.push('<p class="note">由 <code>'+esc(src)+'</code> 自动加工生成。仅提炼<strong>结构与节奏</strong>，剧情/人设请替换为你自己的。</p>');
+            const one=data.macro.one_sentence||'';
+            if(one) L.push('<p><strong>标杆书一句话骨架</strong>：'+esc(one)+'</p>');
+            if(data.takeaways.length){
+                L.push('<h3>0. 写作规律速记（写之前先看）</h3>');
+                L.push('<ul>'+data.takeaways.map(t=>'<li>'+esc(t)+'</li>').join('')+'</ul>');
+            }
+            L.push('<hr>');
+            L.push('<h3>一、章节骨架表（每章必过的环节）</h3>');
+            const formula=data.micro.cycle_formula||'';
+            L.push('<p><strong>核心循环公式</strong>：'+(esc(formula)||'（未提取）')+'</p>');
+            L.push('<p>把上面这条公式当成你每一章的"骨架 checklist"：写完整章后，逐格打钩确认本环是否到位。</p>');
+            const steps=data.micro.cycle_steps;
+            if(steps.length){
+                L.push('<table class="tpl-table"><thead><tr><th>#</th><th>循环步骤</th><th>叙事功能</th><th>触发信号</th><th>读者回报(爽点)</th><th>本章写完打钩</th></tr></thead><tbody>');
+                steps.forEach((s,i)=>{ L.push('<tr><td>'+(i+1)+'</td><td>'+esc(s._name||'')+'</td><td>'+esc(s['叙事功能']||'')+'</td><td>'+esc(s['触发信号']||'')+'</td><td>'+esc(s['读者回报']||'')+'</td><td>☐</td></tr>'); });
+                L.push('</tbody></table>');
+            }
+            L.push('<h4>章节规划表（写新书时逐章填）</h4>');
+            L.push('<table class="tpl-table"><thead><tr><th>章号</th><th>对应循环步骤</th><th>危机/触发信号</th><th>主体动作(叙事功能)</th><th>读者回报(爽点)</th><th>章末钩子</th></tr></thead><tbody>');
+            data.micro.segment_cycle_map.slice(0,2).forEach(sm=>{ L.push('<tr><td>（例）'+esc(sm.chapters||'')+'</td><td>'+esc(sm.text||'')+'</td><td>…</td><td>…</td><td>…</td><td>…</td></tr>'); });
+            for(let i=0;i<12;i++) L.push('<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
+            L.push('</tbody></table>');
+            L.push('<p class="hint">用法：每写一章，先在「对应循环步骤」选本环，再填信号/动作/爽点/钩子。钩子空着 = 这章留不住人。</p>');
+            L.push('<hr>');
+            L.push('<h3>二、阶段规划（整本书进度条）</h3>');
+            const stages=data.macro.stage;
+            const variants={}; data.micro.stage_variations.forEach(v=>variants[v._name]=v);
+            if(stages.length){
+                L.push('<table class="tpl-table"><thead><tr><th>阶段</th><th>章节范围</th><th>核心剧情</th><th>主线变化</th><th>支线</th><th>爽点组合</th><th>阶段钩子</th><th>循环变体</th><th>等级/身份</th><th>资源</th><th>危机层级</th><th>阶段回报</th></tr></thead><tbody>');
+                stages.forEach(st=>{ const name=st._name||''; const v=variants[name]||{};
+                    L.push('<tr><td>'+esc(name)+'</td><td>'+esc(st['章节']||'')+'</td><td>'+esc(st['核心剧情']||'')+'</td><td>'+esc(st['主线变化']||'')+'</td><td>'+esc(st['支线']||'')+'</td><td>'+esc(st['爽点组合']||'')+'</td><td>'+esc(st['阶段钩子']||'')+'</td><td>'+esc(v['循环变体']||'')+'</td><td>'+esc(v['等级/身份']||'')+'</td><td>'+esc(v['资源']||'')+'</td><td>'+esc(v['危机层级']||'')+'</td><td>'+esc(v['阶段回报']||'')+'</td></tr>');
+                });
+                L.push('</tbody></table>');
+            }
+            L.push('<h4>你的书·阶段规划（照上表结构填）</h4>');
+            L.push('<table class="tpl-table"><thead><tr><th>阶段</th><th>章节范围</th><th>核心剧情</th><th>主线变化</th><th>支线</th><th>爽点组合</th><th>阶段钩子</th><th>循环变体</th><th>等级/身份</th><th>资源</th><th>危机层级</th><th>阶段回报</th></tr></thead><tbody>');
+            for(let i=0;i<5;i++) L.push('<tr>'+'<td></td>'.repeat(12)+'</tr>');
+            L.push('</tbody></table>');
+            L.push('<p class="hint">用法：动笔前先排好阶段。前 1/3 铺垫期、中段爽点密集期、后期开新地图/收线——提前定好进度条，避免写到一半节奏塌了。</p>');
+            if(data.micro.variable_axes.length){
+                L.push('<h4>变量轴（不同阶段替换的"料"）</h4>');
+                L.push('<ul>'+data.micro.variable_axes.map(ax=>'<li><strong>'+esc(ax._name||'')+'</strong>：'+esc(ax['变化方式']||'')+'（例：'+esc(ax['例子']||'')+'）</li>').join('')+'</ul>');
+                L.push('<p class="hint">同一套循环，靠替换这些轴来"升级"。写续阶段时，挑 1~2 个轴往上推一档，读者就有新鲜感。</p>');
+            }
+            return L.join('');
+        }
+
+        let lastTemplateMd='';
+        function getOutline(){ return document.getElementById('outlineText').value.trim(); }
+        function clearOutline(){ document.getElementById('outlineText').value=''; }
+        function importOutline(){ document.getElementById('outlineFile').click(); }
+        function onOutlineFile(e){ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ document.getElementById('outlineText').value=r.result; toast('已导入：'+f.name); }; r.readAsText(f); }
+        function loadOutlineSample(){ document.getElementById('outlineText').value=OUTLINE_SAMPLE; toast('已填入示例大纲'); }
+        function genTemplate(){
+            const md=getOutline();
+            if(!md){ toast('先粘贴 story_outline.md，或点「填入示例大纲」'); return; }
+            const data=parseOutline(md);
+            lastTemplateMd=buildTemplateMarkdown(data,'粘贴的大纲');
+            document.getElementById('tplOutput').innerHTML=renderTemplateHTML(data,'粘贴的大纲');
+            document.getElementById('tplPanel').style.display='block';
+            document.getElementById('tplActions').style.display='flex';
+            document.getElementById('tplPanel').scrollIntoView({behavior:'smooth',block:'start'});
+            toast('已生成写作模板');
+        }
+        function copyTemplate(){ if(navigator.clipboard){ navigator.clipboard.writeText(lastTemplateMd).then(()=>toast('已复制模板')); } else toast('复制失败，请手动选择'); }
+        function downloadTemplate(){ const blob=new Blob([lastTemplateMd],{type:'text/markdown'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='写作模板_章节骨架+阶段规划.md'; a.click(); URL.revokeObjectURL(a.href); }
     </script>
 </body>
 </html>
