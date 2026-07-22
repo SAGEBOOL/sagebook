@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAGE BOOK - 大纲编辑器</title>
+    <title>SAGE BOOK - 知识库编辑器</title>
     <style>
         * {
             margin: 0;
@@ -288,7 +288,7 @@
         }
 
         .editor-content:empty:before {
-            content: '在这里编写大纲内容...';
+            content: '在这里编写知识库内容...';
             color: var(--text-muted);
         }
 
@@ -646,11 +646,11 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title">大纲导航</div>
-                <input type="text" class="search-input" placeholder="🔍 搜索大纲..." id="searchInput" oninput="searchOutline(this.value)">
+                <div class="sidebar-title">知识库导航</div>
+                <input type="text" class="search-input" placeholder="🔍 搜索知识库..." id="searchInput" oninput="searchOutline(this.value)">
             </div>
             <div class="outline-tree" id="outlineTree">
-                <!-- 大纲树将通过 JS 动态生成 -->
+                <!-- 知识库树将通过 JS 动态生成 -->
             </div>
         </div>
 
@@ -671,7 +671,7 @@
             <div class="editor-area">
                 <div class="outline-editor">
                     <div class="editor-header">
-                        <input type="text" class="editor-title" id="outlineTitle" placeholder="大纲标题" oninput="updateOutline()">
+                        <input type="text" class="editor-title" id="outlineTitle" placeholder="知识库标题" oninput="updateOutline()">
                         <div class="editor-meta">
                             <span>类型: <strong id="outlineType">卷</strong></span>
                             <span>状态: <strong id="outlineStatus">进行中</strong></span>
@@ -764,7 +764,7 @@
     <script>
         // ===== 数据定义 =====
         let outlineData = {
-            title: '《系统觉醒》大纲',
+            title: '《系统觉醒》知识库',
             nodes: [
                 {
                     id: 1,
@@ -858,7 +858,7 @@
             document.getElementById('theme' + theme.charAt(0).toUpperCase() + theme.slice(1)).classList.add('active');
         }
 
-        // ===== 渲染大纲树 =====
+        // ===== 渲染知识库树 =====
         function renderOutlineTree() {
             const tree = document.getElementById('outlineTree');
             tree.innerHTML = renderNodes(outlineData.nodes, 0);
@@ -1068,7 +1068,7 @@
             saveToStorage();
         }
 
-        // ===== 大纲操作 =====
+        // ===== 知识库操作 =====
         function addOutlineNode(type) {
             const newNode = {
                 id: ++nodeIdCounter,
@@ -1179,7 +1179,7 @@
             a.download = 'outline.txt';
             a.click();
             URL.revokeObjectURL(url);
-            showToast('大纲已导出');
+            showToast('知识库已导出');
         }
 
         function generateOutlineText(nodes, level) {
@@ -1201,7 +1201,7 @@
             document.getElementById('importFileInput').click();
         }
 
-        // 读取本地文件并导入（支持 .json 无损 / .txt .md 文本大纲回写）
+        // 读取本地文件并导入（支持 .json 无损 / .txt .md 文本知识库回写）
         function handleImportFile(input) {
             const file = input.files && input.files[0];
             input.value = ''; // 复位，允许重复选择同一文件
@@ -1228,16 +1228,16 @@
                             nodes = data.outlineData.nodes;
                             title = data.outlineData.title || file.name.replace(/\.[^.]+$/, '');
                         } else {
-                            throw new Error('JSON 中未找到大纲节点数组');
+                            throw new Error('JSON 中未找到知识库节点数组');
                         }
                         nodes = nodes.map(n => normalizeNode(n, 'volume'));
                     } else {
                         nodes = parseOutlineText(text);
                         title = file.name.replace(/\.[^.]+$/, '');
-                        if (nodes.length === 0) throw new Error('未解析出大纲内容');
+                        if (nodes.length === 0) throw new Error('未解析出知识库内容');
                     }
 
-                    // 增量导入：将文件内大纲节点追加到现有大纲末尾，保留原有内容（不覆盖）
+                    // 增量导入：将文件内知识库节点追加到现有知识库末尾，保留原有内容（不覆盖）
                     outlineData.nodes = outlineData.nodes.concat(nodes);
                     if (!outlineData.title) outlineData.title = title;
 
@@ -1288,7 +1288,7 @@
             return node;
         }
 
-        // 解析导出的文本大纲（缩进 2 空格=层级，行尾 [NN%] 标记进度）
+        // 解析导出的文本知识库（缩进 2 空格=层级，行尾 [NN%] 标记进度）
         function parseOutlineText(text) {
             const lines = text.split(/\r?\n/);
             const root = [];
