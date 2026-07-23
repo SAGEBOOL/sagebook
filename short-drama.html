@@ -789,7 +789,14 @@ async function generateStoryboard(script, f){
 async function extractElements(script, f, imported){
   const sys=`请从以下剧本中提取需要生成「三视图参考图」的视觉元素，只提取【角色】和【道具】两类，不要提取场景/环境类元素（场景将在后续「分镜场景图片」阶段逐镜头生成）。
 【强制约束】提取的元素必须与主角「${f.pname}」、类型「${f.genre}」、风格「${f.style}」、故事前提「${f.premise || '（未填写）'}」保持一致，不要引入与剧本无关的现代/都市/其他世界观元素。
-每个元素给出：中文名称、类型（只能是 角色 或 道具）、英文图像生成提示词（角色需包含三视图/全身/正侧面，道具需多角度，均需含风格与光照）。
+每个元素必须包含以下字段：
+- name：中文名称（用于界面展示）。
+- type：只能是 角色 或 道具。
+- prompt：必须是纯英文图像生成提示词（Stable Diffusion / Midjourney 风格），禁止出现任何中文字符、中文标点或中文说明。角色提示词必须包含 character reference sheet, three views, front side back, full body；道具提示词必须包含 prop reference sheet, multiple angles。均需融入风格「${f.genre} ${f.style}」与 clean white background / studio lighting。
+
+示例：
+[{"name":"长剑","type":"道具","prompt":"long sword, xuanhuan fantasy style, prop reference sheet, multiple angles, sharp blade, wooden handle, clean white background, studio lighting, detailed, 4K"}]
+
 输出为 JSON 数组，不要额外解释：
 [{"name":"${f.pname}","type":"角色","prompt":"..."},...]`;
   let text;
@@ -798,8 +805,11 @@ async function extractElements(script, f, imported){
     if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
     text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
   }catch(e){ throw e; }
-  const arr=safeParseJSON(text);
-  if(Array.isArray(arr)&&arr.length) return arr.filter(el=>el&&el.name).map(el=>({id:uid(),name:el.name,type: el.type==='角色'?'角色':'道具', prompt:el.prompt||''}));
+  let arr=safeParseJSON(text);
+  if(Array.isArray(arr)&&arr.length){
+    arr=arr.filter(el=>el&&el.name).map(el=>({id:uid(),name:el.name,type: el.type==='角色'?'角色':'道具', prompt:el.prompt||''}));
+    return await ensureEnglishPrompts(arr, f);
+  }
   return fallbackExtract(script, f);
 }
 
@@ -808,6 +818,29 @@ function safeParseJSON(s){
     const m=(s||'').match(/\[[\s\S]*\]/);
     return m?JSON.parse(m[0]):JSON.parse(s);
   }catch(e){ return null; }
+}
+function hasCJK(s){ return /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(s||''); }
+async function ensureEnglishPrompts(elements, f){
+  const style=`${f.genre||''} ${f.style||''}`.trim();
+  const out=[];
+  for(const el of elements){
+    let prompt=(el.prompt||'').trim();
+    if(!prompt || hasCJK(prompt)){
+      try{
+        const sys=`You are a Stable Diffusion prompt engineer. Rewrite the following image generation description into a pure English, tag-style prompt. Output only the final prompt, no explanation, no Chinese characters.`;
+        const user=`Element Chinese name: ${el.name}\nType: ${el.type}\nOriginal prompt: ${prompt || '(empty)'}\nStyle: ${style}\nRequired keywords: ${el.type==='角色'?'character reference sheet, three views, front side back, full body':'prop reference sheet, multiple angles, clean white background'}`;
+        prompt=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+        prompt=(prompt||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
+      }catch(e){ prompt=''; }
+      if(!prompt){
+        prompt=el.type==='角色'
+          ? `character reference sheet, three views, front side back, full body, ${style}, clean white background, detailed face, cinematic lighting, digital art, 4K`
+          : `prop reference sheet, multiple angles, ${style}, clean white background, studio lighting, detailed, 4K`;
+      }
+    }
+    out.push({...el, prompt});
+  }
+  return out;
 }
 function fallbackExtract(script, f){
   const refs=[];
