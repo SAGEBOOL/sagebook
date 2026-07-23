@@ -31,89 +31,59 @@
         .mode-pill.demo { background:rgba(212,168,83,.16);color:var(--warning);border-color:rgba(212,168,83,.4); }
         .mode-pill.live { background:rgba(90,171,122,.16);color:var(--success);border-color:rgba(90,171,122,.4); }
 
-        /* 设置区 */
-        .settings-card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:14px;margin:14px 0;overflow:hidden; }
-        .settings-head { display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;user-select:none; }
-        .settings-head .st { font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px; }
-        .settings-head .chev { transition:transform .25s;font-size:18px;color:var(--text-secondary); }
-        .settings-card.open .settings-head .chev { transform:rotate(180deg); }
-        .settings-body { display:none;padding:6px 18px 18px;border-top:1px solid var(--border); }
-        .settings-card.open .settings-body { display:block; }
-        .field { margin:12px 0; }
-        .field label { display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px; }
-        .field input { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
-        .field input:focus { border-color:var(--accent); }
-        .field .hint { font-size:12px;color:var(--text-tertiary);margin-top:4px; }
-        .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
-        @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
-
-        /* 按钮 */
+        /* 按钮 / 通用 */
         .btn { padding:9px 16px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-primary);border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .2s; }
         .btn:hover { border-color:var(--accent); }
         .btn:disabled { opacity:.5;cursor:not-allowed; }
         .btn-primary { background:var(--accent);color:white;border-color:var(--accent); }
         .btn-primary:hover { background:var(--accent-hover); }
         .btn-ghost { background:transparent; }
-        .btn-danger { border-color:rgba(224,85,85,.5);color:var(--error); }
-        .btn-danger:hover { background:rgba(224,85,85,.12); }
         .btn-sm { padding:6px 12px;font-size:12px;border-radius:8px; }
 
-        /* Tab */
-        .tabs { display:flex;gap:8px;margin:18px 0;flex-wrap:wrap; }
-        .tab-btn { padding:9px 18px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);border-radius:10px;cursor:pointer;font-size:14px;transition:all .2s; }
-        .tab-btn:hover { border-color:var(--accent); }
-        .tab-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
-        .tab-content { display:none; }
-        .tab-content.active { display:block; }
-
-        .card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:18px;margin:12px 0; }
-        .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px; }
-        .row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0; }
-        textarea, .inp { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:10px 12px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;resize:vertical; }
-        textarea:focus, .inp:focus { border-color:var(--accent); }
-        select.inp { width:auto; }
-
+        .card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:18px;margin:14px 0; }
+        .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+        .row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 0; }
         .note { font-size:13px;color:var(--text-secondary);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:8px 0; }
         .note.warn { border-color:rgba(212,168,83,.4);color:var(--warning); }
         .note.ok { border-color:rgba(90,171,122,.4);color:var(--success); }
         .note.err { border-color:rgba(224,85,85,.4);color:var(--error); }
 
-        /* 场次列表 */
-        .shot-list { display:flex;flex-direction:column;gap:10px;margin:10px 0; }
-        .shot-item { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start; }
-        .shot-item.dragging { opacity:.4; }
-        .shot-item.drop-target { border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-glow); }
-        .shot-handle { cursor:grab;color:var(--text-tertiary);font-size:18px;padding-top:2px;user-select:none; }
-        .shot-main { flex:1;min-width:0; }
-        .shot-num { font-weight:700;color:var(--accent);font-size:14px; }
-        .shot-field { font-size:12px;color:var(--text-secondary);margin-top:4px; }
-        .shot-field b { color:var(--text-primary);font-weight:600; }
-        .shot-actions { display:flex;flex-direction:column;gap:6px; }
-        .badge { display:inline-block;font-size:11px;padding:2px 8px;border-radius:9px;margin-top:6px; }
-        .badge.none { background:rgba(139,138,130,.2);color:var(--text-tertiary); }
-        .badge.img { background:rgba(90,142,204,.18);color:#7aa6e0; }
-        .badge.vid { background:rgba(90,171,122,.18);color:var(--success); }
+        /* 表单字段 */
+        .field { margin:12px 0; }
+        .field label { display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px; }
+        .field input, .field textarea { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
+        .field input:focus, .field textarea:focus { border-color:var(--accent); }
+        .field textarea { resize:vertical; line-height:1.6; }
+        .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+        .grid3 { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
+        @media (max-width:680px){ .grid2,.grid3{ grid-template-columns:1fr; } }
 
-        /* 网格画廊 */
-        .grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:12px 0; }
-        .cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
-        .cell img, .cell .ph { width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--bg-tertiary); }
-        .cell .ph { display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);font-size:13px;text-align:center;padding:10px; }
-        .cell .meta { padding:10px 12px;font-size:12px;color:var(--text-secondary); }
-        .cell .play { position:relative; }
-        .cell .play::after { content:"▶"; position:absolute; inset:0; display:flex;align-items:center;justify-content:center; font-size:34px; color:rgba(255,255,255,.9); text-shadow:0 2px 8px rgba(0,0,0,.5); pointer-events:none; }
-        .cell .vidtag { position:absolute; left:8px; bottom:8px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; padding:2px 8px; border-radius:8px; }
+        /* 文件导入区 */
+        .import-zone { margin-top:16px;padding:14px;border:1px dashed var(--border);border-radius:10px;background:var(--bg-input); }
+        .import-zone .lbl { font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px; }
+        .import-zone .hint { font-size:12px;color:var(--text-tertiary); }
+        .receipt { margin-top:8px;font-size:12px;color:var(--success);min-height:16px; }
+        .switch-line { display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);margin-top:10px; }
+        .switch-line input { width:auto; }
 
-        .char-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:10px 0; }
-        .char-card { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px; }
-        .char-card .nm { font-weight:700;color:var(--accent);font-size:14px; }
-        .char-card .ds { font-size:12px;color:var(--text-secondary);margin-top:4px;word-break:break-word; }
-        .char-card img { width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;margin-top:8px;background:var(--bg-tertiary); }
-        .char-card img.char-img { aspect-ratio:2/3;background:#fff; }
-        .char-card .en-prompt { font-size:11px;color:var(--text-secondary);margin-top:8px;background:var(--bg-tertiary);border:1px solid var(--border);border-radius:6px;padding:6px 8px;line-height:1.4; }
-        .char-card .en-prompt b { color:var(--text-primary); }
-        .char-card .acts { display:flex;gap:6px;margin-top:8px;flex-wrap:wrap; }
-        .mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5; }
+        /* 进度 */
+        .bar { height:8px;background:var(--bg-tertiary);border-radius:999px;overflow:hidden;margin:14px 0 4px;display:none; }
+        .bar>i { display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-light));transition:width .4s; }
+        .progress { background:#0f172a;color:#e2e8f0;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:120px;display:none;white-space:pre-wrap;line-height:1.7;margin:10px 0 4px;max-height:300px;overflow:auto; }
+        .progress b { color:#7dd3fc; }
+
+        /* 结果六阶段 */
+        .phase { margin:14px 0; }
+        .phase h3 { font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--accent); }
+        .phase h3 .tag { font-size:12px;background:var(--accent-glow);color:var(--accent-light);padding:2px 10px;border-radius:20px;font-weight:500; }
+        .phase pre { white-space:pre-wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:300px;overflow:auto;font-size:13px;line-height:1.6;margin:0; }
+        .pic-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:12px 0; }
+        .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+        .pic-cell img { width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--bg-tertiary); }
+        .pic-cell .cap { font-size:12px;color:var(--text-secondary);padding:8px 10px; }
+        .pic-cell .cap b { color:var(--text-primary); }
+        video.vid { width:100%;max-width:480px;border-radius:8px;border:1px solid var(--border);background:#000;display:block;margin-top:4px; }
+        .hidden { display:none; }
 
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
         .footer a { color:var(--accent);text-decoration:none; }
@@ -125,7 +95,6 @@
         .toast.show { opacity:1; }
         .spinner { display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
         @keyframes spin { to { transform:rotate(360deg); } }
-        code.cmd { display:block;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent-light);white-space:pre-wrap;word-break:break-all;margin:8px 0;font-family:ui-monospace,Menlo,Consolas,monospace; }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="text-pressure.css">
@@ -136,9 +105,9 @@
     <div class="header">
         <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
         <div class="title">短剧｜漫剧创作工作台</div>
-        <div class="subtitle">你的智能创作伙伴 · 短剧、网文、漫剧、长篇 — 剧本 → 人物 → 分镜 → 生图 → 生视频</div>
+        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①小说 ②剧本 ③视觉元素 ④分镜 ⑤参考图 ⑥视频</div>
         <div class="mode-bar">
-            <span class="mode-pill demo" id="modePill">🎭 演示模式（开放占位，无需 Key）</span>
+            <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
         </div>
     </div>
     <div class="theme-switcher">
@@ -147,160 +116,79 @@
         <button class="theme-btn" onclick="setTheme('system')">🖥️ 跟随</button>
     </div>
 
-    <!-- WorkRally 设置 -->
-    <div class="settings-card" id="wrSettings">
-        <div class="settings-head" onclick="toggleSettings()">
-            <span class="st">⚙️ WorkRally 结构（仅示意，不实际调用）</span>
-            <span class="chev">⌄</span>
+    <!-- 参数表单 -->
+    <div class="card">
+        <div class="card-title">🎬 漫剧流水线 · 创作参数</div>
+        <div class="grid2">
+            <div class="field"><label>标题</label><input id="f_title" value="剑宗遗孤"></div>
+            <div class="field"><label>篇幅</label><input id="f_length" value="短篇"></div>
         </div>
-        <div class="settings-body">
-            <div class="note">
-                本页复用 <b>WorkRally 的场次 / 分镜结构</b>（shot、series 模型），但 <b>不实际调用</b>其生图 / 生视频接口。<br>
-                生图、生视频均为本地占位演示，无需任何 Key 即可跑通全流程。下方配置字段仅作为结构示意保留，便于你日后对接，不会被发送到任何服务器。
+        <div class="grid2">
+            <div class="field"><label>类型</label><input id="f_genre" value="玄幻"></div>
+            <div class="field"><label>风格</label><input id="f_style" value="爽文"></div>
+        </div>
+        <div class="field"><label>故事前提</label><textarea id="f_premise" rows="2">女主苏瑶被宗门背叛后重生复仇</textarea></div>
+        <div class="grid2">
+            <div class="field"><label>主角名</label><input id="f_pname" value="苏瑶"></div>
+            <div class="field"><label>性别</label><input id="f_pgender" value="女"></div>
+        </div>
+        <div class="grid2">
+            <div class="field"><label>主角目标</label><input id="f_pgoal" value="为师父报仇"></div>
+            <div class="field"><label>核心冲突</label><input id="f_conflict" value="仇人竟是亲生父亲"></div>
+        </div>
+
+        <div class="import-zone">
+            <div class="lbl">📎 导入本地文件（可选；演示可上传，不实际消耗）</div>
+            <div class="grid3">
+                <div class="field" style="margin:0"><label style="font-weight:500">📄 故事正文 (.txt/.md)</label><input type="file" id="d_story" accept=".txt,.md"></div>
+                <div class="field" style="margin:0"><label style="font-weight:500">👤 人物设定 (.txt/.md)</label><input type="file" id="d_chars" accept=".txt,.md"></div>
+                <div class="field" style="margin:0"><label style="font-weight:500">🌍 世界观/场景 (.txt/.md)</label><input type="file" id="d_world" accept=".txt,.md"></div>
             </div>
-            <div class="field">
-                <label>WorkRally API Key（结构示意字段）</label>
-                <input type="password" id="wrKey" placeholder="结构示意，留空即用本地演示" autocomplete="off">
-                <div class="hint">本页不实际调用，字段仅保留结构，存于你本机浏览器 localStorage</div>
-            </div>
-            <div class="field">
-                <label>MCP 端点（Endpoint，结构示意）</label>
-                <input type="text" id="wrEndpoint" value="https://workrally.qq.com/zenstudio/api/mcp">
-            </div>
-            <div class="grid2">
-                <div class="field">
-                    <label>图片模型 ID（结构示意）</label>
-                    <input type="text" id="wrImgModel" placeholder="对接时填入">
-                </div>
-                <div class="field">
-                    <label>视频模型 ID（结构示意）</label>
-                    <input type="text" id="wrVidModel" placeholder="对接时填入">
-                </div>
-            </div>
-            <div class="row">
-                <button class="btn btn-primary" onclick="saveWRConfig()">💾 保存配置</button>
-                <button class="btn btn-ghost" onclick="clearWRConfig()">🧹 清空</button>
-            </div>
-            <div id="wrStatus"></div>
+            <div class="field" style="margin:10px 0 0"><label style="font-weight:500">🖼️ 参考图（可选，做图生图，可多选）</label><input type="file" id="d_ref" multiple accept="image/*"></div>
+            <div class="receipt" id="d_receipt"></div>
+            <label class="switch-line"><input type="checkbox" id="d_auto" checked> 导入故事后，其余阶段（剧本/分镜/生图/视频）仍由 AI 自动补全</label>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">🚀 开始生成</button>
+            <button class="btn btn-ghost" onclick="resetPipeline()">重置</button>
+            <span id="aiHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
         </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-        <button class="tab-btn active" data-tab="script" onclick="switchTab('script')">📝 剧本 / 提示词</button>
-        <button class="tab-btn" data-tab="chars" onclick="switchTab('chars')">👤 人物设定</button>
-        <button class="tab-btn" data-tab="shots" onclick="switchTab('shots')">🎞️ 分镜 · 场次</button>
-        <button class="tab-btn" data-tab="image" onclick="switchTab('image')">🖼️ AI 生图</button>
-        <button class="tab-btn" data-tab="video" onclick="switchTab('video')">🎬 AI 生视频</button>
-    </div>
+    <!-- 进度 -->
+    <div class="bar" id="bar"><i></i></div>
+    <div class="progress" id="log"></div>
 
-    <!-- Tab1 剧本 -->
-    <div class="tab-content active" id="tab-script">
-        <div class="card">
-            <div class="card-title">📝 一句话创意</div>
-            <textarea id="premise" rows="3" placeholder="例：女主重生回到被渣男害死前一夜，用前世记忆逆袭打脸，短剧爽点密集，共 6 场"></textarea>
-            <div class="row">
-                <button class="btn btn-primary" id="genScriptBtn" onclick="genScript()">🤖 生成知识库与分镜草稿</button>
-                <button class="btn" onclick="fillDemoScript()">✨ 填充示例剧本</button>
-            </div>
-            <div id="scriptStatus"></div>
-            <div class="card-title" style="margin-top:14px">📜 知识库 / 分镜文本</div>
-            <div id="scriptOut" class="note" style="white-space:pre-wrap;line-height:1.7">（点击「生成知识库」调用你已配置的 AI，或「填充示例剧本」快速体验）</div>
+    <!-- 结果：六阶段 -->
+    <div id="result" class="hidden">
+        <div class="phase">
+            <h3>① 小说 <span class="tag">novel.md</span></h3>
+            <pre id="out-novel">（生成中…）</pre>
         </div>
-    </div>
-
-    <!-- Tab2 人物 -->
-    <div class="tab-content" id="tab-chars">
-        <div class="card">
-            <div class="card-title">🎨 人物形象设定生成（定型形象图片）</div>
-            <div class="note">根据「剧本 / 分镜」的场次内容，提炼 4–6 个反复出现的主要角色，统一魔幻 / 修仙 / 玄幻 / 复古国风动画风格，并生成可复制的英文角色绘图提示词（定型形象）。下方约束词可自由编辑。</div>
-            <div id="sdKbStat" class="note" style="color:var(--accent)">🧠 知识库关联：加载中…</div>
-            <div class="field">
-                <label>角色设定约束词（可编辑）</label>
-                <textarea id="charConstraint" rows="11" class="mono" onchange="saveCharConstraint()"></textarea>
-            </div>
-            <div class="row">
-                <button class="btn btn-primary" id="genCharsBtn" onclick="genChars()">🤖 生成角色设定</button>
-                <button class="btn" onclick="genCharImageForAll()">🖼️ 批量生成定型形象图</button>
-                <button class="btn" onclick="updateCharPromptsOut()">🔄 刷新提示词整理</button>
-            </div>
-            <div id="charGenStatus"></div>
-            <div class="field" style="margin-top:12px">
-                <label>整理角色提示词（可直接复制 · 每个角色之间空一行）</label>
-                <textarea id="charPromptsOut" rows="8" readonly class="mono" style="background:var(--bg-tertiary)"></textarea>
-                <div class="row" style="margin-top:6px">
-                    <button class="btn btn-sm" onclick="copyCharPrompts()">📋 复制全部提示词</button>
-                </div>
-            </div>
+        <div class="phase">
+            <h3>② 剧本 <span class="tag">script.md</span></h3>
+            <pre id="out-script">（生成中…）</pre>
         </div>
-        <div class="card">
-            <div class="card-title">👤 新增人物</div>
-            <div class="field">
-                <label>名称</label>
-                <input type="text" id="charName" placeholder="如：林晚（女主）">
-            </div>
-            <div class="field">
-                <label>描述 / 外貌提示词</label>
-                <textarea id="charDesc" rows="2" placeholder="如：25岁，冷白皮，黑长直发，红裙，眼神倔强"></textarea>
-            </div>
-            <div class="field">
-                <label>参考图 URL（可选）</label>
-                <input type="text" id="charRef" placeholder="https://... 留空则用占位">
-            </div>
-            <div class="field">
-                <label>英文定型形象提示词（可选）</label>
-                <textarea id="charEn" rows="2" placeholder="如：Full body shot of ... pure white background, no props, cinematic nostalgic animated style"></textarea>
-            </div>
-            <div class="row">
-                <button class="btn btn-primary" onclick="addChar()">➕ 添加人物</button>
-            </div>
+        <div class="phase">
+            <h3>③ 视觉元素提取 <span class="tag">elements.md</span></h3>
+            <pre id="out-elements">（生成中…）</pre>
         </div>
-        <div class="card">
-            <div class="card-title">📇 人物库</div>
-            <div class="char-grid" id="charGrid"><div class="note">还没有人物，先在上方添加。</div></div>
+        <div class="phase">
+            <h3>④ 分镜表 <span class="tag">storyboard.md</span></h3>
+            <pre id="out-storyboard">（生成中…）</pre>
         </div>
-    </div>
-
-    <!-- Tab3 分镜 -->
-    <div class="tab-content" id="tab-shots">
-        <div class="card">
-            <div class="card-title">🎞️ 场次列表 <span id="shotCount" style="font-size:13px;color:var(--text-tertiary)"></span></div>
-            <div class="row">
-                <button class="btn btn-primary" onclick="addShot()">➕ 添加场次</button>
-                <button class="btn" onclick="exportProject()">⬇️ 导出项目 JSON</button>
-                <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ 导入 JSON</button>
-                <input type="file" id="importFile" accept="application/json" style="display:none" onchange="importProject(this)">
-            </div>
-            <div class="shot-list" id="shotList"></div>
+        <div class="phase">
+            <h3>⑤ 参考图 <span class="tag">Pictures/</span></h3>
+            <div class="pic-grid" id="out-pics"><div class="note">（生成中…）</div></div>
         </div>
-    </div>
-
-    <!-- Tab4 生图 -->
-    <div class="tab-content" id="tab-image">
-        <div class="card">
-            <div class="card-title">🖼️ AI 生图</div>
-            <div class="note">选择场次后即可生成该场的视觉图。本页不调用外部接口，生成本地占位演示图（复用 WorkRally 分镜结构）。</div>
-            <div class="row">
-                <select class="inp" id="imgShotSel"></select>
-                <button class="btn btn-primary" id="genImgBtn" onclick="genImage()">🖼️ 生成图片</button>
-                <button class="btn" onclick="genAllImages()">⚡ 全部场次生图</button>
-            </div>
-            <div id="imgStatus"></div>
-            <div class="grid" id="imgGrid"></div>
-        </div>
-    </div>
-
-    <!-- Tab5 生视频 -->
-    <div class="tab-content" id="tab-video">
-        <div class="card">
-            <div class="card-title">🎬 AI 生视频</div>
-            <div class="note">需先有该场的图片（去「生图」标签生成）。本页不调用外部接口，仅显示占位播放框（复用 WorkRally 分镜结构）。</div>
-            <div class="row">
-                <select class="inp" id="vidShotSel"></select>
-                <button class="btn btn-primary" id="genVidBtn" onclick="genVideo()">🎬 生成视频</button>
-            </div>
-            <div id="vidStatus"></div>
-            <div class="grid" id="vidGrid"></div>
+        <div class="phase">
+            <h3>⑥ 视频 <span class="tag">Videos/</span></h3>
+            <p class="hint" style="margin:0 0 10px">真实环境会生成 4 段 mp4 并内嵌播放；当前为本地演示占位（生视频需后端 Agnes 接口）。</p>
+            <video class="vid" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
+                <source src="#" type="video/mp4">
+            </video>
+            <p class="hint" style="margin-top:8px">镜头 1/2/3/4 · 真实生成后此处显示可播放视频</p>
         </div>
     </div>
 
@@ -316,46 +204,6 @@
 </footer>
 
 <script>
-/* ============ 数据模型 ============ */
-const LS='sagebook_shortdrama';
-const CHAR_CONSTRAINT_DEFAULT = `二、角色设定（生成角色图）
-请你扮演一位漫剧风格的角色设计师和AI绘图提示词专家。
-请根据上面生成的分镜内容，提炼出4–6个会反复出现的主要角色。所有角色都要符合提供的文字描述的感觉，风格统一（魔幻、修仙、玄幻、复古国风），并且适合后续反复出现在动画场景中。
-请为每个角色输出以下内容：
-角色名字：
-故事身份：
-年龄：
-外貌特征：突出人物形象特征感，比如“复古的国风服饰、法器、魔幻感、不那么完美的真实细节”。
-穿着风格：比如铠甲、复古国风服饰、连衣裙等。
-性格特点：2–4个真实自然的性格特征。
-行为细节：惊讶的表情、有力的臂膀等。
-情绪作用：比如天真、热闹、温暖、紧张、害怕。
-出现场景：简单说明他通常会出现在哪些场景里。
-然后再为每个角色生成一段英文角色绘图提示词，要求：
-● full body
-● pure white background
-● no props
-● cinematic nostalgic animated style
-● soft lighting
-● clean silhouette
-● consistent character design
-注意：
-1.角色图里只能出现角色本人，不要背景，不要道具，不要文字。
-2.角色一定要有真实的质感，符合魔幻复古国风剧情人物。
-3.每个角色要有明显区分，但整体风格必须统一。
-4.最终请把每个角色的英文提示词单独列出来，方便我直接复制使用。
-整理角色提示词：
-请把所有角色的图片生成提示词整理到一个可直接复制的格式，每个角色提示词之间空一行。
-格式如下：
-[角色名字]
-图片生成提示词`;
-let state = load();
-function load(){
-  try{ const s=JSON.parse(localStorage.getItem(LS)); if(s) return s; }catch(e){}
-  return { config:{ workrallyKey:'', workrallyEndpoint:'https://workrally.qq.com/zenstudio/api/mcp', imageModel:'', videoModel:'' }, characters:[], shots:[], script:'', charConstraint:CHAR_CONSTRAINT_DEFAULT };
-}
-function save(){ localStorage.setItem(LS, JSON.stringify(state)); }
-
 /* ============ 主题 ============ */
 function setTheme(t){
   const h=document.documentElement;
@@ -369,11 +217,10 @@ function setTheme(t){
 (function(){ const saved=localStorage.getItem('sagebook_theme')||'dark'; setTheme(saved); document.querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>{ setTheme(b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); localStorage.setItem('sagebook_theme',b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); }); })();
 
 /* ============ 工具 ============ */
-function uid(){ return 'id'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h; }
 function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
-function toggleSettings(){ document.getElementById('wrSettings').classList.toggle('open'); }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
 /* ============ 站点既有 AI（与设置页共享键） ============ */
 function getAIConfig(){
@@ -406,374 +253,175 @@ async function callSiteAI(messages){
   }
 }
 
-/* ============ WorkRally 配置 ============ */
-function saveWRConfig(){
-  state.config.workrallyKey=document.getElementById('wrKey').value.trim();
-  state.config.workrallyEndpoint=document.getElementById('wrEndpoint').value.trim()||'https://workrally.qq.com/zenstudio/api/mcp';
-  state.config.imageModel=document.getElementById('wrImgModel').value.trim();
-  state.config.videoModel=document.getElementById('wrVidModel').value.trim();
-  save(); updateModePill();
-  toast('已保存（结构示意 · 生图/生视频均为本地演示）');
-}
-function clearWRConfig(){
-  document.getElementById('wrKey').value='';
-  state.config.workrallyKey=''; save(); updateModePill();
-  document.getElementById('wrStatus').innerHTML='<div class="note">已清空结构字段。</div>';
-  toast('已清空');
-}
-function applyWRConfigToUI(){
-  document.getElementById('wrKey').value=state.config.workrallyKey||'';
-  document.getElementById('wrEndpoint').value=state.config.workrallyEndpoint||'https://workrally.qq.com/zenstudio/api/mcp';
-  document.getElementById('wrImgModel').value=state.config.imageModel||'';
-  document.getElementById('wrVidModel').value=state.config.videoModel||'';
-}
-function updateModePill(){
-  const pill=document.getElementById('modePill');
-  if(state.config.workrallyKey){ pill.className='mode-pill live'; pill.textContent='🔑 WorkRally 结构已配置（仅本地演示，不调用）'; }
-  else { pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（本地占位，无需 Key）'; }
-}
-/* 本页仅复用 WorkRally 的场次 / 分镜结构，不实际调用其生图 / 生视频接口 */
-
-
-/* ============ Tab 切换 ============ */
-function switchTab(name){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  if(name==='shots') renderShots();
-  if(name==='image'){ fillShotSelect('imgShotSel'); renderImgGrid(); }
-  if(name==='video'){ fillShotSelect('vidShotSel'); renderVidGrid(); }
-  if(name==='chars') renderChars();
-}
-
-/* ============ 剧本生成 ============ */
-async function genScript(){
-  const premise=document.getElementById('premise').value.trim();
-  if(!premise){ toast('先填一句话创意'); return; }
-  const btn=document.getElementById('genScriptBtn'); const st=document.getElementById('scriptStatus');
-  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在生成知识库与分镜…</div>';
-  try{
-    const sys='你是短剧/漫剧编剧助手。根据用户创意，输出紧凑的短剧知识库，并拆分为若干场次（建议4-8场）。用 JSON 输出：{ "outline":"大纲文字(150字内)", "shots":[ {"num":"EP01-SC01","image_prompt":"画面/角色视觉提示词(英文或中文均可，含风格)","animation_prompt":"运镜/动效提示词"} ] }。只输出 JSON，不要解释。';
-    // (A) 上下文注入：让生成的知识库/场次贴合既有角色与世界观
-    let userMsg=premise;
-    if(window.SageKB){
-      userMsg+='\n\n【知识库设定（请贴合，已有角色/地点/世界观勿凭空冲突）】\n'+SageKB.buildKBContext({charLimit:40,clip:60});
-    }
-    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:userMsg}]);
-    const parsed=parseScriptJSON(text);
-    state.script=parsed.outline||text;
-    if(parsed.shots&&parsed.shots.length){
-      state.shots=parsed.shots.map((s,i)=>({ id:uid(), num:s.num||s.story_num||('SC'+(i+1)), imagePrompt:s.imagePrompt||s.image_prompt||'', animationPrompt:s.animationPrompt||s.animation_prompt||'', characterId:'', imageUrl:'', videoUrl:'' }));
-    }
-    save();
-    st.innerHTML='<div class="note ok">✅ 已生成 '+state.shots.length+' 个场次草稿，去「分镜·场次」查看/编辑。</div>';
-    document.getElementById('scriptOut').textContent=state.script;
-    renderShots();
-  }catch(e){
-    st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>';
-  }finally{ btn.disabled=false; }
-}
-function parseScriptJSON(text){
-  try{
-    // 先尝试去掉可能的 markdown 代码块包裹
-    let cleaned=text.replace(/```(?:json)?\s*/gi,'').replace(/```\s*$/g,'').trim();
-    const m=cleaned.match(/\{[\s\S]*\}/);
-    if(m){ return JSON.parse(m[0]); }
-  }catch(e){}
-  return { outline:text, shots:[] };
-}
-function fillDemoScript(){
-  const outline='【示例】重生逆袭爽剧：女主林晚被害死前一夜重生，利用前世记忆一步步夺回家产、打脸渣男与继妹，节奏密集、反转不断。';
-  state.script=outline;
-  state.shots=[
-    {id:uid(),num:'EP01-SC01',imagePrompt:'林晚倒在血泊中，都市夜景，冷色调，悲剧氛围',animationPrompt:'缓慢推近，雨滴落下',characterId:'',imageUrl:'',videoUrl:''},
-    {id:uid(),num:'EP01-SC02',imagePrompt:'林晚猛然睁眼，回到一年前卧室，晨光，惊愕表情',animationPrompt:'快速变焦到眼睛特写',characterId:'',imageUrl:'',videoUrl:''},
-    {id:uid(),num:'EP01-SC03',imagePrompt:'渣男与继妹在客厅密谋，奢华家装，阴影构图',animationPrompt:'平移跟拍两人',characterId:'',imageUrl:'',videoUrl:''},
-    {id:uid(),num:'EP01-SC04',imagePrompt:'林晚冷笑，红裙转身，自信姿态，逆光',animationPrompt:'镜头环绕主角',characterId:'',imageUrl:'',videoUrl:''},
-    {id:uid(),num:'EP01-SC05',imagePrompt:'股东大会甩出证据，众人震惊，戏剧性打脸',animationPrompt:'快速剪辑，节奏加快',characterId:'',imageUrl:'',videoUrl:''},
-    {id:uid(),num:'EP01-SC06',imagePrompt:'林晚站在落地窗前俯瞰城市，华丽收尾',animationPrompt:'缓慢拉远，定格',characterId:'',imageUrl:'',videoUrl:''}
-  ];
-  save();
-  document.getElementById('scriptOut').textContent=outline;
-  document.getElementById('scriptStatus').innerHTML='<div class="note ok">✅ 已填充示例剧本（6 场）。可改创意后重新生成，或去「分镜」编辑。</div>';
-  renderShots();
-  toast('示例剧本已就绪');
-}
-
-/* ============ 人物 ============ */
-function addChar(){
-  const name=document.getElementById('charName').value.trim();
-  if(!name){ toast('填人物名称'); return; }
-  state.characters.push({ id:uid(), name, desc:document.getElementById('charDesc').value.trim(), ref:document.getElementById('charRef').value.trim(), enPrompt:document.getElementById('charEn').value.trim(), imageUrl:'' });
-  save();
-  document.getElementById('charName').value=''; document.getElementById('charDesc').value=''; document.getElementById('charRef').value=''; document.getElementById('charEn').value='';
-  renderChars(); updateCharPromptsOut(); toast('已添加：'+name);
-}
-function delChar(id){ state.characters=state.characters.filter(c=>c.id!==id); save(); renderChars(); }
-function renderChars(){
-  const g=document.getElementById('charGrid');
-  if(!state.characters.length){ g.innerHTML='<div class="note">还没有人物。可点上方「🤖 生成角色设定」自动提炼，或手动添加。</div>'; return; }
-  g.innerHTML=state.characters.map(c=>`
-    <div class="char-card">
-      <div class="nm">${esc(c.name)}</div>
-      <div class="ds" style="white-space:pre-wrap">${esc(c.desc)||'<span style="color:var(--text-tertiary)">无描述</span>'}</div>
-      ${c.imageUrl?`<img class="char-img" src="${esc(c.imageUrl)}" alt="${esc(c.name)}" onerror="this.style.display='none'">`:''}
-      ${c.enPrompt?`<div class="en-prompt"><b>EN 提示词：</b><span>${esc(c.enPrompt)}</span></div>`:''}
-      ${c.ref?`<img src="${esc(c.ref)}" alt="${esc(c.ref?'参考图':c.name)}" onerror="this.style.display='none'">`:''}
-      <div class="acts">
-        <button class="btn btn-sm" onclick="genCharImage('${c.id}')">🖼️ 定型形象图</button>
-        ${c.enPrompt?`<button class="btn btn-sm" onclick="copyCharEn('${c.id}')">📋 复制EN</button>`:''}
-        <button class="btn btn-sm btn-danger" onclick="delChar('${c.id}')">删除</button>
-      </div>
-    </div>`).join('');
-}
-
-/* ============ 角色设定生成（定型形象图片） ============ */
-function saveCharConstraint(){ state.charConstraint=document.getElementById('charConstraint').value; save(); }
-function applyCharConstraint(){ const el=document.getElementById('charConstraint'); if(el) el.value=state.charConstraint||CHAR_CONSTRAINT_DEFAULT; }
-function composeCharDesc(ch){
-  const parts=[];
-  if(ch.identity) parts.push('故事身份：'+ch.identity);
-  if(ch.age) parts.push('年龄：'+ch.age);
-  if(ch.appearance) parts.push('外貌特征：'+ch.appearance);
-  if(ch.clothing) parts.push('穿着风格：'+ch.clothing);
-  if(ch.personality) parts.push('性格特点：'+ch.personality);
-  if(ch.behavior) parts.push('行为细节：'+ch.behavior);
-  if(ch.emotion) parts.push('情绪作用：'+ch.emotion);
-  if(ch.scenes) parts.push('出现场景：'+ch.scenes);
-  return parts.join('\n');
-}
-function parseCharJSON(text){
-  try{
-    let cleaned=text.replace(/```(?:json)?\s*/gi,'').replace(/```\s*$/g,'').trim();
-    const m=cleaned.match(/\{[\s\S]*\}/);
-    if(m){ const j=JSON.parse(m[0]); if(j&&j.characters) return j; }
-  }catch(e){}
-  return { characters:[] };
-}
-async function genChars(){
-  const constraint=(document.getElementById('charConstraint').value||'').trim();
-  if(!constraint){ toast('约束词为空'); return; }
-  const btn=document.getElementById('genCharsBtn'); const st=document.getElementById('charGenStatus');
-  btn.disabled=true; st.innerHTML='<div class="note"><span class="spinner"></span>AI 正在提炼角色并生成英文提示词…</div>';
-  try{
-    const shotsCtx = state.shots.length
-      ? state.shots.map(s=>s.num+': 生图='+(s.imagePrompt||'')+'; 动效='+(s.animationPrompt||'')).join('\n')
-      : (state.script ? '【故事知识库】'+state.script : '（暂无分镜，请基于通用短剧/漫剧生成，风格：魔幻复古国风）');
-    const sys='你是资深漫剧风格角色设计师与AI绘图提示词专家，擅长从分镜中提炼反复出现的主要角色，并产出风格统一、可直接用于文生图的英文角色提示词。';
-    // (A) 上下文注入：避免与知识库已有角色重名/漂移世界观
-    let kbNote='';
-    if(window.SageKB){
-      kbNote='\n\n【知识库已有角色 / 世界观（重要）】\n'+SageKB.buildKBContext({charLimit:40,clip:60})+
-        '\n指令：若与知识库已有角色重名或高度雷同，请直接复用该角色而非新建；整体风格须与知识库世界观（如魔幻/修仙/玄幻/复古国风）保持统一，不得凭空冲突。';
-    }
-    const user='【分镜 / 故事内容】\n'+shotsCtx+'\n\n【你的任务与约束】\n'+constraint+kbNote+'\n\n请只输出 JSON（不要解释）：\n{"characters":[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","en_prompt":"英文角色绘图提示词，须满足 full body / pure white background / no props / cinematic nostalgic animated style / soft lighting / clean silhouette / consistent character design"}]}\n角色数量 4–6 个。';
-    const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-    const parsed=parseCharJSON(text);
-    if(parsed.characters&&parsed.characters.length){
-      const before=state.characters.length;
-      for(const ch of parsed.characters){
-        state.characters.push({
-          id:uid(),
-          name:ch.name||'未命名角色',
-          desc:composeCharDesc(ch),
-          ref:'',
-          enPrompt:ch.en_prompt||ch.enPrompt||ch.english_prompt||'',
-          imageUrl:''
-        });
-      }
-      save(); renderChars(); updateCharPromptsOut();
-      st.innerHTML='<div class="note ok">✅ 已生成 '+ (state.characters.length-before) +' 个角色，已加入「人物库」。可点「🖼️ 批量生成定型形象图」预览。</div>';
-    } else {
-      st.innerHTML='<div class="note warn">⚠️ AI 未返回可解析的角色 JSON，请检查约束词或换个创意再试。</div>';
-    }
-  }catch(e){
-    st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>';
-  }finally{ btn.disabled=false; }
-}
-function demoCharImage(c){
-  const h=hashStr((c.enPrompt||c.name||'x'));
-  const skin=`hsl(${h%360},42%,72%)`;
-  const robe=`hsl(${(h*3)%360},48%,42%)`;
-  const name=esc(c.name||'角色');
-  const tag=esc((c.enPrompt||'').slice(0,40));
-  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='480' viewBox='0 0 320 480'>
-    <rect width='320' height='480' fill='#ffffff'/>
-    <ellipse cx='160' cy='92' rx='44' ry='50' fill='${skin}'/>
-    <rect x='120' y='150' width='80' height='36' rx='20' fill='${skin}'/>
-    <path d='M78 188 Q160 168 242 188 L252 432 Q160 458 68 432 Z' fill='${robe}'/>
-    <rect x='150' y='150' width='20' height='286' fill='rgba(0,0,0,.06)'/>
-    <text x='160' y='40' text-anchor='middle' fill='#222' font-size='20' font-family='sans-serif' font-weight='bold'>${name}</text>
-    <text x='160' y='462' text-anchor='middle' fill='#555' font-size='13' font-family='sans-serif'>full body · white bg · no props</text>
-    ${tag?`<text x='160' y='150' text-anchor='middle' fill='#888' font-size='11' font-family='sans-serif'>${tag}</text>`:''}
-  </svg>`;
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-}
-function genCharImage(id){
-  const c=state.characters.find(x=>x.id===id); if(!c) return;
-  c.imageUrl=demoCharImage(c); save(); renderChars();
-  toast('已生成定型形象图（本地演示）');
-}
-function genCharImageForAll(){
-  if(!state.characters.length){ toast('先生成或添加角色'); return; }
-  state.characters.forEach(c=>{ c.imageUrl=demoCharImage(c); });
-  save(); renderChars(); toast('已批量生成定型形象图（本地演示）');
-}
-function compileCharPrompts(){
-  return state.characters.map(c=>'['+c.name+']\n'+(c.enPrompt||'')).filter(x=>x.trim().length>('[]'.length)).join('\n\n');
-}
-function updateCharPromptsOut(){
-  const el=document.getElementById('charPromptsOut'); if(el) el.value=compileCharPrompts();
-}
-function copyCharPrompts(){
-  const txt=compileCharPrompts();
-  if(!txt.trim()){ toast('暂无提示词'); return; }
-  navigator.clipboard?.writeText(txt).then(()=>toast('已复制全部提示词')).catch(()=>toast('复制失败，请手动选择'));
-}
-
-// 刷新「🧠 知识库关联」状态（人物设定区）
-function updateSDKBStat(){
-  const el=document.getElementById('sdKbStat'); if(!el) return;
-  if(!window.SageKB){ el.textContent='🧠 知识库关联：未加载'; return; }
-  const s=SageKB.getStats();
-  if(!s.total){ el.textContent='🧠 知识库关联：暂无数据（生成时会基于通用设定）'; return; }
-  el.innerHTML='🧠 已关联知识库：角色 <b>'+s.characters+'</b> · 地点 <b>'+s.locations+'</b> · 势力 <b>'+s.factions+'</b> · 百科 <b>'+s.encyclopedia+'</b>（生成时将自动贴合，重名会复用）';
-}
-function copyCharEn(id){
-  const c=state.characters.find(x=>x.id===id); if(!c||!c.enPrompt){ toast('无提示词'); return; }
-  navigator.clipboard?.writeText(c.enPrompt).then(()=>toast('已复制：'+c.name+' 的提示词')).catch(()=>toast('复制失败'));
-}
-function copyText(t){ navigator.clipboard?.writeText(t).then(()=>toast('已复制')).catch(()=>toast('复制失败')); }
-
-/* ============ 分镜场次 ============ */
-let dragId=null;
-function addShot(){
-  state.shots.push({ id:uid(), num:'SC'+(state.shots.length+1), imagePrompt:'', animationPrompt:'', characterId:'', imageUrl:'', videoUrl:'' });
-  save(); renderShots();
-}
-function delShot(id){ state.shots=state.shots.filter(s=>s.id!==id); save(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); }
-function updateShot(id,field,val){ const s=state.shots.find(x=>x.id===id); if(s){ s[field]=val; save(); } }
-function renderShots(){
-  const list=document.getElementById('shotList');
-  document.getElementById('shotCount').textContent='（共 '+state.shots.length+' 场）';
-  if(!state.shots.length){ list.innerHTML='<div class="note">还没有场次。去「剧本」生成，或点「添加场次」。</div>'; return; }
-  list.innerHTML=state.shots.map(s=>{
-    const st = s.videoUrl?'vid':(s.imageUrl?'img':'none');
-    const stxt = s.videoUrl?'已生成视频':(s.imageUrl?'已生成图片':'未生成');
-    const charOpts=state.characters.map(c=>`<option value="${c.id}" ${s.characterId===c.id?'selected':''}>${esc(c.name)}</option>`).join('');
-    return `<div class="shot-item" draggable="true" data-id="${s.id}" ondragstart="onDrag(event,'${s.id}')" ondragover="onDragOver(event)" ondrop="onDrop(event,'${s.id}')" ondragend="onDragEnd()">
-      <div class="shot-handle">⠿</div>
-      <div class="shot-main">
-        <span class="shot-num">${esc(s.num)}</span>
-        <span class="badge ${st}">${stxt}</span>
-        <div class="shot-field"><b>生图提示词：</b><input class="inp" style="margin-top:4px" value="${esc(s.imagePrompt)}" onchange="updateShot('${s.id}','imagePrompt',this.value)"></div>
-        <div class="shot-field"><b>动效提示词：</b><input class="inp" style="margin-top:4px" value="${esc(s.animationPrompt)}" onchange="updateShot('${s.id}','animationPrompt',this.value)"></div>
-        <div class="shot-field"><b>关联人物：</b><select class="inp" style="margin-top:4px" onchange="updateShot('${s.id}','characterId',this.value)"><option value="">—</option>${charOpts}</select></div>
-      </div>
-      <div class="shot-actions">
-        <button class="btn btn-sm" onclick="dupShot('${s.id}')">复制</button>
-        <button class="btn btn-sm btn-danger" onclick="delShot('${s.id}')">删除</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function dupShot(id){ const s=state.shots.find(x=>x.id===id); if(!s) return; const c=JSON.parse(JSON.stringify(s)); c.id=uid(); c.imageUrl=''; c.videoUrl=''; const i=state.shots.findIndex(x=>x.id===id); state.shots.splice(i+1,0,c); save(); renderShots(); }
-function onDrag(e,id){ dragId=id; e.currentTarget.classList.add('dragging'); }
-function onDragOver(e){ e.preventDefault(); const t=e.currentTarget; if(t.classList.contains('shot-item')) t.classList.add('drop-target'); }
-function onDragEnd(){ dragId=null; document.querySelectorAll('.shot-item').forEach(x=>x.classList.remove('dragging','drop-target')); }
-function onDrop(e,id){ e.preventDefault(); const t=e.currentTarget; t.classList.remove('drop-target'); if(!dragId||dragId===id) return; const from=state.shots.findIndex(x=>x.id===dragId); const to=state.shots.findIndex(x=>x.id===id); if(from<0||to<0) return; const [m]=state.shots.splice(from,1); state.shots.splice(to,0,m); dragId=null; save(); renderShots(); }
-
-/* ============ 占位图生成 ============ */
-function demoImage(shot){
-  const h=hashStr(shot.imagePrompt||shot.num||'x');
-  const c1=`hsl(${h%360},58%,46%)`, c2=`hsl(${(h*2)%360},52%,28%)`;
-  const txt=esc((shot.imagePrompt||'演示分镜').slice(0,46));
-  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='512' height='288' viewBox='0 0 512 288'>
-    <defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
-    <rect width='512' height='288' fill='url(#g)'/>
-    <rect x='16' y='16' width='120' height='34' rx='8' fill='rgba(0,0,0,.35)'/>
-    <text x='30' y='39' fill='#fff' font-size='18' font-family='sans-serif' font-weight='bold'>${esc(shot.num||'SC')}</text>
-    <text x='24' y='258' fill='rgba(255,255,255,.92)' font-size='15' font-family='sans-serif'>${txt}</text>
-    <text x='408' y='272' fill='rgba(255,255,255,.55)' font-size='12' font-family='sans-serif'>演示图</text>
+/* ============ 占位图生成（漫剧风格） ============ */
+function genManjuPic(name, hint){
+  const h=hashStr((name||'')+(hint||'x'));
+  const c1=`hsl(${h%360},42%,52%)`, c2=`hsl(${(h*2)%360},48%,30%)`;
+  const label=esc((name||'元素').slice(0,10));
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'>
+    <defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
+    <rect width='200' height='300' fill='url(#g)'/>
+    <circle cx='100' cy='110' r='42' fill='rgba(255,255,255,.18)'/>
+    <rect x='52' y='160' width='96' height='120' rx='10' fill='rgba(255,255,255,.14)'/>
+    <text x='100' y='292' text-anchor='middle' fill='rgba(255,255,255,.92)' font-size='14' font-family='sans-serif'>${label}</text>
   </svg>`;
   return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
 
-/* ============ 生图 ============ */
-function fillShotSelect(selId){
-  const sel=document.getElementById(selId); if(!sel) return;
-  sel.innerHTML=state.shots.map(s=>`<option value="${s.id}">${esc(s.num)} · ${(s.imagePrompt||'未填提示词').slice(0,18)}</option>`).join('');
+/* ============ 演示示例（无 Key 时使用） ============ */
+const DEMO = {
+  novel: "# 剑宗遗孤\n\n苏瑶死在那场宗门大比上。她记得师兄的剑从背后穿心而过，记得掌门——她唤了十年的“父亲”——在观礼台上微微颔首。\n\n再睁眼，她回到十六岁入门那年。\n\n这一次，她把“痴情少女”的面具戴得更深，却把每一张脸都记进了骨髓。师父的死，要从那个雨夜的茶盏查起……",
+  script: "【场景一·内景·剑宗藏书阁·夜】\n动作：苏瑶指尖掠过师父遗留的剑谱，烛火骤暗。\n苏瑶（低声）：这一次，我不会再信任何人。\n\n【场景二·外景·演武场·晨】\n动作：师兄一剑刺来，苏瑶侧身避开，眸中寒光一闪。\n师兄：师妹，你的剑法……长进了。",
+  elements: "【角色】苏瑶 — Subject: a young cultivator girl with cold eyes, in flowing ink-blue robe, silver hairpin; Style: xianxia cinematic; Lighting: moonlight.\n【场景】剑宗藏书阁 — Subject: ancient library with floating scrolls; Style: ink-wash fantasy; Lighting: dim candle.\n【道具】断魂剑 — Subject: slender jade sword with crack; Style: ornate; Lighting: rim light.",
+  storyboard: "镜头1（15s）· 特写→全景：苏瑶睁眼，雨滴落在脸颊。运镜：缓慢推近。\n镜头2（15s）· 中景：她抚过师父旧剑，眼神转冷。运镜：摇镜。\n镜头3（15s）· 动作：师兄刺剑，苏瑶侧身闪避，剑光划过。运镜：快速横移。\n镜头4（15s）· 远景：掌门于高台颔首，苏瑶仰头，嘴角微扬。运镜：俯拍。",
+  pics: [
+    { name:'苏瑶（主角）', hint:'a young cultivator girl, ink-blue robe' },
+    { name:'场景·藏书阁', hint:'ancient library with floating scrolls' },
+    { name:'道具·断魂剑', hint:'slender jade sword with crack' }
+  ]
+};
+
+/* ============ 文件导入回执 ============ */
+function dReceipt(){
+  const b=document.getElementById('d_receipt'); const t=[];
+  ['d_story','d_chars','d_world'].forEach(id=>{const f=document.getElementById(id); if(f&&f.files[0]) t.push('✓ '+f.files[0].name);});
+  const r=document.getElementById('d_ref'); if(r&&r.files.length) t.push('✓ 参考图 '+r.files.length+' 张');
+  b.textContent=t.length?'已导入：'+t.join('，'):'';
 }
-async function genImage(){
-  const sel=document.getElementById('imgShotSel'); if(!sel.value){ toast('先添加场次'); return; }
-  await genImageFor(sel.value);
+['d_story','d_chars','d_world','d_ref'].forEach(id=>{const f=document.getElementById(id); if(f) f.addEventListener('change',dReceipt);});
+
+function readFileText(input){
+  return new Promise(res=>{ const f=input.files[0]; if(!f) return res(''); const rd=new FileReader(); rd.onload=()=>res(rd.result||''); rd.onerror=()=>res(''); rd.readAsText(f); });
 }
-async function genAllImages(){
-  for(const s of state.shots){ await genImageFor(s.id,true); }
-  toast('全部场次已生成（本地演示）');
-}
-async function genImageFor(id,silent){
-  const shot=state.shots.find(s=>s.id===id); if(!shot) return;
-  const st=document.getElementById('imgStatus');
-  if(!silent) st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」图片…</div>';
-  try{
-    shot.imageUrl=demoImage(shot); shot.videoUrl=''; save();
-    if(!silent) st.innerHTML='<div class="note">🎭 已生成占位图（本地演示，不调用外部接口）。</div>';
-    renderImgGrid(); renderShots();
-  }catch(e){ if(!silent) st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
-}
-function renderImgGrid(){
-  const g=document.getElementById('imgGrid');
-  if(!state.shots.length){ g.innerHTML='<div class="note">还没有场次。</div>'; return; }
-  g.innerHTML=state.shots.map(s=>`
-    <div class="cell">
-      ${s.imageUrl?`<img src="${esc(s.imageUrl)}" alt="${esc(s.num)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ph',textContent:'图 unavailable'}))">`:`<div class="ph">未生成<br>去「分镜」填提示词后点生成</div>`}
-      <div class="meta"><b>${esc(s.num)}</b><br>${(s.imagePrompt||'—').slice(0,40)}</div>
-    </div>`).join('');
+function readRefImages(){
+  return new Promise(res=>{ const f=document.getElementById('d_ref'); const files=f?([...f.files]):[]; if(!files.length) return res([]);
+    let done=0; const out=[];
+    files.forEach(file=>{ const rd=new FileReader(); rd.onload=()=>{ out.push(rd.result); if(++done===files.length) res(out); }; rd.onerror=()=>{ if(++done===files.length) res(out); }; rd.readAsDataURL(file); });
+  });
 }
 
-/* ============ 生视频 ============ */
-async function genVideo(){
-  const sel=document.getElementById('vidShotSel'); if(!sel.value){ toast('先选择场次'); return; }
-  const shot=state.shots.find(s=>s.id===sel.value);
-  if(!shot.imageUrl){ toast('该场还没图，先去生图'); return; }
-  const st=document.getElementById('vidStatus');
-  st.innerHTML='<div class="note"><span class="spinner"></span>正在生成「'+esc(shot.num)+'」视频…</div>';
-  try{
-    shot.videoUrl='demo:'+shot.imageUrl; save();
-    st.innerHTML='<div class="note">🎭 已生成占位播放框（本地演示，不调用外部接口）。</div>';
-    renderVidGrid(); renderShots();
-  }catch(e){ st.innerHTML='<div class="note err">❌ '+esc(e.message)+'</div>'; }
+/* ============ 流水线运行 ============ */
+let running=false;
+function collectForm(){
+  return {
+    title:document.getElementById('f_title').value.trim()||'未命名',
+    length:document.getElementById('f_length').value.trim()||'短篇',
+    genre:document.getElementById('f_genre').value.trim()||'玄幻',
+    style:document.getElementById('f_style').value.trim()||'爽文',
+    premise:document.getElementById('f_premise').value.trim(),
+    pname:document.getElementById('f_pname').value.trim()||'主角',
+    pgender:document.getElementById('f_pgender').value.trim(),
+    pgoal:document.getElementById('f_pgoal').value.trim(),
+    conflict:document.getElementById('f_conflict').value.trim(),
+    autoImport:document.getElementById('d_auto').checked
+  };
 }
-function renderVidGrid(){
-  const g=document.getElementById('vidGrid');
-  const withImg=state.shots.filter(s=>s.imageUrl);
-  if(!withImg.length){ g.innerHTML='<div class="note">还没有带图的场次。去「生图」生成后回来。</div>'; return; }
-  g.innerHTML=withImg.map(s=>`
-    <div class="cell">
-      <div class="play"><img src="${esc(s.imageUrl)}" alt="${esc(s.num)}" onerror="this.style.display='none'"></div>
-      <span class="vidtag">${s.videoUrl&&s.videoUrl.startsWith('http')?'真实视频':'演示占位'}</span>
-      <div class="meta"><b>${esc(s.num)}</b><br>${(s.animationPrompt||s.imagePrompt||'—').slice(0,40)}</div>
-    </div>`).join('');
+function formSummary(f){
+  return `标题：${f.title}\n篇幅：${f.length}\n类型：${f.genre}\n风格：${f.style}\n故事前提：${f.premise}\n主角：${f.pname}（${f.pgender}），目标：${f.pgoal}，核心冲突：${f.conflict}`;
 }
 
-/* ============ 导入导出 ============ */
-function exportProject(){
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sagebook-短剧项目.json'; a.click();
-  toast('已导出项目 JSON');
-}
-function importProject(input){
-  const f=input.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{ try{ const d=JSON.parse(rd.result); if(d&&d.shots){ state=d; if(!state.charConstraint) state.charConstraint=CHAR_CONSTRAINT_DEFAULT; save(); applyWRConfigToUI(); updateModePill(); renderShots(); fillShotSelect('imgShotSel'); fillShotSelect('vidShotSel'); renderImgGrid(); renderVidGrid(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); updateSDKBStat(); toast('已导入项目'); } else toast('文件格式不对'); }catch(e){ toast('解析失败'); } };
-  rd.readAsText(f); input.value='';
+async function runPipeline(){
+  if(running) return; running=true;
+  const btn=document.getElementById('runBtn'); btn.disabled=true;
+  const f=collectForm();
+  const cfg=getAIConfig();
+  const useAI=!!(cfg.cloudApiKey)||cfg.mode==='ollama';
+
+  const imported={ story:'', chars:'', world:'', refs:[] };
+  imported.story=await readFileText(document.getElementById('d_story'));
+  imported.chars=await readFileText(document.getElementById('d_chars'));
+  imported.world=await readFileText(document.getElementById('d_world'));
+  imported.refs=await readRefImages();
+
+  const useImportedNovel = imported.story && f.autoImport;
+
+  const result=document.getElementById('result');
+  const log=document.getElementById('log');
+  const bar=document.getElementById('bar');
+  bar.style.display='block'; log.style.display='block'; log.textContent=''; result.classList.add('hidden');
+  const STEPS=['[1/6] 生成小说 …','[2/6] 生成剧本 …','[3/6] 提取视觉元素（角色/场景/道具）…','[4/6] 生成 15 秒分镜 …','[5/6] 生成参考图（3 张）…','[6/6] 生成视频 …','✅ 全部阶段完成。'];
+  let i=0;
+  const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((i+1)/STEPS.length*100)+'%'; i++; };
+
+  // ① 小说
+  step(STEPS[0]);
+  let novel;
+  if(useImportedNovel) novel=imported.story;
+  else if(useAI){ try{ novel=await callSiteAI([{role:'system',content:'你是小说家，根据设定写一段约 250 字的开篇小说，中文。'},{role:'user',content:formSummary(f)}]); }catch(e){ novel=DEMO.novel; } }
+  else novel=DEMO.novel;
+  document.getElementById('out-novel').textContent=novel;
+  await sleep(380);
+
+  // ② 剧本
+  step(STEPS[1]);
+  let script;
+  if(useAI){ try{ script=await callSiteAI([{role:'system',content:'你是短剧/漫剧编剧，把上面的故事设定扩写成 2 个场景的剧本（场景标题+动作+台词），中文。'},{role:'user',content:formSummary(f)+'\n\n【小说开头】\n'+novel}]); }catch(e){ script=DEMO.script; } }
+  else script=DEMO.script;
+  document.getElementById('out-script').textContent=script;
+  await sleep(380);
+
+  // ③ 视觉元素
+  step(STEPS[2]);
+  let elements;
+  if(useAI){ try{ elements=await callSiteAI([{role:'system',content:'从故事中提取角色/场景/道具各一个，给出英文 Subject/Style/Lighting 提示词，格式：【角色】…【场景】…【道具】…，中文标签。'},{role:'user',content:formSummary(f)}]); }catch(e){ elements=DEMO.elements; } }
+  else elements=DEMO.elements;
+  document.getElementById('out-elements').textContent=elements;
+  await sleep(380);
+
+  // ④ 分镜
+  step(STEPS[3]);
+  let storyboard;
+  if(useAI){ try{ storyboard=await callSiteAI([{role:'system',content:'生成约 4 个 15 秒分镜，每个含景别、画面描述、运镜，中文。'},{role:'user',content:formSummary(f)}]); }catch(e){ storyboard=DEMO.storyboard; } }
+  else storyboard=DEMO.storyboard;
+  document.getElementById('out-storyboard').textContent=storyboard;
+  await sleep(380);
+
+  // ⑤ 参考图
+  step(STEPS[4]);
+  const picGrid=document.getElementById('out-pics');
+  let pics=DEMO.pics;
+  if(imported.refs.length){
+    // 用导入的参考图做图生图占位（首张作主角底图）
+    picGrid.innerHTML=imported.refs.slice(0,3).map((u,idx)=>`<div class="pic-cell"><img src="${u}" alt="参考图${idx+1}" onerror="this.style.display='none'"><div class="cap">参考图 ${idx+1} <b>（图生图底图）</b></div></div>`).join('');
+  } else {
+    picGrid.innerHTML=pics.map(p=>`<div class="pic-cell"><img src="${genManjuPic(p.name,p.hint)}" alt="${esc(p.name)}"><div class="cap"><b>${esc(p.name)}</b></div></div>`).join('');
+  }
+  await sleep(380);
+
+  // ⑥ 视频（占位）
+  step(STEPS[5]);
+
+  step(STEPS[6]);
+  await sleep(450);
+  log.style.display='none'; bar.style.display='none';
+  result.classList.remove('hidden');
+  result.scrollIntoView({behavior:'smooth'});
+  const note = useImportedNovel ? '（已用导入的故事正文作为小说，其余阶段'+(useAI?'由 AI 生成':'用示例')+'）'
+              : (useAI ? '（已用你配置的 AI 真实生成文本，图片/视频为本地占位）' : '（演示模式：预置示例，未消耗任何 API）');
+  toast('流水线完成 '+note);
+  running=false; btn.disabled=false;
 }
 
-/* ============ 初始化 ============ */
-applyWRConfigToUI(); updateModePill(); renderShots(); renderChars(); applyCharConstraint(); updateCharPromptsOut(); updateSDKBStat();
+function resetPipeline(){
+  running=false;
+  document.getElementById('result').classList.add('hidden');
+  document.getElementById('log').style.display='none';
+  document.getElementById('log').textContent='';
+  document.getElementById('bar').style.display='none';
+  document.getElementById('bar').firstElementChild.style.width='0';
+  ['out-novel','out-script','out-elements','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
+  document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  toast('已重置');
+}
+
+/* 初始化：提示当前 AI 状态 */
+(function(){
+  const cfg=getAIConfig();
+  const hint=document.getElementById('aiHint');
+  if(cfg.cloudApiKey || cfg.mode==='ollama'){ hint.textContent='已检测到 AI 配置，将真实生成文本阶段'; document.getElementById('modePill').className='mode-pill live'; document.getElementById('modePill').textContent='🔑 已配置 AI（文本阶段真实生成，图/视频占位）'; }
+  else { hint.textContent='未配置 AI，将使用演示示例（无需 Key）'; }
+})();
 </script>
-
 <script src="text-pressure.js"></script>
 <script>
 (function(){
