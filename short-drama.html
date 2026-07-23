@@ -100,6 +100,12 @@
         .ref-detail-readonly { font-size:12px;color:var(--text-secondary);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:4px 0 10px;line-height:1.55; }
         .ref-detail-readonly div { margin-bottom:4px; }
         .ref-detail-readonly b { color:var(--text-primary); }
+        .ref-prompt-summary { margin:14px 0 4px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px; }
+        .ref-prompt-summary .rps-title { font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px; }
+        .ref-prompt-summary .rps-row { display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px dashed var(--border); }
+        .ref-prompt-summary .rps-row:first-of-type { border-top:none; }
+        .ref-prompt-summary .rps-name { flex:0 0 120px;font-weight:600;color:var(--text-primary);font-size:12px;padding-top:2px; }
+        .ref-prompt-summary .rps-code { flex:1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word; }
         video.vid { width:100%;max-width:480px;border-radius:8px;border:1px solid var(--border);background:#000;display:block;margin-top:4px; }
         .hidden { display:none; }
 
@@ -305,6 +311,7 @@
                 </div>
             </div>
             <div class="pic-grid" id="out-pics"><div class="note">（等待分镜脚本确认…）</div></div>
+            <div class="ref-prompt-summary" id="refsPromptSummary"></div>
         </div>
         <div class="phase" id="phase-scenes">
             <h3>⑤ 分镜场景图片 <span class="tag">scenes/</span></h3>
@@ -798,7 +805,8 @@ async function generateStoryboard(script, f){
 
 async function extractElements(storyboard, f, imported){
   const sys=`你扮演一位擅长角色设计师和 AI 绘图提示词专家。
-请根据下面提供的【分镜脚本】内容，提炼出反复出现的主要角色。所有角色都要符合分镜感觉，风格统一，并且适合后续反复出现在分镜图片（动画）场景中。
+请根据下面提供的【分镜脚本】内容，提炼出反复出现的主要角色。所有角色都要符合分镜感觉，并且适合后续反复出现在分镜图片（动画）场景中。
+【画面约束】每个角色参考图必须只出现角色本人：不要背景、不要道具、不要任何文字/字母/签名/水印。每个角色的外貌（发型、服饰颜色、体型、配色）要有明显区分，但所有角色的整体画风、色调、线条质感必须统一，形成同一部作品的角色群像。
 为每个角色输出以下字段：
 - name：角色名字
 - identity：故事身份
@@ -809,7 +817,7 @@ async function extractElements(storyboard, f, imported){
 - behavior：行为细节
 - emotion：情绪作用（如天真、热闹、温暖、紧张、害怕）
 - scenes：出现场景（简单说明通常出现在哪些场景）
-- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点；必须包含关键词：full body, pure white background, no props, cinematic nostalgic animated style, soft lighting。
+- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点；必须包含关键词：full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting。
 
 输出为 JSON 数组，不要额外解释：
 [{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","prompt":"英文角色绘图提示词"},...]`;
@@ -847,13 +855,13 @@ async function ensureEnglishPrompts(elements, f){
     let prompt=(el.prompt||'').trim();
     if(!prompt || hasCJK(prompt)){
       try{
-        const sys=`You are a character designer and Stable Diffusion prompt engineer. Rewrite the following into a pure English, tag-style character drawing prompt. Output only the final prompt, no explanation, no Chinese characters. Must include: full body, pure white background, no props, cinematic nostalgic animated style, soft lighting.`;
+        const sys=`You are a character designer and Stable Diffusion prompt engineer. Rewrite the following into a pure English, tag-style character drawing prompt. Output only the final prompt, no explanation, no Chinese characters. The image must show the character ONLY: solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature. Must include: full body, cinematic nostalgic animated style, soft lighting.`;
         const user=`Character name: ${el.name}\nIdentity: ${el.identity||''}\nAge: ${el.age||''}\nAppearance: ${el.appearance||''}\nClothing: ${el.clothing||''}\nOriginal prompt: ${prompt || '(empty)'}`;
         prompt=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
         prompt=(prompt||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
       }catch(e){ prompt=''; }
       if(!prompt){
-        prompt=`full body, pure white background, no props, cinematic nostalgic animated style, soft lighting, ${el.name||'character'}, ${el.appearance||''}`;
+        prompt=`full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting, ${el.name||'character'}, ${el.appearance||''}`;
       }
     }
     out.push({...el, prompt});
@@ -861,14 +869,14 @@ async function ensureEnglishPrompts(elements, f){
   return out;
 }
 function fallbackExtract(storyboard, f){
-  if(f && f.pname) return [{id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, pure white background, no props, cinematic nostalgic animated style, soft lighting`}];
+  if(f && f.pname) return [{id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting`}];
   return [];
 }
 
 function buildImagePrompt(el){
   const base=(el.prompt||'').trim();
   if(base) return base;
-  if(el.type==='角色') return `full body, pure white background, no props, cinematic nostalgic animated style, soft lighting, character design`;
+  if(el.type==='角色') return `full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting, character design`;
   return `prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K`;
 }
 
@@ -931,6 +939,14 @@ function renderRefGrid(container){
       </div>
     </div>
   `).join('');
+  fillRefPromptSummary();
+}
+
+function fillRefPromptSummary(){
+  const el=document.getElementById('refsPromptSummary');
+  if(!el) return;
+  if(!pipelineRefs || !pipelineRefs.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="rps-title">各角色英文提示词</div>'+pipelineRefs.map((r,i)=>`<div class="rps-row"><span class="rps-name">${i+1}. ${esc(r.name)}</span><code class="rps-code">${esc(r.prompt)}</code></div>`).join('');
 }
 
 function updateRefCell(idx, errMsg){
