@@ -156,6 +156,32 @@
         </div>
     </div>
 
+    <!-- 媒体 AI 接口配置（用户自行填写） -->
+    <details class="card" id="mediaCfgCard">
+        <summary class="card-title" style="cursor:pointer;list-style:none">🔌 AI 图像 / 视频接口配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">可选 · 留空则图片/视频为本地占位</span></summary>
+        <div class="note">填写你自己的图像 / 视频生成接口，流水线第 ⑤⑥ 阶段将真实调用；留空则使用本地占位（不影响文本阶段）。配置仅保存在本机浏览器。</div>
+        <div class="grid2">
+            <div class="field"><label>🖼️ 图像接口 URL（OpenAI 兼容 images/generations）</label><input id="img_url" placeholder="https://api.openai.com/v1/images/generations"></div>
+            <div class="field"><label>图像 API Key</label><input id="img_key" type="password" placeholder="sk-..."></div>
+        </div>
+        <div class="grid2">
+            <div class="field"><label>图像模型名（可选）</label><input id="img_model" placeholder="dall-e-3"></div>
+            <div class="field"><label>图像尺寸（可选，如 1024x1024）</label><input id="img_size" placeholder="1024x1024"></div>
+        </div>
+        <div class="field"><label>图像响应取图路径（JSON 点路径；默认 <code>data[0].url</code>，base64 用 <code>data[0].b64_json</code>）</label><input id="img_resp" value="data[0].url"></div>
+
+        <div class="field" style="margin-top:18px"><label>🎞️ 视频接口 URL</label><input id="vid_url" placeholder="https://your-video-api/generate"></div>
+        <div class="field"><label>视频 API Key</label><input id="vid_key" type="password" placeholder="token..."></div>
+        <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位，例如 <code>{"prompt":"{{prompt}}","duration":4}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
+        <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>）</label><input id="vid_resp" value="data[0].url"></div>
+
+        <div class="row">
+            <button class="btn btn-sm" onclick="saveMediaCfg()">💾 保存接口配置</button>
+            <button class="btn btn-sm btn-ghost" onclick="loadMediaCfg()">↺ 载入已存配置</button>
+            <span id="mediaCfgHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+        </div>
+    </details>
+
     <!-- 进度 -->
     <div class="bar" id="bar"><i></i></div>
     <div class="progress" id="log"></div>
@@ -185,10 +211,10 @@
         <div class="phase">
             <h3>⑥ 视频 <span class="tag">Videos/</span></h3>
             <p class="hint" style="margin:0 0 10px">真实环境会生成 4 段 mp4 并内嵌播放；当前为本地演示占位（生视频需后端 Agnes 接口）。</p>
-            <video class="vid" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
+            <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
                 <source src="#" type="video/mp4">
             </video>
-            <p class="hint" style="margin-top:8px">镜头 1/2/3/4 · 真实生成后此处显示可播放视频</p>
+            <p class="hint" id="vidHint" style="margin-top:8px">镜头 1/2/3/4 · 真实生成后此处显示可播放视频</p>
         </div>
     </div>
 
@@ -380,16 +406,39 @@ async function runPipeline(){
   step(STEPS[4]);
   const picGrid=document.getElementById('out-pics');
   let pics=DEMO.pics;
+  const mc=getMediaCfg();
   if(imported.refs.length){
     // 用导入的参考图做图生图占位（首张作主角底图）
     picGrid.innerHTML=imported.refs.slice(0,3).map((u,idx)=>`<div class="pic-cell"><img src="${u}" alt="参考图${idx+1}" onerror="this.style.display='none'"><div class="cap">参考图 ${idx+1} <b>（图生图底图）</b></div></div>`).join('');
+  } else if(mc.imgUrl){
+    picGrid.innerHTML=pics.map(p=>`<div class="pic-cell"><div class="cap"><b>${esc(p.name)}</b></div><div class="cap" style="color:var(--text-tertiary)">生成中…</div></div>`).join('');
+    for(let idx=0; idx<pics.length; idx++){
+      const p=pics[idx]; const cell=picGrid.children[idx];
+      try{
+        const u=await genImage(`漫剧风格插画，${p.hint}，角色名 ${p.name}`, mc);
+        if(u) cell.innerHTML=`<img src="${u}" alt="${esc(p.name)}" onerror="this.style.display='none'"><div class="cap"><b>${esc(p.name)}</b></div>`;
+        else if(cell.querySelector('.cap:last-child')) cell.querySelector('.cap:last-child').textContent='生成失败（占位）';
+      }catch(e){ if(cell&&cell.querySelector('.cap:last-child')) cell.querySelector('.cap:last-child').textContent='生成失败：'+e.message.slice(0,30); }
+      await sleep(200);
+    }
   } else {
     picGrid.innerHTML=pics.map(p=>`<div class="pic-cell"><img src="${genManjuPic(p.name,p.hint)}" alt="${esc(p.name)}"><div class="cap"><b>${esc(p.name)}</b></div></div>`).join('');
   }
   await sleep(380);
 
-  // ⑥ 视频（占位）
+  // ⑥ 视频
   step(STEPS[5]);
+  const mc2=getMediaCfg();
+  if(mc2.vidUrl){
+    const vEl=document.getElementById('out-video');
+    const vHint=document.getElementById('vidHint');
+    try{
+      const vp=`漫剧短片：${f.title}。${f.premise} 分镜：${storyboard}`;
+      const u=await genVideo(vp, mc2);
+      if(u){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent='✅ 真实视频已生成，可播放'; }
+      else if(vHint) vHint.textContent='⚠️ 视频生成失败（占位中）';
+    }catch(e){ if(vHint) vHint.textContent='⚠️ 视频生成失败：'+e.message.slice(0,40)+'（占位中）'; }
+  }
 
   step(STEPS[6]);
   await sleep(450);
@@ -414,12 +463,77 @@ function resetPipeline(){
   toast('已重置');
 }
 
+/* ============ 媒体 AI 接口配置（用户自填） ============ */
+const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_resp'];
+function fillMediaInputs(){
+  MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); const v=localStorage.getItem(id); if(el&&v!=null) el.value=v; });
+}
+function saveMediaCfg(){
+  MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); if(el) localStorage.setItem(id, el.value); });
+  const h=document.getElementById('mediaCfgHint'); if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓'; setTimeout(()=>h.textContent='',2000); }
+}
+function loadMediaCfg(){
+  fillMediaInputs();
+  const h=document.getElementById('mediaCfgHint'); if(h){ h.textContent='已载入已存配置'; setTimeout(()=>h.textContent='',2000); }
+}
+function getMediaCfg(){
+  return {
+    imgUrl:localStorage.getItem('img_url')||'',
+    imgKey:localStorage.getItem('img_key')||'',
+    imgModel:localStorage.getItem('img_model')||'',
+    imgSize:localStorage.getItem('img_size')||'1024x1024',
+    imgResp:localStorage.getItem('img_resp')||'data[0].url',
+    vidUrl:localStorage.getItem('vid_url')||'',
+    vidKey:localStorage.getItem('vid_key')||'',
+    vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}"}',
+    vidResp:localStorage.getItem('vid_resp')||'data[0].url'
+  };
+}
+function resolvePath(obj, path){
+  try{ return path.split('.').reduce((o,k)=> (o==null?undefined:o[k]), obj); }catch(e){ return undefined; }
+}
+async function genImage(prompt, cfg){
+  if(!cfg.imgUrl) return null;
+  if(location.protocol==='https:' && cfg.imgUrl.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  const body={ prompt, n:1, size:cfg.imgSize||'1024x1024' };
+  if(cfg.imgModel) body.model=cfg.imgModel;
+  const headers={'Content-Type':'application/json'}; if(cfg.imgKey) headers['Authorization']='Bearer '+cfg.imgKey;
+  const res=await fetch(cfg.imgUrl,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
+  const data=await res.json();
+  const val=resolvePath(data, cfg.imgResp);
+  if(!val) throw new Error('响应中未找到图片（路径 '+cfg.imgResp+'）');
+  return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
+}
+async function genVideo(prompt, cfg){
+  if(!cfg.vidUrl) return null;
+  if(location.protocol==='https:' && cfg.vidUrl.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  let bodyTpl; try{ bodyTpl=JSON.parse(cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt)); }catch(e){ bodyTpl={prompt}; }
+  const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
+  const res=await fetch(cfg.vidUrl,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
+  const data=await res.json();
+  const val=resolvePath(data, cfg.vidResp);
+  if(!val) throw new Error('响应中未找到视频 URL（路径 '+cfg.vidResp+'）');
+  return val;
+}
+
 /* 初始化：提示当前 AI 状态 */
 (function(){
+  fillMediaInputs();
   const cfg=getAIConfig();
+  const mc=getMediaCfg();
   const hint=document.getElementById('aiHint');
-  if(cfg.cloudApiKey || cfg.mode==='ollama'){ hint.textContent='已检测到 AI 配置，将真实生成文本阶段'; document.getElementById('modePill').className='mode-pill live'; document.getElementById('modePill').textContent='🔑 已配置 AI（文本阶段真实生成，图/视频占位）'; }
-  else { hint.textContent='未配置 AI，将使用演示示例（无需 Key）'; }
+  const pill=document.getElementById('modePill');
+  const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
+  const mediaOn = mc.imgUrl || mc.vidUrl;
+  if(aiOn || mediaOn){
+    let t='🔑 已配置：'; if(aiOn) t+='文本真实生成'; if(mediaOn) t+=(aiOn?'，':'')+'图/视频真实生成';
+    pill.className='mode-pill live'; pill.textContent=t;
+    hint.textContent = (aiOn?'文本阶段由你配置的 AI 真实生成':'文本为演示示例') + (mediaOn?(aiOn?'，':'')+'图/视频接口已配置':'');
+  } else {
+    hint.textContent='未配置 AI / 媒体接口，将使用演示示例（无需 Key）';
+  }
 })();
 </script>
 <script src="text-pressure.js"></script>
