@@ -224,6 +224,7 @@
 
     <!-- 结果：五阶段 -->
     <div id="result" class="hidden">
+        <div id="pipeline-status" class="note hidden" style="margin-bottom:14px"></div>
         <div class="phase" id="phase-story">
             <h3>① 故事梗概 <span class="tag">story.md</span></h3>
             <pre id="out-story">（等待开始…）</pre>
@@ -351,6 +352,13 @@ function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function fmtTime(sec){ const m=String(Math.floor(sec/60)).padStart(2,'0'); const s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; }
 function uid(){ return 'ref_'+Math.random().toString(36).slice(2,9); }
+function setPipelineStatus(type, html){
+  const el=document.getElementById('pipeline-status'); if(!el) return;
+  el.className='note '+(type==='err'?'err':type==='warn'?'warn':type==='ok'?'ok':'');
+  el.style.marginBottom='14px';
+  el.innerHTML=html||'';
+  el.style.display=html?'block':'none';
+}
 
 /* ============ 站点既有 AI（与设置页共享键） ============ */
 function getAIConfig(){
@@ -547,6 +555,19 @@ async function runPipeline(){
 
   const useImportedStory = imported.story && f.autoImport;
 
+  // 在结果区顶部显示当前 AI 状态，避免用户误以为降级内容是 AI 生成
+  const mediaCfg=getMediaCfg();
+  const mediaOn=!!(mediaCfg.imgUrl)||!!(mediaCfg.vidUrl);
+  if(!useAI && !mediaOn){
+    setPipelineStatus('err', '⚠️ 当前处于<strong>演示/手动模式</strong>：未配置文本 AI，也未配置图像/视频接口。故事/剧本/分镜将使用导入原文或示例模板，参考图/视频为占位图。请前往「设置」配置文本 AI，并在本页填写图像/视频接口 URL。');
+  } else if(!useAI){
+    setPipelineStatus('warn', '⚠️ 当前未启用<strong>文本 AI</strong>：专业剧本、分镜脚本将直接使用导入的故事正文或示例模板。请前往「设置」配置云端 API Key 或本地 Ollama，以获得 AI 生成的剧本和分镜。');
+  } else if(!mediaOn){
+    setPipelineStatus('warn', 'ℹ️ 文本 AI 已启用，但未配置图像/视频接口，参考图和视频将显示占位图。如需真实生图/生视频，请在本页填写图像/视频接口 URL。');
+  } else {
+    setPipelineStatus('ok', '✅ 文本 AI 与图像/视频接口均已配置，将真实生成剧本、分镜、参考图与视频。');
+  }
+
   // 无 AI 且无故事导入时，明确提示而不是 fallback 到固定示例
   if(!useAI && !useImportedStory){
     resetResultPhases();
@@ -583,14 +604,14 @@ async function runPipeline(){
     }},
     {name:'script', label:'[2/5] 将故事转化为专业剧本', gen:async ()=>{
       if(useAI){ try{ outputs.script=await generateScript(outputs.story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; outputs.script='（生成失败：'+e.message+'）'; } }
-      else if(useImportedStory) { outputs.script='【未配置文本 AI，以下直接使用导入的故事正文作为专业剧本，可手动编辑后确认】\n\n'+imported.story; }
-      else { outputs.script='【未配置文本 AI，请手动编辑专业剧本，或去「设置」配置 API Key 后重新生成】\n\n（例如：01 夜、内、场景地点\n人物：主角…\n▲全景：…）'; }
+      else if(useImportedStory) { outputs.script='【⚠️ 未启用文本 AI — 以下内容直接引用导入的故事原文，并非 AI 生成的专业剧本。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n'+imported.story; }
+      else { outputs.script='【⚠️ 未启用文本 AI — 请手动编辑专业剧本，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n（示例格式：\n01 夜、内、场景地点\n人物：主角…\n▲全景：…）'; }
       document.getElementById('out-script').textContent=outputs.script;
       showPhase('script');
     }},
     {name:'storyboard', label:'[3/5] 生成分镜脚本', gen:async ()=>{
       if(useAI){ try{ outputs.storyboard=await generateStoryboard(outputs.script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; outputs.storyboard='（生成失败：'+e.message+'）'; } }
-      else { outputs.storyboard='【未配置文本 AI，请手动编辑分镜脚本，或去「设置」配置 API Key 后重新生成】\n\n镜头1（15s）· 全景：开场画面。运镜：缓慢推近。\n镜头2（15s）· 中景：主角登场。运镜：横移。\n镜头3（15s）· 特写：关键动作。运镜：推镜。\n镜头4（15s）· 近景：情绪高潮。运镜：固定。'; }
+      else { outputs.storyboard='【⚠️ 未启用文本 AI — 以下仅为示例分镜模板，并非根据剧本生成。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n镜头1（15s）· 全景：开场画面。运镜：缓慢推近。\n镜头2（15s）· 中景：主角登场。运镜：横移。\n镜头3（15s）· 特写：关键动作。运镜：推镜。\n镜头4（15s）· 近景：情绪高潮。运镜：固定。'; }
       document.getElementById('out-storyboard').textContent=outputs.storyboard;
       showPhase('storyboard');
     }},
@@ -772,8 +793,10 @@ async function generateReferenceImages(elements, importedImages){
 
   renderRefGrid(picGrid);
 
-  if(!mc.imgUrl){
-    pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
+  const imgUrlStr=String(mc.imgUrl||'').trim();
+  const imgUrlInvalid=imgUrlStr && !/^https?:\/\//i.test(imgUrlStr);
+  if(!imgUrlStr || imgUrlInvalid){
+    pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx, imgUrlInvalid?'图像接口 URL 无效：'+imgUrlStr:null); });
     return;
   }
 
@@ -1058,8 +1081,10 @@ function resolvePath(obj, path){
   try{ return path.replace(/\[(\d+)\]/g,'.$1').split('.').filter(Boolean).reduce((o,k)=> (o==null?undefined:o[k]), obj); }catch(e){ return undefined; }
 }
 async function genImage(prompt, cfg, imageUrl){
-  if(!cfg.imgUrl) return null;
-  if(location.protocol==='https:' && cfg.imgUrl.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  const urlStr=String(cfg.imgUrl||'').trim();
+  if(!urlStr) return null;
+  if(!/^https?:\/\//i.test(urlStr)) throw new Error('图像接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
+  if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
   let body;
   if(cfg.imgBody && cfg.imgBody.trim()){
     let tpl=cfg.imgBody.replace(/\{\{prompt\}\}/g, prompt);
@@ -1071,7 +1096,7 @@ async function genImage(prompt, cfg, imageUrl){
     if(cfg.imgModel) body.model=cfg.imgModel;
   }
   const headers={'Content-Type':'application/json'}; if(cfg.imgKey) headers['Authorization']='Bearer '+cfg.imgKey;
-  const res=await fetch(cfg.imgUrl,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
+  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
   const val=resolvePath(data, cfg.imgResp);
@@ -1079,8 +1104,10 @@ async function genImage(prompt, cfg, imageUrl){
   return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
 }
 async function genVideo(prompt, cfg, imageUrl){
-  if(!cfg.vidUrl) return null;
-  if(location.protocol==='https:' && cfg.vidUrl.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  const urlStr=String(cfg.vidUrl||'').trim();
+  if(!urlStr) return null;
+  if(!/^https?:\/\//i.test(urlStr)) throw new Error('视频接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
+  if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
   let tpl=cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt);
   if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
   let bodyTpl;
@@ -1092,7 +1119,7 @@ async function genVideo(prompt, cfg, imageUrl){
     if(cfg.vidImgField) delete bodyTpl[cfg.vidImgField];
   }
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
-  const res=await fetch(cfg.vidUrl,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
+  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
   const val=resolvePath(data, cfg.vidResp);
