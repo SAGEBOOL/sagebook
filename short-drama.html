@@ -215,7 +215,8 @@
             <div class="field"><label>视频接口参考图字段名（可选，如 <code>image_url</code> / <code>first_frame</code>；若模板里已有 <code>{{image_url}}</code> 可留空）</label><input id="vid_img_field" placeholder="image_url"></div>
         </div>
         <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位；如需参考图可用 <code>{{image_url}}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}","image_url":"{{image_url}}"}'></textarea></div>
-        <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>）</label><input id="vid_resp" value="data[0].url"></div>
+        <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>；Agnes 等异步接口由系统自动轮询，此项可留默认）</label><input id="vid_resp" value="data[0].url"></div>
+        <p class="hint" style="color:var(--text-tertiary);font-size:12px;margin:4px 0 0">Agnes 视频：接口 URL 填 <code>https://apihub.agnes-ai.com/v1/videos</code>，模型名填 <code>agnes-video-v2.0</code>，图生视频字段用 <code>image</code>（系统会自动把模板里的 <code>image_url</code> 归一化）。该接口为异步，生成后会自动轮询直到完成。</p>
 
         <div class="row">
             <button class="btn btn-sm" onclick="saveMediaCfg()">💾 保存接口配置</button>
@@ -1155,23 +1156,82 @@ async function genVideo(prompt, cfg, imageUrl){
   if(!urlStr) return null;
   if(!/^https?:\/\//i.test(urlStr)) throw new Error('视频接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
   if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  const isAgnes = /agnes/i.test(urlStr);
+
+  // 构建请求体
   let tpl=cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt);
-  if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
+  if(imageUrl){
+    if(tpl.includes('{{image}}')) tpl=tpl.replace(/\{\{image\}\}/g, imageUrl);
+    else if(tpl.includes('{{image_url}}')) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
+  }
   let bodyTpl;
   try{ bodyTpl=JSON.parse(tpl); }
-  catch(e){ bodyTpl={prompt}; if(imageUrl&&cfg.vidImgField) bodyTpl[cfg.vidImgField]=imageUrl; }
-  if(cfg.vidModel) bodyTpl.model=cfg.vidModel;
+  catch(e){ bodyTpl={prompt}; if(imageUrl) bodyTpl[cfg.vidImgField||(isAgnes?'image':'image_url')]=imageUrl; }
+  // Agnes 图生视频字段名是 image（非 image_url），做兼容归一化
+  if(imageUrl && isAgnes && bodyTpl.image_url!==undefined && bodyTpl.image===undefined){
+    bodyTpl.image=bodyTpl.image_url; delete bodyTpl.image_url;
+  }
+  // 模型名：优先用配置，Agnes 缺省补 agnes-video-v2.0
+  const model = cfg.vidModel || (isAgnes ? 'agnes-video-v2.0' : '');
+  if(model) bodyTpl.model=model;
   if(!imageUrl){
-    delete bodyTpl.image_url;
+    delete bodyTpl.image_url; delete bodyTpl.image;
     if(cfg.vidImgField) delete bodyTpl[cfg.vidImgField];
   }
+
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
   const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
-  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||e.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
+
+  // 异步任务（Agnes 风格）：创建后返回 video_id/task_id + status=queued/in_progress
+  const taskId = data.video_id || data.task_id || data.id;
+  if(taskId && data.status && data.status!=='completed'){
+    return await pollAsyncVideo(cfg, taskId, isAgnes);
+  }
+  if(data.status==='failed'){
+    throw new Error('视频任务失败：'+(data.error?JSON.stringify(data.error):'服务端生成失败'));
+  }
+  // 已完成或同步风格
+  if(taskId && data.metadata && data.metadata.url) return data.metadata.url;
   const val=resolvePath(data, cfg.vidResp);
   if(!val) throw new Error('响应中未找到视频 URL（路径 '+cfg.vidResp+'）');
   return val;
+}
+
+// 异步视频轮询：Agnes 用 GET /agnesapi?video_id= 直到 status=completed
+async function pollAsyncVideo(cfg, taskId, isAgnes){
+  const headers={'Authorization':'Bearer '+cfg.vidKey};
+  let url;
+  if(isAgnes){
+    const base=(cfg.vidUrl||'').replace(/\/v1\/videos\/?.*$/,'');
+    url=base+'/agnesapi?video_id='+encodeURIComponent(taskId);
+  } else {
+    url=buildPollUrl(cfg, taskId);
+  }
+  const deadline=Date.now()+5*60*1000; // 最多等 5 分钟
+  let last='';
+  while(Date.now()<deadline){
+    await sleep(5000);
+    try{
+      const r=await fetch(url,{headers,signal:AbortSignal.timeout(30000)});
+      if(!r.ok) continue;
+      const j=await r.json();
+      last=j.status||'';
+      if(j.status==='completed' && j.metadata && j.metadata.url) return j.metadata.url;
+      if(j.status==='failed') throw new Error('视频生成失败：'+(j.error?JSON.stringify(j.error):'任务失败'));
+    }catch(e){ if(/失败|超时/.test(e.message)) throw e; }
+  }
+  throw new Error('视频生成轮询超时（5 分钟，最后状态：'+last+'）');
+}
+
+// 非 Agnes 异步接口的轮询 URL（兼容旧版 /v1/videos/<taskId>）
+function buildPollUrl(cfg, taskId){
+  const v=cfg.vidUrl||'';
+  let base=v.replace(/\/v1\/videos\/?$/,'');
+  if(base===v) base=v.replace(/\/videos\/?$/,'');
+  const seg=v.includes('/v1/') ? 'v1/videos/' : 'videos/';
+  return base+'/'+seg+taskId;
 }
 
 function updateModePill(){
