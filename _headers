@@ -1,0 +1,12 @@
+# 强制 HTML 不缓存，避免 Cloudflare/GitHub CDN 返回旧版页面
+# （旧版页面装载配置有缺陷，缓存导致需强制刷新才能读到已保存的 API 模型）
+/*.html
+  Cache-Control: no-cache, no-store, must-revalidate
+  Surrogate-Control: no-store
+
+# 静态资源可缓存，但设较短 TTL，便于发版后尽快更新
+/*.js
+  Cache-Control: max-age=600
+
+/*.css
+  Cache-Control: max-age=600
