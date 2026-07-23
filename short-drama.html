@@ -333,6 +333,7 @@
                 <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
                 <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
             </div>
+            <div class="ref-prompt-summary" id="videoPromptSummary"></div>
         </div>
     </div>
 
@@ -681,12 +682,12 @@ async function runPipeline(){
     }},
     {name:'scenes', label:'[5/6] 生成分镜场景图片', gen:async ()=>{
       document.getElementById('out-scenes').innerHTML='<div class="note">（准备生成分镜场景图…）</div>';
-      await generateSceneImages(outputs.storyboard, pipelineRefs, f);
+      await generateSceneImages(outputs.storyboard, pipelineRefs, f, useAI);
       showPhase('scenes');
     }},
     {name:'video', label:'[6/6] 生成视频', gen:async ()=>{
       document.getElementById('vidHint').textContent='（准备生成视频…）';
-      await generateVideos(outputs.storyboard, pipelineScenes, pipelineRefs, f);
+      await generateVideos(outputs.storyboard, pipelineScenes, pipelineRefs, f, useAI);
       showPhase('video');
     }}
   ];
@@ -948,6 +949,12 @@ function fillRefPromptSummary(){
   if(!pipelineRefs || !pipelineRefs.length){ el.innerHTML=''; return; }
   el.innerHTML='<div class="rps-title">各角色英文提示词</div>'+pipelineRefs.map((r,i)=>`<div class="rps-row"><span class="rps-name">${i+1}. ${esc(r.name)}</span><code class="rps-code">${esc(r.prompt)}</code></div>`).join('');
 }
+function fillVideoPromptSummary(list){
+  const el=document.getElementById('videoPromptSummary');
+  if(!el) return;
+  if(!list || !list.length){ el.innerHTML=''; return; }
+  el.innerHTML='<div class="rps-title">各镜头视频英文提示词</div>'+list.map((v,i)=>`<div class="rps-row"><span class="rps-name">${i+1}. 镜头${v.num}</span><code class="rps-code">${esc(v.prompt)}</code></div>`).join('');
+}
 
 function updateRefCell(idx, errMsg){
   const container=document.getElementById('out-pics');
@@ -961,11 +968,21 @@ function updateRefCell(idx, errMsg){
 
 /* ============ 分镜场景图片（三视图确认后生成） ============ */
 function buildScenePrompt(shot, refs, f){
-  const matched=matchRefsForShot(shot, refs); // 角色/道具参考，用于人物与道具一致性
-  const refText=matched.map(r=>r.name+'：'+r.prompt).join('；');
-  return `${f.title} 分镜${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。角色与道具一致性参考：${refText}。电影级构图，场景氛围统一，8K。`;
+  const matched=matchRefsForShot(shot, refs); // 角色参考，用于人物一致性
+  const refText=matched.map(r=>r.name).join(', ');
+  return `cinematic animated still, ${f.style} style, ${f.genre}, shot ${shot.num}: ${shot.desc}. Lived-in environment with life-like details, character action with clear body language and facial expression, key props present, warm nostalgic lighting (soft sunlight / yellow bulb), ${matched.length?'consistent with characters: '+refText:'no character'}, mid-shot, eye-level, emotional cinematic mood, storybook illustration.`;
 }
-async function generateSceneImages(storyboard, refs, f){
+async function generateScenePromptAI(shot, refs, f){
+  const matched=matchRefsForShot(shot, refs);
+  const refText=matched.map(r=>r.name+'：'+r.prompt).join('；');
+  const sys=`You are a professional storyboard-to-image prompt writer for cinematic animated shorts. Convert the given storyboard shot into a SINGLE English image prompt that captures "one image = one complete story moment" — a viewer should understand the place, what happens, and why the character acts this way WITHOUT any text or narration.
+Each prompt MUST include: location/setting, time of day, environmental details, character action, facial expression and body language, key objects/props, lighting (specify clearly, e.g. sunlight, yellow bulb, tube light), camera angle (close-up / mid-shot / wide shot, add eye-level or over-the-shoulder when relevant), and overall mood. The environment must feel lived-in and cinematic; lighting should convey a warm, nostalgic atmosphere. Keep a consistent visual style across all shots.
+Output ONLY the English prompt, no explanation, no Chinese characters.`;
+  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description (Chinese, for reference): ${shot.desc}\nCharacter/prop reference prompts for consistency:\n${refText}`;
+  const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+  return (text||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim() || buildScenePrompt(shot, refs, f);
+}
+async function generateSceneImages(storyboard, refs, f, useAI){
   const grid=document.getElementById('out-scenes');
   const mc=getMediaCfg();
   pipelineScenes=[];
@@ -974,11 +991,17 @@ async function generateSceneImages(storyboard, refs, f){
   shots.forEach(s=>{ pipelineScenes.push({num:s.num, scene:s.scene, desc:s.desc, prompt:'', url:'', originalUrl:'', inputImage:''}); });
   renderScenesGrid(grid);
 
+  // 先为每条镜头生成英文绘图提示词（有文本 AI 时调用模型，否则用模板）
+  for(const s of pipelineScenes){
+    if(useAI){ try{ s.prompt=await generateScenePromptAI(s, refs, f); }catch(e){ s.prompt=buildScenePrompt(s, refs, f); } }
+    else s.prompt=buildScenePrompt(s, refs, f);
+  }
+  renderScenesGrid(grid); // 刷新以展示每条英文提示词
+
   const imgUrlStr=String(mc.imgUrl||'').trim();
   const imgUrlInvalid=imgUrlStr && !/^https?:\/\//i.test(imgUrlStr);
   if(!imgUrlStr || imgUrlInvalid){
     pipelineScenes.forEach((s,idx)=>{
-      s.prompt=buildScenePrompt(s, refs, f);
       s.url=genManjuPic('镜头'+s.num, s.desc); s.originalUrl=s.url;
       updateSceneCell(idx, imgUrlInvalid?'图像接口 URL 无效：'+imgUrlStr:null);
     });
@@ -988,7 +1011,6 @@ async function generateSceneImages(storyboard, refs, f){
     const s=pipelineScenes[idx];
     updateSceneCell(idx, '生成中…');
     try{
-      s.prompt=buildScenePrompt(s, refs, f);
       const u=await genImage(s.prompt, mc, '');
       if(u){ s.url=u; s.originalUrl=u; }
       updateSceneCell(idx, u?null:'生成失败（未返回 URL）');
@@ -1002,6 +1024,12 @@ function renderScenesGrid(container){
       <span class="ref-type">镜头 ${s.num}</span>
       <img src="${s.url||genManjuPic('镜头'+s.num,s.desc)}" alt="镜头 ${s.num}" onerror="this.style.display='none'">
       <div class="cap"><b>镜头 ${s.num}</b></div>
+      <details class="ref-detail">
+        <summary>英文提示词</summary>
+        <div class="ref-detail-body">
+          ${s.prompt?`<div class="ref-prompt">${esc(s.prompt)}</div>`:'<div class="ref-prompt">（生成中…）</div>'}
+        </div>
+      </details>
     </div>
   `).join('');
 }
@@ -1138,7 +1166,22 @@ function doUploadRef(){
 let videoFailed=false;
 let videoErrorMsg='';
 
-async function generateVideos(storyboard, scenes, refs, f){
+function buildVideoPrompt(shot, scenePrompt, f){
+  return `cinematic video, subtle motion, ${scenePrompt}. slight character movement: gentle breathing, small head turn, clothes swaying gently, emotional warm atmosphere, slow camera drift, consistent style.`;
+}
+async function generateVideoPromptAI(shot, scenePrompt, refs, f){
+  const sys=`You are a video prompt engineer for AI image-to-video generation of cinematic animated shorts. Based on the storyboard shot and its image prompt, write an English video prompt that drives subtle, natural, controllable motion.
+Requirements:
+- Combine the shot content and the image prompt; do NOT drop character, setting, object, emotion, or environment details.
+- Motion must be natural, slight, and controlled: blinking, turning head slightly, breathing, clothes swaying gently, fingers twitching, body leaning forward a little.
+- NO large movements (no running, jumping, big turns, complex multi-person interaction) to avoid deformation.
+- Each prompt MUST include: character action, facial expression & body language, object interaction, environment motion, lighting change, camera movement, emotional atmosphere.
+Keep style consistent with the image prompts. Output ONLY the English prompt, no explanation, no Chinese characters.`;
+  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description: ${shot.desc}\nImage prompt (for reference): ${scenePrompt}`;
+  const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+  return (text||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim() || buildVideoPrompt(shot, scenePrompt, f);
+}
+async function generateVideos(storyboard, scenes, refs, f, useAI){
   const mc=getMediaCfg();
   const vEl=document.getElementById('out-video');
   const vHint=document.getElementById('vidHint');
@@ -1155,13 +1198,17 @@ async function generateVideos(storyboard, scenes, refs, f){
 
   const useImg = mc.vidMode === 'img2vid';
   let successCount=0;
+  const vidPrompts=[];
 
   for(let i=0;i<shots.length;i++){
     const shot=shots[i];
     const scene=scenes.find(s=>s.num===shot.num) || scenes[i] || scenes[0];
     const matchedRefs=matchRefsForShot(shot, refs);
-    const charRef=matchedRefs.find(r=>r.type==='角色')||refs.find(r=>r.type==='角色');
-    const prompt=`${f.title} - 镜头${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。` + (charRef?` 主角：${charRef.name}。`:'');
+    const scenePrompt = scene && scene.prompt ? scene.prompt : '';
+    let prompt;
+    if(useAI){ try{ prompt=await generateVideoPromptAI(shot, scenePrompt, refs, f); }catch(e){ prompt=buildVideoPrompt(shot, scenePrompt, f); } }
+    else prompt=buildVideoPrompt(shot, scenePrompt, f);
+    vidPrompts.push({num:shot.num, prompt});
     try{
       const imageUrl = useImg && scene && scene.url && scene.url.startsWith('http') ? scene.url : '';
       const u=await genVideo(prompt, mc, imageUrl);
@@ -1185,6 +1232,7 @@ async function generateVideos(storyboard, scenes, refs, f){
   } else if(successCount>0 && videoFailed){
     if(vHint) vHint.innerHTML=`⚠️ 部分视频生成失败（成功 ${successCount}/${shots.length}）：${videoErrorMsg.slice(0,80)}<br><small>点击下方「🔄 重新生成视频」可补全剩余镜头</small>`;
   }
+  fillVideoPromptSummary(vidPrompts);
 }
 
 function parseStoryboard(storyboard){
