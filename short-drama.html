@@ -57,6 +57,9 @@
         .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
         .field textarea { resize:vertical; line-height:1.6; }
         .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+        /* 配置板块 */
+        .cfg-board { margin:14px 0;padding:14px 14px 4px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input); }
+        .cfg-board-title { font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px; }
         .grid3 { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
         @media (max-width:680px){ .grid2,.grid3{ grid-template-columns:1fr; } }
 
@@ -205,8 +208,16 @@
             <div class="field"><label>图像生成模式</label><select id="img_mode"><option value="txt2img">文生图</option><option value="img2img">图生图（使用上传参考图）</option></select></div>
             <div class="field"><label>视频生成模式</label><select id="vid_mode"><option value="txt2vid">文生视频</option><option value="img2vid">图生视频（使用参考图）</option></select></div>
         </div>
-        <div class="field"><label>图像请求体模板（JSON，用 <code>{{prompt}}</code> 占位；图生图可用 <code>{{image_url}}</code>；留空则使用标准 OpenAI images/generations 格式）</label><textarea id="img_body" rows="2" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
-        <div class="field"><label>图像响应取图路径（JSON 点路径；默认 <code>data[0].url</code>，base64 用 <code>data[0].b64_json</code>）</label><input id="img_resp" value="data[0].url"></div>
+        <!-- 图像生成通用风格约束提示词 板块 -->
+        <div class="cfg-board">
+            <div class="cfg-board-title">🎨 图像生成通用风格约束提示词</div>
+            <p class="hint" style="color:var(--text-tertiary);font-size:12px;margin:0 0 8px">以下提示词会作为前缀，自动加在每一张参考图（人物／场景／道具）的生成提示词之前，保证所有图风格统一。</p>
+            <div class="field"><label>通用风格约束提示词（作用于所有图片）</label><textarea id="img_style" rows="2" placeholder="例如：写实风格，电影级光影，8k 高清，细节丰富，统一美术风格"></textarea></div>
+            <div class="grid2">
+                <div class="field"><label>图像请求体模板（JSON，<code>{{prompt}}</code> 占位；图生图可用 <code>{{image_url}}</code>；留空则用标准 OpenAI 格式）</label><textarea id="img_body" rows="2" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
+                <div class="field"><label>图像响应取图路径（默认 <code>data[0].url</code>，base64 用 <code>data[0].b64_json</code>）</label><input id="img_resp" value="data[0].url"></div>
+            </div>
+        </div>
 
         <div class="field" style="margin-top:18px"><label>🎞️ 视频接口 URL</label><input id="vid_url" placeholder="https://your-video-api/generate"></div>
         <div class="field"><label>视频 API Key</label><input id="vid_key" type="password" placeholder="token..."></div>
@@ -1076,7 +1087,7 @@ function loadDemo(){
 }
 
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
-const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
+const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
   MEDIA_KEYS.forEach(id=>{
@@ -1114,6 +1125,7 @@ function getMediaCfg(){
     imgModel:localStorage.getItem('img_model')||'',
     imgSize:localStorage.getItem('img_size')||'1024x1024',
     imgMode:localStorage.getItem('img_mode')||'txt2img',
+    imgStyle:localStorage.getItem('img_style')||'',
     imgBody:localStorage.getItem('img_body')||'',
     imgResp:localStorage.getItem('img_resp')||'data[0].url',
     vidUrl:localStorage.getItem('vid_url')||'',
@@ -1133,14 +1145,20 @@ async function genImage(prompt, cfg, imageUrl){
   if(!urlStr) return null;
   if(!/^https?:\/\//i.test(urlStr)) throw new Error('图像接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
   if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
+  // 通用风格约束提示词作为前缀拼接到所有图片提示词
+  let full=prompt;
+  if(cfg.imgStyle && cfg.imgStyle.trim()){
+    const sep=/[。.!?！？]$/.test(cfg.imgStyle.trim()) ? ' ' : '。';
+    full=cfg.imgStyle.trim()+sep+prompt;
+  }
   let body;
   if(cfg.imgBody && cfg.imgBody.trim()){
-    let tpl=cfg.imgBody.replace(/\{\{prompt\}\}/g, prompt);
+    let tpl=cfg.imgBody.replace(/\{\{prompt\}\}/g, full);
     if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
     try{ body=JSON.parse(tpl); }
-    catch(e){ body={prompt}; if(imageUrl) body.image_url=imageUrl; }
+    catch(e){ body={prompt:full}; if(imageUrl) body.image_url=imageUrl; }
   } else {
-    body={ prompt, n:1, size:cfg.imgSize||'1024x1024' };
+    body={ prompt:full, n:1, size:cfg.imgSize||'1024x1024' };
     if(cfg.imgModel) body.model=cfg.imgModel;
   }
   const headers={'Content-Type':'application/json'}; if(cfg.imgKey) headers['Authorization']='Bearer '+cfg.imgKey;
@@ -1150,6 +1168,25 @@ async function genImage(prompt, cfg, imageUrl){
   const val=resolvePath(data, cfg.imgResp);
   if(!val) throw new Error('响应中未找到图片（路径 '+cfg.imgResp+'）');
   return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
+}
+// 带重试的 fetch：对 5xx / 429 / 网络失败自动重试；401/400/404 等客户端错误不重试
+async function fetchRetry(url, opts, retries=3, baseDelay=4000){
+  let lastErr;
+  for(let i=0;i<=retries;i++){
+    try{
+      const res=await fetch(url, opts);
+      if(res.ok) return res;
+      if(res.status===400||res.status===401||res.status===404) return res;
+      let m='HTTP '+res.status;
+      try{ const e=await res.json(); m=e.error?.message||e.message||m; }catch{}
+      lastErr=new Error(m);
+    }catch(e){ lastErr=e; }
+    if(i<retries) await sleep(baseDelay*(i+1));
+  }
+  if(lastErr && /Failed to fetch/i.test(lastErr.message)){
+    throw new Error('网络请求失败：可能是 CORS 跨域被拦截或服务不可达，请确认接口 URL 正确，且服务商允许本站跨域（Origin: '+location.origin+'）');
+  }
+  throw lastErr;
 }
 async function genVideo(prompt, cfg, imageUrl){
   const urlStr=String(cfg.vidUrl||'').trim();
@@ -1180,7 +1217,7 @@ async function genVideo(prompt, cfg, imageUrl){
   }
 
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
-  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
+  const res=await fetchRetry(urlStr,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)}, 3, 4000);
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||e.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
 
@@ -1222,7 +1259,7 @@ async function pollAsyncVideo(cfg, taskId, isAgnes){
       if(j.status==='failed') throw new Error('视频生成失败：'+(j.error?JSON.stringify(j.error):'任务失败'));
     }catch(e){ if(/失败|超时/.test(e.message)) throw e; }
   }
-  throw new Error('视频生成轮询超时（5 分钟，最后状态：'+last+'）');
+  throw new Error('视频生成轮询超时（5 分钟，最后状态：'+last+'；若一直请求失败，可能是 CORS 跨域被拦截或服务繁忙，请稍后点「重新生成视频」重试）');
 }
 
 // 非 Agnes 异步接口的轮询 URL（兼容旧版 /v1/videos/<taskId>）
