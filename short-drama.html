@@ -91,6 +91,15 @@
         .pic-cell .cap b { color:var(--text-primary); }
         .pic-cell .ref-actions { display:flex;gap:6px;padding:0 10px 10px; }
         .ref-type { position:absolute;top:8px;left:8px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:3px 9px;border-radius:12px;z-index:2; }
+        .ref-detail { font-size:12px;color:var(--text-secondary);padding:4px 10px 8px;border-top:1px solid var(--border); }
+        .ref-detail summary { cursor:pointer;color:var(--text-secondary);user-select:none;padding:2px 0; }
+        .ref-detail-body { margin-top:6px;line-height:1.55; }
+        .ref-detail-body div { margin-bottom:3px; }
+        .ref-detail-body b { color:var(--text-primary); }
+        .ref-prompt { margin-top:6px;padding:6px 8px;background:var(--bg-tertiary);border-radius:6px;color:var(--text-primary);word-break:break-word; }
+        .ref-detail-readonly { font-size:12px;color:var(--text-secondary);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:4px 0 10px;line-height:1.55; }
+        .ref-detail-readonly div { margin-bottom:4px; }
+        .ref-detail-readonly b { color:var(--text-primary); }
         video.vid { width:100%;max-width:480px;border-radius:8px;border:1px solid var(--border);background:#000;display:block;margin-top:4px; }
         .hidden { display:none; }
 
@@ -134,7 +143,7 @@
     <div class="header">
         <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
         <div class="title">短剧｜漫剧创作工作台</div>
-        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④三视图参考图 ⑤视频</div>
+        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④角色参考图 ⑤分镜场景图片 ⑥视频</div>
         <div class="mode-bar">
             <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
         </div>
@@ -286,9 +295,9 @@
             </div>
         </div>
         <div class="phase" id="phase-refs">
-            <h3>④ 三视图参考图（角色 / 道具） <span class="tag">references/</span></h3>
+            <h3>④ 角色参考图（角色设定） <span class="tag">references/</span></h3>
             <div class="ref-pause" id="refPause">
-                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查角色/道具参考图，如需替换可点击卡片上的「替换」按钮（场景将在下一步「⑤ 分镜场景图片」生成）</div>
+                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查角色参考图，如需替换可点击卡片上的「替换」按钮（场景将在下一步「⑤ 分镜场景图片」生成）</div>
                 <div class="ref-pause-count" id="refCountdown">02:00</div>
                 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
                     <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成分镜场景图</button>
@@ -300,7 +309,7 @@
         <div class="phase" id="phase-scenes">
             <h3>⑤ 分镜场景图片 <span class="tag">scenes/</span></h3>
             <p class="hint" id="scenesHint" style="margin:0 0 10px">基于分镜脚本与已确认的角色/道具参考图，逐镜头生成场景图；未配置图像接口时显示占位图。</p>
-            <div class="pic-grid" id="out-scenes"><div class="note">（等待三视图参考图确认…）</div></div>
+            <div class="pic-grid" id="out-scenes"><div class="note">（等待角色参考图确认…）</div></div>
             <div class="phase-actions" id="actions-scenes" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('scenes')">✅ 确认并继续</button>
                 <button class="btn btn-ghost" onclick="retryStep('scenes')">🔄 重新生成</button>
@@ -335,6 +344,7 @@
         </div>
         <div class="modal-section active" id="tab-regen">
             <div class="field"><label>参考图名称</label><input id="replaceName" readonly></div>
+            <div id="replaceDetail" class="ref-detail-readonly"></div>
             <div class="field"><label>图像生成提示词（英文效果最佳）</label><textarea id="replacePrompt" rows="5"></textarea></div>
             <img class="modal-preview" id="replacePreviewRegen" src="" alt="预览">
             <div class="modal-row">
@@ -649,14 +659,14 @@ async function runPipeline(){
       document.getElementById('out-storyboard').textContent=outputs.storyboard;
       showPhase('storyboard');
     }},
-    {name:'refs', label:'[4/6] 生成三视图参考图', gen:async ()=>{
+    {name:'refs', label:'[4/6] 生成角色参考图', gen:async ()=>{
       document.getElementById('out-pics').innerHTML='<div class="note">（准备生成参考图…）</div>';
       let elements;
-      if(useAI){ try{ elements=await extractElements(outputs.script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
+      if(useAI){ try{ elements=await extractElements(outputs.storyboard, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
       else { elements=[]; }
       if(!elements.length){
         elements=[
-          {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`}
+          {id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, pure white background, no props, cinematic nostalgic animated style, soft lighting`}
         ];
       }
       await generateReferenceImages(elements, imported.refs);
@@ -711,7 +721,7 @@ function resetResultPhases(){
   document.getElementById('out-script').textContent='（等待故事梗概确认…）';
   document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
   document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
-  document.getElementById('out-scenes').innerHTML='<div class="note">（等待三视图参考图确认…）</div>';
+  document.getElementById('out-scenes').innerHTML='<div class="note">（等待角色参考图确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
   document.getElementById('vidHint').textContent='（等待参考图确认…）';
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
@@ -786,31 +796,42 @@ async function generateStoryboard(script, f){
   return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
 }
 
-async function extractElements(script, f, imported){
-  const sys=`请从以下剧本中提取需要生成「三视图参考图」的视觉元素，只提取【角色】和【道具】两类，不要提取场景/环境类元素（场景将在后续「分镜场景图片」阶段逐镜头生成）。
-【强制约束】提取的元素必须与主角「${f.pname}」、类型「${f.genre}」、风格「${f.style}」、故事前提「${f.premise || '（未填写）'}」保持一致，不要引入与剧本无关的现代/都市/其他世界观元素。
-每个元素必须包含以下字段：
-- name：中文名称（用于界面展示）。
-- type：只能是 角色 或 道具。
-- prompt：必须是纯英文图像生成提示词（Stable Diffusion / Midjourney 风格），禁止出现任何中文字符、中文标点或中文说明。角色提示词必须包含 character reference sheet, three views, front side back, full body；道具提示词必须包含 prop reference sheet, multiple angles。均需融入风格「${f.genre} ${f.style}」与 clean white background / studio lighting。
-
-示例：
-[{"name":"长剑","type":"道具","prompt":"long sword, xuanhuan fantasy style, prop reference sheet, multiple angles, sharp blade, wooden handle, clean white background, studio lighting, detailed, 4K"}]
+async function extractElements(storyboard, f, imported){
+  const sys=`你扮演一位擅长角色设计师和 AI 绘图提示词专家。
+请根据下面提供的【分镜脚本】内容，提炼出反复出现的主要角色。所有角色都要符合分镜感觉，风格统一，并且适合后续反复出现在分镜图片（动画）场景中。
+为每个角色输出以下字段：
+- name：角色名字
+- identity：故事身份
+- age：年龄
+- appearance：外貌特征
+- clothing：穿着风格
+- personality：性格特点（2–4 个真实自然的性格特征）
+- behavior：行为细节
+- emotion：情绪作用（如天真、热闹、温暖、紧张、害怕）
+- scenes：出现场景（简单说明通常出现在哪些场景）
+- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点；必须包含关键词：full body, pure white background, no props, cinematic nostalgic animated style, soft lighting。
 
 输出为 JSON 数组，不要额外解释：
-[{"name":"${f.pname}","type":"角色","prompt":"..."},...]`;
+[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","prompt":"英文角色绘图提示词"},...]`;
   let text;
   try{
-    let user='【剧本】\n'+script;
+    let user='【分镜脚本】\n'+storyboard;
     if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
     text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
   }catch(e){ throw e; }
   let arr=safeParseJSON(text);
   if(Array.isArray(arr)&&arr.length){
-    arr=arr.filter(el=>el&&el.name).map(el=>({id:uid(),name:el.name,type: el.type==='角色'?'角色':'道具', prompt:el.prompt||''}));
+    arr=arr.filter(el=>el&&el.name).map(el=>({
+      id:uid(), type:'角色',
+      name: el.name||'', identity: el.identity||'', age: el.age||'',
+      appearance: el.appearance||'', clothing: el.clothing||'',
+      personality: el.personality||'', behavior: el.behavior||'',
+      emotion: el.emotion||'', scenes: el.scenes||'',
+      prompt: el.prompt||''
+    }));
     return await ensureEnglishPrompts(arr, f);
   }
-  return fallbackExtract(script, f);
+  return fallbackExtract(storyboard, f);
 }
 
 function safeParseJSON(s){
@@ -821,44 +842,34 @@ function safeParseJSON(s){
 }
 function hasCJK(s){ return /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(s||''); }
 async function ensureEnglishPrompts(elements, f){
-  const style=`${f.genre||''} ${f.style||''}`.trim();
   const out=[];
   for(const el of elements){
     let prompt=(el.prompt||'').trim();
     if(!prompt || hasCJK(prompt)){
       try{
-        const sys=`You are a Stable Diffusion prompt engineer. Rewrite the following image generation description into a pure English, tag-style prompt. Output only the final prompt, no explanation, no Chinese characters.`;
-        const user=`Element Chinese name: ${el.name}\nType: ${el.type}\nOriginal prompt: ${prompt || '(empty)'}\nStyle: ${style}\nRequired keywords: ${el.type==='角色'?'character reference sheet, three views, front side back, full body':'prop reference sheet, multiple angles, clean white background'}`;
+        const sys=`You are a character designer and Stable Diffusion prompt engineer. Rewrite the following into a pure English, tag-style character drawing prompt. Output only the final prompt, no explanation, no Chinese characters. Must include: full body, pure white background, no props, cinematic nostalgic animated style, soft lighting.`;
+        const user=`Character name: ${el.name}\nIdentity: ${el.identity||''}\nAge: ${el.age||''}\nAppearance: ${el.appearance||''}\nClothing: ${el.clothing||''}\nOriginal prompt: ${prompt || '(empty)'}`;
         prompt=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
         prompt=(prompt||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
       }catch(e){ prompt=''; }
       if(!prompt){
-        prompt=el.type==='角色'
-          ? `character reference sheet, three views, front side back, full body, ${style}, clean white background, detailed face, cinematic lighting, digital art, 4K`
-          : `prop reference sheet, multiple angles, ${style}, clean white background, studio lighting, detailed, 4K`;
+        prompt=`full body, pure white background, no props, cinematic nostalgic animated style, soft lighting, ${el.name||'character'}, ${el.appearance||''}`;
       }
     }
     out.push({...el, prompt});
   }
   return out;
 }
-function fallbackExtract(script, f){
-  const refs=[];
-  if(f && f.pname) refs.push({id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre||''} ${f.style||''}, character reference sheet, three views, front side back, full body, clean white background`});
-  const lines=(script||'').split('\n');
-  lines.forEach(line=>{
-    const m=line.match(/^人物[：:](.+)$/);
-    if(m) m[1].split(/[,，、]/).forEach(n=>{ const name=n.trim(); if(name) refs.push({id:uid(),name,type:'角色',prompt:name+', character reference sheet, three views, full body, clean white background'}); });
-  });
-  const seen=new Set();
-  return refs.filter(r=>{ if(seen.has(r.name)) return false; seen.add(r.name); return true; });
+function fallbackExtract(storyboard, f){
+  if(f && f.pname) return [{id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, pure white background, no props, cinematic nostalgic animated style, soft lighting`}];
+  return [];
 }
 
 function buildImagePrompt(el){
-  const base=el.prompt||'';
-  if(el.type==='角色') return `character reference sheet, three views, front side back, full body, ${base}, clean white background, consistent design, detailed face, cinematic lighting, digital art, 4K`;
-  if(el.type==='场景') return `wide establishing shot, ${base}, cinematic lighting, detailed environment, 8K`;
-  return `prop reference sheet, multiple angles, ${base}, clean white background, studio lighting, detailed, 4K`;
+  const base=(el.prompt||'').trim();
+  if(base) return base;
+  if(el.type==='角色') return `full body, pure white background, no props, cinematic nostalgic animated style, soft lighting, character design`;
+  return `prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K`;
 }
 
 async function generateReferenceImages(elements, importedImages){
@@ -901,7 +912,20 @@ function renderRefGrid(container){
     <div class="pic-cell" data-idx="${idx}">
       <span class="ref-type">${esc(r.type)}</span>
       <img src="${r.url||genManjuPic(r.name,r.prompt)}" alt="${esc(r.name)}" onerror="this.style.display='none'">
-      <div class="cap"><b>${esc(r.name)}</b></div>
+      <div class="cap"><b>${esc(r.name)}</b>${r.identity?` · <span>${esc(r.identity)}</span>`:''}</div>
+      <details class="ref-detail">
+        <summary>角色设定</summary>
+        <div class="ref-detail-body">
+          ${r.age?`<div><b>年龄：</b>${esc(r.age)}</div>`:''}
+          ${r.appearance?`<div><b>外貌：</b>${esc(r.appearance)}</div>`:''}
+          ${r.clothing?`<div><b>穿着：</b>${esc(r.clothing)}</div>`:''}
+          ${r.personality?`<div><b>性格：</b>${esc(r.personality)}</div>`:''}
+          ${r.behavior?`<div><b>行为：</b>${esc(r.behavior)}</div>`:''}
+          ${r.emotion?`<div><b>情绪：</b>${esc(r.emotion)}</div>`:''}
+          ${r.scenes?`<div><b>场景：</b>${esc(r.scenes)}</div>`:''}
+          ${r.prompt?`<div class="ref-prompt"><b>英文提示词：</b>${esc(r.prompt)}</div>`:''}
+        </div>
+      </details>
       <div class="ref-actions">
         <button class="btn btn-sm" onclick="openReplaceModal(${idx})">替换</button>
       </div>
@@ -1015,11 +1039,24 @@ function retryRefStep(){
 
 /* ============ 替换参考图弹窗 ============ */
 let replaceIdx=-1;
+function refDetailHTML(r){
+  const rows=[];
+  if(r.identity) rows.push(`<div><b>故事身份：</b>${esc(r.identity)}</div>`);
+  if(r.age) rows.push(`<div><b>年龄：</b>${esc(r.age)}</div>`);
+  if(r.appearance) rows.push(`<div><b>外貌特征：</b>${esc(r.appearance)}</div>`);
+  if(r.clothing) rows.push(`<div><b>穿着风格：</b>${esc(r.clothing)}</div>`);
+  if(r.personality) rows.push(`<div><b>性格特点：</b>${esc(r.personality)}</div>`);
+  if(r.behavior) rows.push(`<div><b>行为细节：</b>${esc(r.behavior)}</div>`);
+  if(r.emotion) rows.push(`<div><b>情绪作用：</b>${esc(r.emotion)}</div>`);
+  if(r.scenes) rows.push(`<div><b>出现场景：</b>${esc(r.scenes)}</div>`);
+  return rows.join('');
+}
 function openReplaceModal(idx){
   replaceIdx=idx;
   const r=pipelineRefs[idx]; if(!r) return;
   document.getElementById('replaceTitle').textContent='替换参考图：'+r.name+'（'+r.type+'）';
   document.getElementById('replaceName').value=r.name;
+  document.getElementById('replaceDetail').innerHTML=refDetailHTML(r);
   document.getElementById('replacePrompt').value=r.prompt||'';
   document.getElementById('replacePreviewRegen').src=r.url||'';
   document.getElementById('replaceFile').value='';
@@ -1052,7 +1089,7 @@ async function doRegenerateRef(){
       if(u) r.url=u;
       else throw new Error('未返回图片');
     }
-    updateRefCell(replaceIdx);
+    renderRefGrid(document.getElementById('out-pics'));
     closeReplaceModal();
     toast('参考图已替换：'+r.name);
   }catch(e){ toast('替换失败：'+e.message); }
@@ -1181,7 +1218,7 @@ function resetPipeline(){
   document.getElementById('out-script').textContent='（等待故事梗概确认…）';
   document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
   document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
-  document.getElementById('out-scenes').innerHTML='<div class="note">（等待三视图参考图确认…）</div>';
+  document.getElementById('out-scenes').innerHTML='<div class="note">（等待角色参考图确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
   document.getElementById('vidHint').textContent='（等待参考图确认…）';
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
