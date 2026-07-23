@@ -39,6 +39,8 @@
         .btn-primary:hover { background:var(--accent-hover); }
         .btn-ghost { background:transparent; }
         .btn-sm { padding:6px 12px;font-size:12px;border-radius:8px; }
+        .btn-warning { background:var(--warning);color:#1a1200;border-color:var(--warning); }
+        .btn-warning:hover { background:#c49a45; }
 
         .card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:18px;margin:14px 0; }
         .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
@@ -51,8 +53,8 @@
         /* 表单字段 */
         .field { margin:12px 0; }
         .field label { display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px; }
-        .field input, .field textarea { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
-        .field input:focus, .field textarea:focus { border-color:var(--accent); }
+        .field input, .field textarea, .field select { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
+        .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
         .field textarea { resize:vertical; line-height:1.6; }
         .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
         .grid3 { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
@@ -72,18 +74,40 @@
         .progress { background:#0f172a;color:#e2e8f0;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:120px;display:none;white-space:pre-wrap;line-height:1.7;margin:10px 0 4px;max-height:300px;overflow:auto; }
         .progress b { color:#7dd3fc; }
 
-        /* 结果六阶段 */
+        /* 结果阶段 */
         .phase { margin:14px 0; }
         .phase h3 { font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--accent); }
         .phase h3 .tag { font-size:12px;background:var(--accent-glow);color:var(--accent-light);padding:2px 10px;border-radius:20px;font-weight:500; }
-        .phase pre { white-space:pre-wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:300px;overflow:auto;font-size:13px;line-height:1.6;margin:0; }
+        .phase pre { white-space:pre-wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:360px;overflow:auto;font-size:13px;line-height:1.6;margin:0; }
         .pic-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:12px 0; }
-        .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+        .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative; }
         .pic-cell img { width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--bg-tertiary); }
         .pic-cell .cap { font-size:12px;color:var(--text-secondary);padding:8px 10px; }
         .pic-cell .cap b { color:var(--text-primary); }
+        .pic-cell .ref-actions { display:flex;gap:6px;padding:0 10px 10px; }
+        .ref-type { position:absolute;top:8px;left:8px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:3px 9px;border-radius:12px;z-index:2; }
         video.vid { width:100%;max-width:480px;border-radius:8px;border:1px solid var(--border);background:#000;display:block;margin-top:4px; }
         .hidden { display:none; }
+
+        /* 参考图暂停确认条 */
+        .ref-pause { background:rgba(212,168,83,.16);border:1px solid rgba(212,168,83,.45);border-radius:12px;padding:16px;margin:10px 0;text-align:center;display:none; }
+        .ref-pause.active { display:block; }
+        .ref-pause-text { font-weight:600;color:var(--warning);margin-bottom:10px; }
+        .ref-pause-count { font-size:20px;font-weight:700;color:var(--warning);margin-bottom:10px;font-variant-numeric:tabular-nums; }
+        .ref-pause .btn-warning { font-weight:600; }
+
+        /* 替换弹窗 */
+        .modal-backdrop { position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;align-items:center;z-index:300;padding:20px; }
+        .modal-backdrop.active { display:flex; }
+        .modal { background:var(--bg-secondary);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:20px; }
+        .modal-title { font-size:16px;font-weight:700;margin-bottom:14px;color:var(--accent); }
+        .modal-tabs { display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--border); }
+        .modal-tab { padding:8px 14px;background:transparent;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;border-bottom:2px solid transparent; }
+        .modal-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+        .modal-section { display:none; }
+        .modal-section.active { display:block; }
+        .modal-preview { width:100%;max-height:260px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);margin:10px 0; }
+        .modal-row { display:flex;justify-content:flex-end;gap:8px;margin-top:16px; }
 
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
         .footer a { color:var(--accent);text-decoration:none; }
@@ -105,7 +129,7 @@
     <div class="header">
         <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
         <div class="title">短剧｜漫剧创作工作台</div>
-        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①小说 ②剧本 ③视觉元素 ④分镜 ⑤参考图 ⑥视频</div>
+        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④三视图参考图 ⑤视频</div>
         <div class="mode-bar">
             <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
         </div>
@@ -159,7 +183,7 @@
     <!-- 媒体 AI 接口配置（用户自行填写） -->
     <details class="card" id="mediaCfgCard">
         <summary class="card-title" style="cursor:pointer;list-style:none">🔌 AI 图像 / 视频接口配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">可选 · 留空则图片/视频为本地占位</span></summary>
-        <div class="note">填写你自己的图像 / 视频生成接口，流水线第 ⑤⑥ 阶段将真实调用；留空则使用本地占位（不影响文本阶段）。配置仅保存在本机浏览器。</div>
+        <div class="note">填写你自己的图像 / 视频生成接口，流水线第 ④⑤ 阶段将真实调用；留空则使用本地占位（不影响文本阶段）。配置仅保存在本机浏览器。</div>
         <div class="grid2">
             <div class="field"><label>🖼️ 图像接口 URL（OpenAI 兼容 images/generations）</label><input id="img_url" placeholder="https://api.openai.com/v1/images/generations"></div>
             <div class="field"><label>图像 API Key</label><input id="img_key" type="password" placeholder="sk-..."></div>
@@ -172,7 +196,8 @@
 
         <div class="field" style="margin-top:18px"><label>🎞️ 视频接口 URL</label><input id="vid_url" placeholder="https://your-video-api/generate"></div>
         <div class="field"><label>视频 API Key</label><input id="vid_key" type="password" placeholder="token..."></div>
-        <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位，例如 <code>{"prompt":"{{prompt}}","duration":4}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
+        <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位；如需参考图可用 <code>{{image_url}}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}","image_url":"{{image_url}}"}'></textarea></div>
+        <div class="field"><label>视频接口参考图字段名（可选，如 <code>image_url</code> / <code>first_frame</code>；若模板里已有 <code>{{image_url}}</code> 可留空）</label><input id="vid_img_field" placeholder="image_url"></div>
         <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>）</label><input id="vid_resp" value="data[0].url"></div>
 
         <div class="row">
@@ -186,31 +211,32 @@
     <div class="bar" id="bar"><i></i></div>
     <div class="progress" id="log"></div>
 
-    <!-- 结果：六阶段 -->
+    <!-- 结果：五阶段 -->
     <div id="result" class="hidden">
         <div class="phase">
-            <h3>① 小说 <span class="tag">novel.md</span></h3>
-            <pre id="out-novel">（生成中…）</pre>
+            <h3>① 故事梗概 <span class="tag">story.md</span></h3>
+            <pre id="out-story">（生成中…）</pre>
         </div>
         <div class="phase">
-            <h3>② 剧本 <span class="tag">script.md</span></h3>
+            <h3>② 专业剧本 <span class="tag">script.md</span></h3>
             <pre id="out-script">（生成中…）</pre>
         </div>
         <div class="phase">
-            <h3>③ 视觉元素提取 <span class="tag">elements.md</span></h3>
-            <pre id="out-elements">（生成中…）</pre>
-        </div>
-        <div class="phase">
-            <h3>④ 分镜表 <span class="tag">storyboard.md</span></h3>
+            <h3>③ 分镜脚本 <span class="tag">storyboard.md</span></h3>
             <pre id="out-storyboard">（生成中…）</pre>
         </div>
         <div class="phase">
-            <h3>⑤ 参考图 <span class="tag">Pictures/</span></h3>
+            <h3>④ 三视图参考图 <span class="tag">references/</span></h3>
+            <div class="ref-pause" id="refPause">
+                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查参考图，如需替换可点击卡片上的「替换」按钮</div>
+                <div class="ref-pause-count" id="refCountdown">02:00</div>
+                <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成视频</button>
+            </div>
             <div class="pic-grid" id="out-pics"><div class="note">（生成中…）</div></div>
         </div>
         <div class="phase">
-            <h3>⑥ 视频 <span class="tag">Videos/</span></h3>
-            <p class="hint" style="margin:0 0 10px">真实环境会生成 4 段 mp4 并内嵌播放；当前为本地演示占位（生视频需后端 Agnes 接口）。</p>
+            <h3>⑤ 视频 <span class="tag">Videos/</span></h3>
+            <p class="hint" style="margin:0 0 10px">真实环境会生成可播放视频；当前为本地演示占位（生视频需后端视频接口）。</p>
             <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
                 <source src="#" type="video/mp4">
             </video>
@@ -223,8 +249,36 @@
     </div>
 </div>
 
+<!-- 替换参考图弹窗 -->
+<div class="modal-backdrop" id="replaceModal">
+    <div class="modal">
+        <div class="modal-title" id="replaceTitle">替换参考图</div>
+        <div class="modal-tabs">
+            <button class="modal-tab active" onclick="switchReplaceTab('regen')">🔄 重新生成</button>
+            <button class="modal-tab" onclick="switchReplaceTab('upload')">📁 本地上传</button>
+        </div>
+        <div class="modal-section active" id="tab-regen">
+            <div class="field"><label>参考图名称</label><input id="replaceName" readonly></div>
+            <div class="field"><label>图像生成提示词（英文效果最佳）</label><textarea id="replacePrompt" rows="5"></textarea></div>
+            <img class="modal-preview" id="replacePreviewRegen" src="" alt="预览">
+            <div class="modal-row">
+                <button class="btn btn-ghost" onclick="closeReplaceModal()">取消</button>
+                <button class="btn btn-primary" onclick="doRegenerateRef()" id="replaceRegenBtn">🔄 重新生成</button>
+            </div>
+        </div>
+        <div class="modal-section" id="tab-upload">
+            <div class="field"><label>选择本地图片</label><input type="file" id="replaceFile" accept="image/*" onchange="previewReplaceFile(this)"></div>
+            <img class="modal-preview" id="replacePreviewUpload" src="" alt="预览" style="display:none">
+            <div class="modal-row">
+                <button class="btn btn-ghost" onclick="closeReplaceModal()">取消</button>
+                <button class="btn btn-primary" onclick="doUploadRef()">📤 使用此图</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <footer class="footer">
-    <div>SAGE BOOK v1.5 | Created by DSArt-Design | 2025-2026 | 你的创作主场 Powered by Ollama · OpenAI · Claude · Qwen · GLM</div>
+    <div>SAGE BOOK v1.6 | Created by DSArt-Design | 2025-2026 | 你的创作主场 Powered by Ollama · OpenAI · Claude · Qwen · GLM</div>
     <div class="footer-legal"><a href="copyright.html">版权声明</a> · <a href="privacy.html">隐私条款</a> · <a href="terms.html">使用条款</a></div>
     <div class="footer-links">友情链接｜<a href="https://storylucas.top/" target="_blank" rel="noopener">NON九界</a>｜<a href="https://sagebool.github.io/lifeline/" target="_blank" rel="noopener">人生运势K线图</a>｜<a href="https://sagebool.github.io/crystal-calculator/" target="_blank" rel="noopener">水晶运势计算器</a></div>
 </footer>
@@ -247,6 +301,8 @@ function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').repla
 function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h; }
 function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function fmtTime(sec){ const m=String(Math.floor(sec/60)).padStart(2,'0'); const s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; }
+function uid(){ return 'ref_'+Math.random().toString(36).slice(2,9); }
 
 /* ============ 站点既有 AI（与设置页共享键） ============ */
 function getAIConfig(){
@@ -296,14 +352,20 @@ function genManjuPic(name, hint){
 
 /* ============ 演示示例（无 Key 时使用） ============ */
 const DEMO = {
-  novel: "# 剑宗遗孤\n\n苏瑶死在那场宗门大比上。她记得师兄的剑从背后穿心而过，记得掌门——她唤了十年的“父亲”——在观礼台上微微颔首。\n\n再睁眼，她回到十六岁入门那年。\n\n这一次，她把“痴情少女”的面具戴得更深，却把每一张脸都记进了骨髓。师父的死，要从那个雨夜的茶盏查起……",
-  script: "【场景一·内景·剑宗藏书阁·夜】\n动作：苏瑶指尖掠过师父遗留的剑谱，烛火骤暗。\n苏瑶（低声）：这一次，我不会再信任何人。\n\n【场景二·外景·演武场·晨】\n动作：师兄一剑刺来，苏瑶侧身避开，眸中寒光一闪。\n师兄：师妹，你的剑法……长进了。",
-  elements: "【角色】苏瑶 — Subject: a young cultivator girl with cold eyes, in flowing ink-blue robe, silver hairpin; Style: xianxia cinematic; Lighting: moonlight.\n【场景】剑宗藏书阁 — Subject: ancient library with floating scrolls; Style: ink-wash fantasy; Lighting: dim candle.\n【道具】断魂剑 — Subject: slender jade sword with crack; Style: ornate; Lighting: rim light.",
-  storyboard: "镜头1（15s）· 特写→全景：苏瑶睁眼，雨滴落在脸颊。运镜：缓慢推近。\n镜头2（15s）· 中景：她抚过师父旧剑，眼神转冷。运镜：摇镜。\n镜头3（15s）· 动作：师兄刺剑，苏瑶侧身闪避，剑光划过。运镜：快速横移。\n镜头4（15s）· 远景：掌门于高台颔首，苏瑶仰头，嘴角微扬。运镜：俯拍。",
-  pics: [
-    { name:'苏瑶（主角）', hint:'a young cultivator girl, ink-blue robe' },
-    { name:'场景·藏书阁', hint:'ancient library with floating scrolls' },
-    { name:'道具·断魂剑', hint:'slender jade sword with crack' }
+  story: "暴雨如注的深夜，废弃的花房在雷声中摇摇欲坠。林秋浑身湿透，死死护着怀中那盆唯一的红玫瑰。这是已故妻子留下的最后遗物，也是他在这座冷漠城市中仅存的温情寄托。\n\n次日清晨，邻居小孩好奇地凑过来：「叔叔，这花快死了，为什么还留着？」林秋沉默不语。然而，一场突如其来的入室盗窃打破了宁静。小偷为了抢夺值钱物品，粗暴地推倒了花盆。泥土飞溅，玫瑰折断，鲜红的汁液染红了林秋的白衬衫。愤怒瞬间爆发，林秋冲上去与小偷搏斗，最终将其制服报警。\n\n警察带走小偷后，林秋瘫坐在地，望着断成两截的玫瑰，泪水终于决堤。就在他绝望之际，他发现断茎处竟然冒出了一颗嫩绿的新芽。那一刻，林秋明白，死亡并非终结，而是新生的序章。",
+  script: "01 夜、内、废弃花房\n人物：林秋（30岁，面色苍白，眼窝深陷，发丝凌乱湿漉，身穿沾满泥点的深色旧衬衫）\n\n▲全景：暴雨如注的深夜，狂风呼啸。一座破败的玻璃花房在雷声中剧烈摇晃，玻璃碎片不时掉落。\n▲中景：林秋浑身湿透，雨水顺着他的脸颊滚落。他蜷缩在花房中央，双臂死死护着怀中一个简陋的花盆。\n▲特写：花盆中，一株红玫瑰在风雨中飘摇。花瓣边缘微微卷曲，呈现出明显的枯萎迹象，颜色暗红如血。\n▲近景：林秋眼神空洞而绝望，望着怀中的玫瑰。\n林秋vo（低沉、沙哑）：这是婉儿留下的最后一点遗存。在这座冷漠的城市里，它是我唯一还活着的证据。\n▲闪回画面（快速剪辑）：\n1. 撕碎的离婚通知书。\n2. 空荡荡的离婚协议书。\n3. 林秋独自坐在黑暗房间里的剪影。\n▲近景：林秋的双手颤抖着抚摸玫瑰干枯的花瓣，泪水混着雨水滴落。\n林秋vo：失业、离婚、孤独……生活将我逼入绝境。就像这朵花一样，正在一点点死去。\n\n02 日、内、林秋公寓客厅\n人物：林秋（30岁）、邻家小孩（8岁，天真好奇，穿着校服）\n\n▲全景：次日清晨，阳光穿透云层，洒进略显凌乱的客厅，空气中漂浮着尘埃。\n▲中景：林秋坐在小板凳上，手持一把小剪刀，小心翼翼地修剪玫瑰的枯叶。",
+  storyboard: "镜头1（15s）· 全景→特写：暴雨夜花房，林秋护花。运镜：缓慢推近。\n镜头2（15s）· 中景：林秋与玫瑰特写交切。运镜：摇镜。\n镜头3（15s）· 动作：小偷推倒花盆，林秋愤怒搏斗。运镜：快速横移。\n镜头4（15s）· 近景：断茎新芽，林秋落泪微笑。运镜：缓慢推近。",
+  refs: [
+    { id:'demo_1', name:'林秋', type:'角色', prompt:'a 30-year-old Chinese man, pale face, deep eye sockets, messy wet hair, old dark shirt with mud stains, character reference sheet, three views, front side back, full body, clean white background, cinematic lighting, detailed face, digital art, 4K' },
+    { id:'demo_2', name:'邻家小孩', type:'角色', prompt:'an 8-year-old Chinese child, curious expression, school uniform, character reference sheet, three views, front side back, full body, clean white background, soft lighting, digital art, 4K' },
+    { id:'demo_3', name:'小偷', type:'角色', prompt:'a masked thief in dark clothes, tense posture, character reference sheet, three views, front side back, full body, clean white background, dramatic lighting, digital art, 4K' },
+    { id:'demo_4', name:'废弃花房', type:'场景', prompt:'abandoned glass greenhouse at stormy night, broken glass, heavy rain, cinematic wide shot, moody lighting, detailed environment, 8K' },
+    { id:'demo_5', name:'林秋公寓客厅', type:'场景', prompt:'small messy apartment living room, morning sunlight through clouds, dust particles, cinematic wide shot, warm lighting, detailed interior, 8K' },
+    { id:'demo_6', name:'红玫瑰与花盆', type:'道具', prompt:'withered red rose in a simple clay pot, prop reference sheet, multiple angles, petals curling, dark red like blood, clean white background, studio lighting, detailed, 4K' },
+    { id:'demo_7', name:'小剪刀', type:'道具', prompt:'small gardening scissors, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
+    { id:'demo_8', name:'撕碎的纸张', type:'道具', prompt:'torn divorce notice papers, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
+    { id:'demo_9', name:'口罩', type:'道具', prompt:'black fabric face mask, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
+    { id:'demo_10', name:'手机', type:'道具', prompt:'smartphone showing calling screen, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' }
   ]
 };
 
@@ -328,6 +390,11 @@ function readRefImages(){
 
 /* ============ 流水线运行 ============ */
 let running=false;
+let pipelineRefs=[];
+let refConfirmResolver=null;
+let refConfirmTimer=null;
+let refConfirmSeconds=120;
+
 function collectForm(){
   return {
     title:document.getElementById('f_title').value.trim()||'未命名',
@@ -359,113 +426,370 @@ async function runPipeline(){
   imported.world=await readFileText(document.getElementById('d_world'));
   imported.refs=await readRefImages();
 
-  const useImportedNovel = imported.story && f.autoImport;
+  const useImportedStory = imported.story && f.autoImport;
 
   const result=document.getElementById('result');
   const log=document.getElementById('log');
   const bar=document.getElementById('bar');
   bar.style.display='block'; log.style.display='block'; log.textContent=''; result.classList.add('hidden');
-  const STEPS=['[1/6] 生成小说 …','[2/6] 生成剧本 …','[3/6] 提取视觉元素（角色/场景/道具）…','[4/6] 生成 15 秒分镜 …','[5/6] 生成参考图（3 张）…','[6/6] 生成视频 …','✅ 全部阶段完成。'];
+  const STEPS=['[1/5] 生成故事梗概 …','[2/5] 将故事转化为专业剧本 …','[3/5] 生成分镜脚本 …','[4/5] 生成三视图参考图 …','[5/5] 生成视频 …','✅ 全部阶段完成。'];
   let i=0;
   const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((i+1)/STEPS.length*100)+'%'; i++; };
 
-  // ① 小说
+  // ① 故事梗概
   step(STEPS[0]);
-  let novel;
-  if(useImportedNovel) novel=imported.story;
-  else if(useAI){ try{ novel=await callSiteAI([{role:'system',content:'你是小说家，根据设定写一段约 250 字的开篇小说，中文。'},{role:'user',content:formSummary(f)}]); }catch(e){ novel=DEMO.novel; } }
-  else novel=DEMO.novel;
-  document.getElementById('out-novel').textContent=novel;
+  let story;
+  if(useImportedStory) story=imported.story;
+  else if(useAI){ try{ story=await generateStory(f, imported); }catch(e){ story=DEMO.story; } }
+  else story=DEMO.story;
+  document.getElementById('out-story').textContent=story;
   await sleep(380);
 
-  // ② 剧本
+  // ② 专业剧本
   step(STEPS[1]);
   let script;
-  if(useAI){ try{ script=await callSiteAI([{role:'system',content:'你是短剧/漫剧编剧，把上面的故事设定扩写成 2 个场景的剧本（场景标题+动作+台词），中文。'},{role:'user',content:formSummary(f)+'\n\n【小说开头】\n'+novel}]); }catch(e){ script=DEMO.script; } }
+  if(useAI){ try{ script=await generateScript(story, f, imported); }catch(e){ script=DEMO.script; } }
   else script=DEMO.script;
   document.getElementById('out-script').textContent=script;
   await sleep(380);
 
-  // ③ 视觉元素
+  // ③ 分镜脚本
   step(STEPS[2]);
-  let elements;
-  if(useAI){ try{ elements=await callSiteAI([{role:'system',content:'从故事中提取角色/场景/道具各一个，给出英文 Subject/Style/Lighting 提示词，格式：【角色】…【场景】…【道具】…，中文标签。'},{role:'user',content:formSummary(f)}]); }catch(e){ elements=DEMO.elements; } }
-  else elements=DEMO.elements;
-  document.getElementById('out-elements').textContent=elements;
-  await sleep(380);
-
-  // ④ 分镜
-  step(STEPS[3]);
   let storyboard;
-  if(useAI){ try{ storyboard=await callSiteAI([{role:'system',content:'生成约 4 个 15 秒分镜，每个含景别、画面描述、运镜，中文。'},{role:'user',content:formSummary(f)}]); }catch(e){ storyboard=DEMO.storyboard; } }
+  if(useAI){ try{ storyboard=await generateStoryboard(script, f); }catch(e){ storyboard=DEMO.storyboard; } }
   else storyboard=DEMO.storyboard;
   document.getElementById('out-storyboard').textContent=storyboard;
   await sleep(380);
 
-  // ⑤ 参考图
-  step(STEPS[4]);
-  const picGrid=document.getElementById('out-pics');
-  let pics=DEMO.pics;
-  const mc=getMediaCfg();
-  if(imported.refs.length){
-    // 用导入的参考图做图生图占位（首张作主角底图）
-    picGrid.innerHTML=imported.refs.slice(0,3).map((u,idx)=>`<div class="pic-cell"><img src="${u}" alt="参考图${idx+1}" onerror="this.style.display='none'"><div class="cap">参考图 ${idx+1} <b>（图生图底图）</b></div></div>`).join('');
-  } else if(mc.imgUrl){
-    picGrid.innerHTML=pics.map(p=>`<div class="pic-cell"><div class="cap"><b>${esc(p.name)}</b></div><div class="cap" style="color:var(--text-tertiary)">生成中…</div></div>`).join('');
-    for(let idx=0; idx<pics.length; idx++){
-      const p=pics[idx]; const cell=picGrid.children[idx];
-      try{
-        const u=await genImage(`漫剧风格插画，${p.hint}，角色名 ${p.name}`, mc);
-        if(u) cell.innerHTML=`<img src="${u}" alt="${esc(p.name)}" onerror="this.style.display='none'"><div class="cap"><b>${esc(p.name)}</b></div>`;
-        else if(cell.querySelector('.cap:last-child')) cell.querySelector('.cap:last-child').textContent='生成失败（占位）';
-      }catch(e){ if(cell&&cell.querySelector('.cap:last-child')) cell.querySelector('.cap:last-child').textContent='生成失败：'+e.message.slice(0,30); }
-      await sleep(200);
-    }
-  } else {
-    picGrid.innerHTML=pics.map(p=>`<div class="pic-cell"><img src="${genManjuPic(p.name,p.hint)}" alt="${esc(p.name)}"><div class="cap"><b>${esc(p.name)}</b></div></div>`).join('');
-  }
+  // ④ 三视图参考图
+  step(STEPS[3]);
+  let elements;
+  if(useAI){ try{ elements=await extractElements(script, imported); }catch(e){ elements=DEMO.refs; } }
+  else elements=DEMO.refs;
+  await generateReferenceImages(elements, imported.refs);
   await sleep(380);
 
-  // ⑥ 视频
-  step(STEPS[5]);
-  const mc2=getMediaCfg();
-  if(mc2.vidUrl){
-    const vEl=document.getElementById('out-video');
-    const vHint=document.getElementById('vidHint');
-    try{
-      const vp=`漫剧短片：${f.title}。${f.premise} 分镜：${storyboard}`;
-      const u=await genVideo(vp, mc2);
-      if(u){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent='✅ 真实视频已生成，可播放'; }
-      else if(vHint) vHint.textContent='⚠️ 视频生成失败（占位中）';
-    }catch(e){ if(vHint) vHint.textContent='⚠️ 视频生成失败：'+e.message.slice(0,40)+'（占位中）'; }
-  }
+  // 等待用户确认（2 分钟超时自动继续）
+  await waitForReferenceConfirm();
 
-  step(STEPS[6]);
+  // ⑤ 视频
+  step(STEPS[4]);
+  await generateVideos(storyboard, pipelineRefs, f);
+
+  step(STEPS[5]);
   await sleep(450);
   log.style.display='none'; bar.style.display='none';
   result.classList.remove('hidden');
   result.scrollIntoView({behavior:'smooth'});
-  const note = useImportedNovel ? '（已用导入的故事正文作为小说，其余阶段'+(useAI?'由 AI 生成':'用示例')+'）'
-              : (useAI ? '（已用你配置的 AI 真实生成文本，图片/视频为本地占位）' : '（演示模式：预置示例，未消耗任何 API）');
+  const note = useImportedStory ? '（已用导入的故事正文，其余阶段'+(useAI?'由 AI 生成':'用示例')+'）'
+              : (useAI ? '（文本由你配置的 AI 真实生成，图片/视频按接口配置调用）' : '（演示模式：预置示例，未消耗任何 API）');
   toast('流水线完成 '+note);
   running=false; btn.disabled=false;
 }
 
+async function generateStory(f, imported){
+  const sys='你是专业短剧/漫剧故事策划。请根据用户设定写一段约 400 字的故事梗概，包含起因、经过、高潮、结局，情节完整、画面感强、适合改编为 1-2 分钟短剧。中文输出。';
+  let user=formSummary(f);
+  if(imported.chars) user+='\n\n【人物设定】\n'+imported.chars;
+  if(imported.world) user+='\n\n【世界观/场景】\n'+imported.world;
+  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+}
+
+async function generateScript(story, f, imported){
+  const sys=`你是专业短剧/漫剧编剧。请将故事梗概改编为专业剧本格式，要求：
+1. 每个场景以「场景号 时间（日/夜）、内外景、地点」开头；
+2. 列出该场景出现的人物及外貌/服装/状态描写；
+3. 用 ▲全景 / ▲中景 / ▲特写 / ▲近景 等标注镜头景别；
+4. 包含动作描写、人物台词、VO 旁白、闪回画面、情绪标注；
+5. 中文输出，格式参考示例：
+01 夜、内、废弃花房
+人物：林秋（30岁，面色苍白，眼窝深陷，发丝凌乱湿漉，身穿沾满泥点的深色旧衬衫）
+▲全景：暴雨如注的深夜……
+林秋vo（低沉、沙哑）：这是婉儿留下的最后一点遗存。`;
+  let user='【故事梗概】\n'+story;
+  user+='\n\n【短剧设定】\n'+formSummary(f);
+  if(imported.chars) user+='\n\n【人物设定参考】\n'+imported.chars;
+  if(imported.world) user+='\n\n【场景参考】\n'+imported.world;
+  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+}
+
+async function generateStoryboard(script, f){
+  const sys='你是分镜导演。请根据剧本生成约 4 个 15 秒分镜，每个含景别、画面描述、运镜方式、情绪节奏，中文。';
+  const user='【剧本】\n'+script+'\n\n【设定】\n'+formSummary(f);
+  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+}
+
+async function extractElements(script, imported){
+  const sys=`请从以下剧本中提取所有需要生成参考图的视觉元素，按角色、场景、道具分类。
+每个元素给出：中文名称、类型（角色/场景/道具）、英文图像生成提示词（含外貌/环境/风格/光照，角色需包含三视图/全身/正侧面，场景需全景，道具需多角度）。
+输出为 JSON 数组，不要额外解释：
+[{"name":"林秋","type":"角色","prompt":"..."},...]`;
+  let text;
+  try{
+    text=await callSiteAI([{role:'system',content:sys},{role:'user',content:script}]);
+  }catch(e){ return DEMO.refs; }
+  const arr=safeParseJSON(text);
+  if(Array.isArray(arr)&&arr.length) return arr.map(el=>({id:uid(),name:el.name||'未命名',type:el.type||'道具',prompt:el.prompt||''}));
+  // fallback 简单提取
+  return fallbackExtract(script);
+}
+
+function safeParseJSON(s){
+  try{
+    const m=(s||'').match(/\[[\s\S]*\]/);
+    return m?JSON.parse(m[0]):JSON.parse(s);
+  }catch(e){ return null; }
+}
+function fallbackExtract(script){
+  const refs=[];
+  const lines=(script||'').split('\n');
+  lines.forEach(line=>{
+    const m=line.match(/^人物[：:](.+)$/);
+    if(m) m[1].split(/[,，、]/).forEach(n=>{ const name=n.trim(); if(name) refs.push({id:uid(),name,type:'角色',prompt:name+', character reference sheet, three views, full body, clean white background'}); });
+  });
+  // 简单去重
+  const seen=new Set();
+  return refs.filter(r=>{ if(seen.has(r.name)) return false; seen.add(r.name); return true; });
+}
+
+function buildImagePrompt(el){
+  const base=el.prompt||'';
+  if(el.type==='角色') return `character reference sheet, three views, front side back, full body, ${base}, clean white background, consistent design, detailed face, cinematic lighting, digital art, 4K`;
+  if(el.type==='场景') return `wide establishing shot, ${base}, cinematic lighting, detailed environment, 8K`;
+  return `prop reference sheet, multiple angles, ${base}, clean white background, studio lighting, detailed, 4K`;
+}
+
+async function generateReferenceImages(elements, importedImages){
+  const picGrid=document.getElementById('out-pics');
+  const mc=getMediaCfg();
+  pipelineRefs=[];
+
+  // 导入的参考图优先作为首位元素占位
+  if(importedImages.length){
+    importedImages.slice(0, Math.min(importedImages.length, elements.length||3)).forEach((u, idx)=>{
+      const el=elements[idx]||{id:uid(), name:'参考图 '+(idx+1), type:'参考', prompt:''};
+      pipelineRefs.push({...el, url:u, originalUrl:u});
+    });
+    // 剩余元素继续
+    if(elements.length>importedImages.length){
+      elements.slice(importedImages.length).forEach(el=>pipelineRefs.push({...el, url:'', originalUrl:''}));
+    }
+  } else {
+    elements.forEach(el=>pipelineRefs.push({...el, url:'', originalUrl:''}));
+  }
+
+  // 渲染占位
+  renderRefGrid(picGrid);
+
+  if(!mc.imgUrl){
+    // 演示占位图
+    pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
+    return;
+  }
+
+  // 真实调用
+  for(let idx=0; idx<pipelineRefs.length; idx++){
+    const r=pipelineRefs[idx];
+    updateRefCell(idx, '生成中…');
+    try{
+      const prompt=buildImagePrompt(r);
+      const u=await genImage(prompt, mc);
+      if(u){ r.url=u; r.originalUrl=u; }
+      updateRefCell(idx, u?null:'生成失败（占位）');
+    }catch(e){ updateRefCell(idx, '生成失败：'+e.message.slice(0,30)); }
+    await sleep(200);
+  }
+}
+
+function renderRefGrid(container){
+  container.innerHTML=pipelineRefs.map((r,idx)=>`
+    <div class="pic-cell" data-idx="${idx}">
+      <span class="ref-type">${esc(r.type)}</span>
+      <img src="${r.url||genManjuPic(r.name,r.prompt)}" alt="${esc(r.name)}" onerror="this.style.display='none'">
+      <div class="cap"><b>${esc(r.name)}</b></div>
+      <div class="ref-actions">
+        <button class="btn btn-sm" onclick="openReplaceModal(${idx})">替换</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateRefCell(idx, errMsg){
+  const container=document.getElementById('out-pics');
+  const cell=container.children[idx]; if(!cell) return;
+  const r=pipelineRefs[idx];
+  cell.querySelector('img').src=r.url||genManjuPic(r.name,r.prompt);
+  let cap=cell.querySelector('.cap');
+  if(!cap){ cap=document.createElement('div'); cap.className='cap'; cell.appendChild(cap); }
+  cap.innerHTML=errMsg?`<b>${esc(r.name)}</b> · <span style="color:var(--error)">${esc(errMsg)}</span>`:`<b>${esc(r.name)}</b>`;
+}
+
+/* ============ 参考图确认暂停（2 分钟超时） ============ */
+function waitForReferenceConfirm(){
+  return new Promise(resolve=>{
+    refConfirmResolver=resolve;
+    refConfirmSeconds=120;
+    const pause=document.getElementById('refPause');
+    const count=document.getElementById('refCountdown');
+    pause.classList.add('active');
+    count.textContent=fmtTime(refConfirmSeconds);
+    const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=false;
+    document.getElementById('out-pics').scrollIntoView({behavior:'smooth', block:'center'});
+    toast('参考图已生成，请检查或替换；2 分钟后自动继续');
+    if(refConfirmTimer) clearInterval(refConfirmTimer);
+    refConfirmTimer=setInterval(()=>{
+      refConfirmSeconds--;
+      count.textContent=fmtTime(refConfirmSeconds);
+      if(refConfirmSeconds<=0) confirmRefContinue(true);
+    },1000);
+  });
+}
+
+function confirmRefContinue(auto=false){
+  if(!refConfirmResolver) return;
+  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
+  const pause=document.getElementById('refPause'); pause.classList.remove('active');
+  const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=true;
+  if(!auto) toast('已确认，继续生成视频');
+  const res=refConfirmResolver; refConfirmResolver=null; res();
+}
+
+/* ============ 替换参考图弹窗 ============ */
+let replaceIdx=-1;
+function openReplaceModal(idx){
+  replaceIdx=idx;
+  const r=pipelineRefs[idx]; if(!r) return;
+  document.getElementById('replaceTitle').textContent='替换参考图：'+r.name+'（'+r.type+'）';
+  document.getElementById('replaceName').value=r.name;
+  document.getElementById('replacePrompt').value=r.prompt||'';
+  document.getElementById('replacePreviewRegen').src=r.url||'';
+  document.getElementById('replaceFile').value='';
+  document.getElementById('replacePreviewUpload').style.display='none';
+  document.getElementById('replacePreviewUpload').src='';
+  switchReplaceTab('regen');
+  document.getElementById('replaceModal').classList.add('active');
+}
+function closeReplaceModal(){ document.getElementById('replaceModal').classList.remove('active'); replaceIdx=-1; }
+function switchReplaceTab(tab){
+  document.querySelectorAll('.modal-tab').forEach((b,i)=>b.classList.toggle('active', (tab==='regen'&&i===0)||(tab==='upload'&&i===1)));
+  document.getElementById('tab-regen').classList.toggle('active', tab==='regen');
+  document.getElementById('tab-upload').classList.toggle('active', tab==='upload');
+}
+async function doRegenerateRef(){
+  if(replaceIdx<0) return;
+  const r=pipelineRefs[replaceIdx];
+  r.prompt=document.getElementById('replacePrompt').value.trim();
+  const btn=document.getElementById('replaceRegenBtn'); btn.disabled=true; btn.textContent='生成中…';
+  const mc=getMediaCfg();
+  try{
+    if(!mc.imgUrl){ await sleep(800); r.url=genManjuPic(r.name, r.prompt); }
+    else {
+      const prompt=buildImagePrompt(r);
+      const u=await genImage(prompt, mc);
+      if(u) r.url=u;
+      else throw new Error('未返回图片');
+    }
+    updateRefCell(replaceIdx);
+    closeReplaceModal();
+    toast('参考图已替换：'+r.name);
+  }catch(e){ toast('替换失败：'+e.message); }
+  finally{ btn.disabled=false; btn.textContent='🔄 重新生成'; }
+}
+function previewReplaceFile(input){
+  const f=input.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const img=document.getElementById('replacePreviewUpload');
+    img.src=rd.result; img.style.display='block';
+  };
+  rd.readAsDataURL(f);
+}
+function doUploadRef(){
+  if(replaceIdx<0) return;
+  const file=document.getElementById('replaceFile').files[0];
+  if(!file){ toast('请先选择图片'); return; }
+  const rd=new FileReader();
+  rd.onload=()=>{
+    pipelineRefs[replaceIdx].url=rd.result;
+    updateRefCell(replaceIdx);
+    closeReplaceModal();
+    toast('已上传替换：'+pipelineRefs[replaceIdx].name);
+  };
+  rd.readAsDataURL(file);
+}
+
+/* ============ 视频生成（使用参考图保持一致性） ============ */
+async function generateVideos(storyboard, refs, f){
+  const mc=getMediaCfg();
+  const vEl=document.getElementById('out-video');
+  const vHint=document.getElementById('vidHint');
+  if(!mc.vidUrl){
+    if(vHint) vHint.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
+    return;
+  }
+  // 解析分镜为若干 shot
+  const shots=parseStoryboard(storyboard);
+  if(!shots.length) shots.push({num:1,desc:`漫剧短片：${f.title}。${f.premise}`});
+
+  // 默认取第一张角色参考图作为系列主参考
+  const mainCharRef=refs.find(r=>r.type==='角色')||refs[0];
+  const mainSceneRef=refs.find(r=>r.type==='场景')||refs[1];
+
+  for(let i=0;i<shots.length;i++){
+    const shot=shots[i];
+    const matchedRefs=matchRefsForShot(shot, refs);
+    const primaryRef=matchedRefs[0]||mainCharRef||mainSceneRef;
+    const prompt=`${f.title} - 镜头${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。`;
+    try{
+      const u=await genVideo(prompt, mc, primaryRef?primaryRef.url:'');
+      if(u && i===0){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
+      else if(vHint) vHint.textContent=`✅ 已生成 ${i+1}/${shots.length} 段视频`;
+    }catch(e){ if(vHint) vHint.textContent='⚠️ 视频生成失败：'+e.message.slice(0,40); }
+    await sleep(300);
+  }
+}
+
+function parseStoryboard(storyboard){
+  const lines=(storyboard||'').split('\n');
+  const shots=[];
+  lines.forEach(line=>{
+    const m=line.match(/镜头\s*(\d+)[（(]?[^）)]*[）)]?\s*[·|\.\-:]\s*(.+)/);
+    if(m) shots.push({num:+m[1], desc:m[2].trim()});
+  });
+  return shots;
+}
+
+function matchRefsForShot(shot, refs){
+  const matched=[];
+  refs.forEach(r=>{
+    if(!r.name) return;
+    if(shot.desc.includes(r.name)) matched.push(r);
+  });
+  // 补充主要角色/场景
+  if(!matched.find(r=>r.type==='角色')){ const c=refs.find(r=>r.type==='角色'); if(c) matched.unshift(c); }
+  if(!matched.find(r=>r.type==='场景')){ const s=refs.find(r=>r.type==='场景'); if(s) matched.unshift(s); }
+  return matched.length?matched:refs.slice(0,2);
+}
+
 function resetPipeline(){
   running=false;
+  pipelineRefs=[];
+  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
+  refConfirmResolver=null;
+  document.getElementById('refPause').classList.remove('active');
   document.getElementById('result').classList.add('hidden');
   document.getElementById('log').style.display='none';
   document.getElementById('log').textContent='';
   document.getElementById('bar').style.display='none';
   document.getElementById('bar').firstElementChild.style.width='0';
-  ['out-novel','out-script','out-elements','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
+  ['out-story','out-script','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
   document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
   const rb=document.getElementById('runBtn'); if(rb) rb.disabled=false;
   toast('已重置');
 }
 
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
-const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_resp'];
+const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
   MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); const v=localStorage.getItem(id); if(el&&v!=null) el.value=v; });
@@ -492,6 +816,7 @@ function getMediaCfg(){
     vidUrl:localStorage.getItem('vid_url')||'',
     vidKey:localStorage.getItem('vid_key')||'',
     vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}"}',
+    vidImgField:localStorage.getItem('vid_img_field')||'',
     vidResp:localStorage.getItem('vid_resp')||'data[0].url'
   };
 }
@@ -511,10 +836,19 @@ async function genImage(prompt, cfg){
   if(!val) throw new Error('响应中未找到图片（路径 '+cfg.imgResp+'）');
   return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
 }
-async function genVideo(prompt, cfg){
+async function genVideo(prompt, cfg, imageUrl){
   if(!cfg.vidUrl) return null;
   if(location.protocol==='https:' && cfg.vidUrl.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
-  let bodyTpl; try{ bodyTpl=JSON.parse(cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt)); }catch(e){ bodyTpl={prompt}; }
+  let tpl=cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt);
+  if(imageUrl){
+    tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
+    // 若配置了独立的参考图字段且模板未包含 {{image_url}}，则追加
+    if(cfg.vidImgField && !cfg.vidBody.includes('{{image_url}}')){
+      try{ const o=JSON.parse(tpl); o[cfg.vidImgField]=imageUrl; tpl=JSON.stringify(o); }catch(e){}
+    }
+  }
+  let bodyTpl;
+  try{ bodyTpl=JSON.parse(tpl); }catch(e){ bodyTpl={prompt}; if(imageUrl&&cfg.vidImgField) bodyTpl[cfg.vidImgField]=imageUrl; }
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
   const res=await fetch(cfg.vidUrl,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
