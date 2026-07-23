@@ -176,6 +176,7 @@
         <div class="row">
             <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">🚀 开始生成</button>
             <button class="btn btn-ghost" onclick="resetPipeline()">重置</button>
+            <button class="btn btn-ghost" onclick="loadDemo()">🎭 加载示例</button>
             <span id="aiHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
         </div>
     </div>
@@ -428,6 +429,19 @@ async function runPipeline(){
 
   const useImportedStory = imported.story && f.autoImport;
 
+  // 无 AI 且无故事导入时，明确提示而不是 fallback 到不相关的固定示例
+  if(!useAI && !useImportedStory){
+    const result=document.getElementById('result');
+    result.classList.remove('hidden');
+    document.getElementById('out-story').textContent='未配置可用的文本 AI。\n\n请在「设置」页填写云端 API Key，或选择「本地 Ollama」模式；也可以上传「故事正文 (.txt/.md)」后直接运行。';
+    document.getElementById('out-script').textContent='（未开始：无文本 AI）';
+    document.getElementById('out-storyboard').textContent='（未开始：无文本 AI）';
+    document.getElementById('out-pics').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
+    toast('未配置文本 AI，无法生成原创内容');
+    running=false; btn.disabled=false;
+    return;
+  }
+
   const result=document.getElementById('result');
   const log=document.getElementById('log');
   const bar=document.getElementById('bar');
@@ -440,32 +454,38 @@ async function runPipeline(){
   step(STEPS[0]);
   let story;
   if(useImportedStory) story=imported.story;
-  else if(useAI){ try{ story=await generateStory(f, imported); }catch(e){ story=DEMO.story; } }
-  else story=DEMO.story;
+  else if(useAI){ try{ story=await generateStory(f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 故事生成失败：'+e.message; story='（生成失败：'+e.message+'）'; } }
   document.getElementById('out-story').textContent=story;
   await sleep(380);
 
   // ② 专业剧本
   step(STEPS[1]);
   let script;
-  if(useAI){ try{ script=await generateScript(story, f, imported); }catch(e){ script=DEMO.script; } }
-  else script=DEMO.script;
+  if(useAI){ try{ script=await generateScript(story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; script='（生成失败：'+e.message+'）'; } }
+  else { script='（未生成：未配置文本 AI，已使用导入的故事正文）'; }
   document.getElementById('out-script').textContent=script;
   await sleep(380);
 
   // ③ 分镜脚本
   step(STEPS[2]);
   let storyboard;
-  if(useAI){ try{ storyboard=await generateStoryboard(script, f); }catch(e){ storyboard=DEMO.storyboard; } }
-  else storyboard=DEMO.storyboard;
+  if(useAI){ try{ storyboard=await generateStoryboard(script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; storyboard='（生成失败：'+e.message+'）'; } }
+  else { storyboard='（未生成：未配置文本 AI）'; }
   document.getElementById('out-storyboard').textContent=storyboard;
   await sleep(380);
 
   // ④ 三视图参考图
   step(STEPS[3]);
   let elements;
-  if(useAI){ try{ elements=await extractElements(script, imported); }catch(e){ elements=DEMO.refs; } }
-  else elements=DEMO.refs;
+  if(useAI){ try{ elements=await extractElements(script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
+  else { elements=[]; }
+  if(!elements.length){
+    // 无可用元素时，根据主角/场景生成至少一张占位参考图，避免完全空白
+    elements=[
+      {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`},
+      {id:uid(), name:'主场景', type:'场景', prompt:`${f.genre} scene, ${f.premise}, wide establishing shot, cinematic lighting`}
+    ];
+  }
   await generateReferenceImages(elements, imported.refs);
   await sleep(380);
 
@@ -481,31 +501,51 @@ async function runPipeline(){
   log.style.display='none'; bar.style.display='none';
   result.classList.remove('hidden');
   result.scrollIntoView({behavior:'smooth'});
-  const note = useImportedStory ? '（已用导入的故事正文，其余阶段'+(useAI?'由 AI 生成':'用示例')+'）'
-              : (useAI ? '（文本由你配置的 AI 真实生成，图片/视频按接口配置调用）' : '（演示模式：预置示例，未消耗任何 API）');
+  const note = useImportedStory ? '（已用导入的故事正文，其余阶段'+(useAI?'由 AI 生成':'未配置 AI')+'）'
+              : (useAI ? '（文本由你配置的 AI 真实生成，图片/视频按接口配置调用）' : '（未配置 AI）');
   toast('流水线完成 '+note);
   running=false; btn.disabled=false;
 }
 
 async function generateStory(f, imported){
-  const sys='你是专业短剧/漫剧故事策划。请根据用户设定写一段约 400 字的故事梗概，包含起因、经过、高潮、结局，情节完整、画面感强、适合改编为 1-2 分钟短剧。中文输出。';
-  let user=formSummary(f);
-  if(imported.chars) user+='\n\n【人物设定】\n'+imported.chars;
-  if(imported.world) user+='\n\n【世界观/场景】\n'+imported.world;
+  const sys=`你是专业短剧/漫剧故事策划。请严格遵守以下【强制创作参数】生成故事梗概，绝对不允许脱离这些参数自行发挥：
+- 标题：${f.title}
+- 篇幅：${f.length}
+- 类型：${f.genre}
+- 风格：${f.style}
+- 故事前提：${f.premise || '（未填写）'}
+- 主角姓名：${f.pname}（性别：${f.pgender}）
+- 主角目标：${f.pgoal || '（未填写）'}
+- 核心冲突：${f.conflict || '（未填写）'}
+
+要求：
+1. 写一段约 400 字的故事梗概，包含起因、经过、高潮、结局；
+2. 主角姓名必须与【强制创作参数】完全一致；
+3. 必须体现主角目标和核心冲突；
+4. 情节完整、画面感强、适合改编为 1-2 分钟短剧；
+5. 中文输出。`;
+  let user='请根据以上【强制创作参数】创作故事梗概。';
+  if(imported.chars) user+='\n\n【人物设定参考】\n'+imported.chars;
+  if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
   return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
 }
 
 async function generateScript(story, f, imported){
-  const sys=`你是专业短剧/漫剧编剧。请将故事梗概改编为专业剧本格式，要求：
+  const sys=`你是专业短剧/漫剧编剧。请根据【强制创作参数】和【故事梗概】改编为专业剧本格式，绝对不允许脱离创作参数：
+- 标题：${f.title}
+- 类型：${f.genre}
+- 风格：${f.style}
+- 主角姓名：${f.pname}（性别：${f.pgender}）
+- 主角目标：${f.pgoal || '（未填写）'}
+- 核心冲突：${f.conflict || '（未填写）'}
+
+剧本格式要求：
 1. 每个场景以「场景号 时间（日/夜）、内外景、地点」开头；
 2. 列出该场景出现的人物及外貌/服装/状态描写；
-3. 用 ▲全景 / ▲中景 / ▲特写 / ▲近景 等标注镜头景别；
-4. 包含动作描写、人物台词、VO 旁白、闪回画面、情绪标注；
-5. 中文输出，格式参考示例：
-01 夜、内、废弃花房
-人物：林秋（30岁，面色苍白，眼窝深陷，发丝凌乱湿漉，身穿沾满泥点的深色旧衬衫）
-▲全景：暴雨如注的深夜……
-林秋vo（低沉、沙哑）：这是婉儿留下的最后一点遗存。`;
+3. 使用 ▲全景 / ▲中景 / ▲特写 / ▲近景 标注镜头景别；
+4. 包含动作描写、人物台词（标注说话人）、VO 旁白、闪回画面、情绪标注；
+5. 主角名称必须与【强制创作参数】一致；
+6. 中文输出。`;
   let user='【故事梗概】\n'+story;
   user+='\n\n【短剧设定】\n'+formSummary(f);
   if(imported.chars) user+='\n\n【人物设定参考】\n'+imported.chars;
@@ -514,24 +554,34 @@ async function generateScript(story, f, imported){
 }
 
 async function generateStoryboard(script, f){
-  const sys='你是分镜导演。请根据剧本生成约 4 个 15 秒分镜，每个含景别、画面描述、运镜方式、情绪节奏，中文。';
+  const sys=`你是分镜导演。请根据以下【强制创作参数】和剧本生成约 4 个 15 秒分镜，必须保持与创作参数一致：
+- 标题：${f.title}
+- 类型：${f.genre}
+- 风格：${f.style}
+- 主角：${f.pname}
+- 核心冲突：${f.conflict || '（未填写）'}
+
+每个分镜含景别、画面描述、运镜方式、情绪节奏，中文输出。`;
   const user='【剧本】\n'+script+'\n\n【设定】\n'+formSummary(f);
   return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
 }
 
-async function extractElements(script, imported){
+async function extractElements(script, f, imported){
   const sys=`请从以下剧本中提取所有需要生成参考图的视觉元素，按角色、场景、道具分类。
+【强制约束】提取的元素必须与主角「${f.pname}」、类型「${f.genre}」、风格「${f.style}」、故事前提「${f.premise || '（未填写）'}」保持一致，不要引入与剧本无关的现代/都市/其他世界观元素。
 每个元素给出：中文名称、类型（角色/场景/道具）、英文图像生成提示词（含外貌/环境/风格/光照，角色需包含三视图/全身/正侧面，场景需全景，道具需多角度）。
 输出为 JSON 数组，不要额外解释：
-[{"name":"林秋","type":"角色","prompt":"..."},...]`;
+[{"name":"${f.pname}","type":"角色","prompt":"..."},...]`;
   let text;
   try{
-    text=await callSiteAI([{role:'system',content:sys},{role:'user',content:script}]);
-  }catch(e){ return DEMO.refs; }
+    let user='【剧本】\n'+script;
+    if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
+    text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+  }catch(e){ throw e; }
   const arr=safeParseJSON(text);
   if(Array.isArray(arr)&&arr.length) return arr.map(el=>({id:uid(),name:el.name||'未命名',type:el.type||'道具',prompt:el.prompt||''}));
   // fallback 简单提取
-  return fallbackExtract(script);
+  return fallbackExtract(script, f);
 }
 
 function safeParseJSON(s){
@@ -540,8 +590,10 @@ function safeParseJSON(s){
     return m?JSON.parse(m[0]):JSON.parse(s);
   }catch(e){ return null; }
 }
-function fallbackExtract(script){
+function fallbackExtract(script, f){
   const refs=[];
+  // 优先加入主角
+  if(f && f.pname) refs.push({id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre||''} ${f.style||''}, character reference sheet, three views, front side back, full body, clean white background`});
   const lines=(script||'').split('\n');
   lines.forEach(line=>{
     const m=line.match(/^人物[：:](.+)$/);
@@ -788,6 +840,23 @@ function resetPipeline(){
   toast('已重置');
 }
 
+function loadDemo(){
+  if(running) return;
+  resetPipeline();
+  const result=document.getElementById('result');
+  result.classList.remove('hidden');
+  document.getElementById('out-story').textContent='【演示示例】\n'+DEMO.story;
+  document.getElementById('out-script').textContent='【演示示例】\n'+DEMO.script;
+  document.getElementById('out-storyboard').textContent='【演示示例】\n'+DEMO.storyboard;
+  pipelineRefs=DEMO.refs.map(r=>({...r, url:'', originalUrl:''}));
+  // 示例固定使用占位图，不消耗真实接口
+  const picGrid=document.getElementById('out-pics');
+  renderRefGrid(picGrid);
+  pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
+  toast('已加载演示示例（与当前创作参数无关）');
+  result.scrollIntoView({behavior:'smooth'});
+}
+
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
@@ -867,12 +936,14 @@ async function genVideo(prompt, cfg, imageUrl){
   const pill=document.getElementById('modePill');
   const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
   const mediaOn = mc.imgUrl || mc.vidUrl;
-  if(aiOn || mediaOn){
-    let t='🔑 已配置：'; if(aiOn) t+='文本真实生成'; if(mediaOn) t+=(aiOn?'，':'')+'图/视频真实生成';
+  if(aiOn){
+    let t='🔑 已配置：文本真实生成';
+    if(mediaOn) t+='，图/视频真实生成';
     pill.className='mode-pill live'; pill.textContent=t;
-    hint.textContent = (aiOn?'文本阶段由你配置的 AI 真实生成':'文本为演示示例') + (mediaOn?(aiOn?'，':'')+'图/视频接口已配置':'');
+    hint.textContent = '文本阶段由你配置的 AI 真实生成' + (mediaOn?'，图/视频接口已配置':'');
   } else {
-    hint.textContent='未配置 AI / 媒体接口，将使用演示示例（无需 Key）';
+    pill.className='mode-pill demo'; pill.textContent='🎭 未配置文本 AI（点击「加载示例」可看效果，或去「设置」配置）';
+    hint.textContent='未配置文本 AI 时，「开始生成」会提示配置；可点击「加载示例」查看演示数据。';
   }
 })();
 </script>
