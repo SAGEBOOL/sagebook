@@ -226,7 +226,7 @@
     <div id="result" class="hidden">
         <div class="phase" id="phase-story">
             <h3>① 故事梗概 <span class="tag">story.md</span></h3>
-            <pre id="out-story">（生成中…）</pre>
+            <pre id="out-story">（等待开始…）</pre>
             <textarea class="phase-edit" id="edit-story" rows="6" style="display:none"></textarea>
             <div class="phase-actions" id="actions-story" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('story')">✅ 确认并继续</button>
@@ -240,7 +240,7 @@
         </div>
         <div class="phase" id="phase-script">
             <h3>② 专业剧本 <span class="tag">script.md</span></h3>
-            <pre id="out-script">（生成中…）</pre>
+            <pre id="out-script">（等待故事梗概确认…）</pre>
             <textarea class="phase-edit" id="edit-script" rows="8" style="display:none"></textarea>
             <div class="phase-actions" id="actions-script" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('script')">✅ 确认并继续</button>
@@ -254,7 +254,7 @@
         </div>
         <div class="phase" id="phase-storyboard">
             <h3>③ 分镜脚本 <span class="tag">storyboard.md</span></h3>
-            <pre id="out-storyboard">（生成中…）</pre>
+            <pre id="out-storyboard">（等待专业剧本确认…）</pre>
             <textarea class="phase-edit" id="edit-storyboard" rows="8" style="display:none"></textarea>
             <div class="phase-actions" id="actions-storyboard" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('storyboard')">✅ 确认并继续</button>
@@ -276,7 +276,7 @@
                     <button class="btn btn-ghost" onclick="retryRefStep()" style="color:var(--warning);border-color:rgba(212,168,83,.45)">🔄 重新生成参考图</button>
                 </div>
             </div>
-            <div class="pic-grid" id="out-pics"><div class="note">（生成中…）</div></div>
+            <div class="pic-grid" id="out-pics"><div class="note">（等待分镜脚本确认…）</div></div>
         </div>
         <div class="phase" id="phase-video">
             <h3>⑤ 视频 <span class="tag">Videos/</span></h3>
@@ -284,7 +284,7 @@
             <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
                 <source src="#" type="video/mp4">
             </video>
-            <p class="hint" id="vidHint" style="margin-top:8px">等待生成 …</p>
+            <p class="hint" id="vidHint" style="margin-top:8px">（等待参考图确认…）</p>
             <div class="phase-actions" id="actions-video" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
                 <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
@@ -583,17 +583,19 @@ async function runPipeline(){
     }},
     {name:'script', label:'[2/5] 将故事转化为专业剧本', gen:async ()=>{
       if(useAI){ try{ outputs.script=await generateScript(outputs.story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; outputs.script='（生成失败：'+e.message+'）'; } }
-      else { outputs.script='（未生成：未配置文本 AI，已使用导入的故事正文）'; }
+      else if(useImportedStory) { outputs.script='【未配置文本 AI，以下直接使用导入的故事正文作为专业剧本，可手动编辑后确认】\n\n'+imported.story; }
+      else { outputs.script='【未配置文本 AI，请手动编辑专业剧本，或去「设置」配置 API Key 后重新生成】\n\n（例如：01 夜、内、场景地点\n人物：主角…\n▲全景：…）'; }
       document.getElementById('out-script').textContent=outputs.script;
       showPhase('script');
     }},
     {name:'storyboard', label:'[3/5] 生成分镜脚本', gen:async ()=>{
       if(useAI){ try{ outputs.storyboard=await generateStoryboard(outputs.script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; outputs.storyboard='（生成失败：'+e.message+'）'; } }
-      else { outputs.storyboard='（未生成：未配置文本 AI）'; }
+      else { outputs.storyboard='【未配置文本 AI，请手动编辑分镜脚本，或去「设置」配置 API Key 后重新生成】\n\n镜头1（15s）· 全景：开场画面。运镜：缓慢推近。\n镜头2（15s）· 中景：主角登场。运镜：横移。\n镜头3（15s）· 特写：关键动作。运镜：推镜。\n镜头4（15s）· 近景：情绪高潮。运镜：固定。'; }
       document.getElementById('out-storyboard').textContent=outputs.storyboard;
       showPhase('storyboard');
     }},
     {name:'refs', label:'[4/5] 生成三视图参考图', gen:async ()=>{
+      document.getElementById('out-pics').innerHTML='<div class="note">（准备生成参考图…）</div>';
       let elements;
       if(useAI){ try{ elements=await extractElements(outputs.script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
       else { elements=[]; }
@@ -607,6 +609,7 @@ async function runPipeline(){
       showPhase('refs');
     }},
     {name:'video', label:'[5/5] 生成视频', gen:async ()=>{
+      document.getElementById('vidHint').textContent='（准备生成视频…）';
       await generateVideos(outputs.storyboard, pipelineRefs, f);
       showPhase('video');
     }}
@@ -643,12 +646,12 @@ async function runPipeline(){
 }
 
 function resetResultPhases(){
-  document.getElementById('out-story').textContent='（生成中…）';
-  document.getElementById('out-script').textContent='（生成中…）';
-  document.getElementById('out-storyboard').textContent='（生成中…）';
-  document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  document.getElementById('out-story').textContent='（等待开始…）';
+  document.getElementById('out-script').textContent='（等待故事梗概确认…）';
+  document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
+  document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
-  document.getElementById('vidHint').textContent='等待生成 …';
+  document.getElementById('vidHint').textContent='（等待参考图确认…）';
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
   hideAllStepActions();
 }
@@ -985,10 +988,13 @@ function resetPipeline(){
   document.getElementById('log').textContent='';
   document.getElementById('bar').style.display='none';
   document.getElementById('bar').firstElementChild.style.width='0';
-  ['out-story','out-script','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
-  document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  document.getElementById('out-story').textContent='（等待开始…）';
+  document.getElementById('out-script').textContent='（等待故事梗概确认…）';
+  document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
+  document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
-  document.getElementById('vidHint').textContent='等待生成 …';
+  document.getElementById('vidHint').textContent='（等待参考图确认…）';
+  document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
   const rb=document.getElementById('runBtn'); if(rb) rb.disabled=false;
   toast('已重置');
 }
