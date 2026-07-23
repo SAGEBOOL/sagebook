@@ -460,15 +460,21 @@ function resetPipeline(){
   document.getElementById('bar').firstElementChild.style.width='0';
   ['out-novel','out-script','out-elements','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
   document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  const rb=document.getElementById('runBtn'); if(rb) rb.disabled=false;
   toast('已重置');
 }
 
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_resp'];
+function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
   MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); const v=localStorage.getItem(id); if(el&&v!=null) el.value=v; });
 }
 function saveMediaCfg(){
+  const iu=document.getElementById('img_url').value.trim();
+  const vu=document.getElementById('vid_url').value.trim();
+  if(iu && iu.startsWith('http://') && !isLocalhostUrl(iu)) toast('⚠️ 图像接口为 HTTP，建议改用 https://（HTTPS 站点下浏览器会拦截该请求）');
+  if(vu && vu.startsWith('http://') && !isLocalhostUrl(vu)) toast('⚠️ 视频接口为 HTTP，建议改用 https://（HTTPS 站点下浏览器会拦截该请求）');
   MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); if(el) localStorage.setItem(id, el.value); });
   const h=document.getElementById('mediaCfgHint'); if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓'; setTimeout(()=>h.textContent='',2000); }
 }

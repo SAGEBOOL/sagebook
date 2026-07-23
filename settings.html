@@ -761,9 +761,21 @@
             return keys;
         }
 
+        // 敏感字段（导出时掩码，避免明文外泄）
+        const SECRET_KEYS = ['cloudApiKey','sagebook_gist_token','sagebook_gitee_token'];
+        function maskSecret(v){
+            if(!v) return v;
+            if(String(v).length <= 4) return '****';
+            return String(v).slice(0, Math.min(6, Math.floor(String(v).length/2))) + '****' + String(v).slice(-4);
+        }
+        function isLocalhostUrl(u){
+            try{ const h = new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; }
+        }
+
         function exportConfig(){
             const cfg = {};
             getMigrateKeys().forEach(k => { const v = localStorage.getItem(k); if(v !== null) cfg[k] = v; });
+            SECRET_KEYS.forEach(k => { if(cfg[k]) cfg[k] = maskSecret(cfg[k]); });
             const text = JSON.stringify(cfg, null, 2);
             const ta = document.getElementById('migrateText');
             if(ta){ ta.value = text; ta.focus(); ta.select(); }
@@ -785,9 +797,16 @@
             try { cfg = JSON.parse(raw); } catch(e){ showToast('配置文本格式错误：' + e.message); return; }
             if(typeof cfg !== 'object' || cfg === null){ showToast('配置文本格式错误'); return; }
             const keys = getMigrateKeys();
-            let n = 0;
-            Object.keys(cfg).forEach(k => { if(keys.includes(k)){ localStorage.setItem(k, String(cfg[k])); n++; } });
-            showToast('已导入 ' + n + ' 项配置，正在重新加载…');
+            let n = 0; const masked = [];
+            Object.keys(cfg).forEach(k => {
+                if(!keys.includes(k)) return;
+                if(SECRET_KEYS.includes(k)){
+                    if(typeof cfg[k]==='string' && cfg[k].includes('*')){ masked.push(k); return; } // 掩码字段跳过，提示用户重填
+                }
+                localStorage.setItem(k, String(cfg[k])); n++;
+            });
+            if(masked.length) showToast('已导入 ' + n + ' 项；' + masked.length + ' 个敏感字段为掩码已跳过，请重新填写 API Key / Token');
+            else showToast('已导入 ' + n + ' 项配置，正在重新加载…');
             setTimeout(() => location.reload(), 600);
         }
 
