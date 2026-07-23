@@ -79,6 +79,8 @@
         .phase h3 { font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--accent); }
         .phase h3 .tag { font-size:12px;background:var(--accent-glow);color:var(--accent-light);padding:2px 10px;border-radius:20px;font-weight:500; }
         .phase pre { white-space:pre-wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:360px;overflow:auto;font-size:13px;line-height:1.6;margin:0; }
+        .phase-actions { display:flex;gap:8px;margin-top:10px;flex-wrap:wrap; }
+        .phase-edit { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text-primary);font-size:13px;line-height:1.6;margin-top:8px;font-family:inherit; }
         .pic-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:12px 0; }
         .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative; }
         .pic-cell img { width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--bg-tertiary); }
@@ -162,13 +164,13 @@
         </div>
 
         <div class="import-zone">
-            <div class="lbl">📎 导入本地文件（可选；演示可上传，不实际消耗）</div>
+            <div class="lbl">📎 导入本地文件（可选；图生图/图生视频需上传参考图）</div>
             <div class="grid3">
                 <div class="field" style="margin:0"><label style="font-weight:500">📄 故事正文 (.txt/.md)</label><input type="file" id="d_story" accept=".txt,.md"></div>
                 <div class="field" style="margin:0"><label style="font-weight:500">👤 人物设定 (.txt/.md)</label><input type="file" id="d_chars" accept=".txt,.md"></div>
                 <div class="field" style="margin:0"><label style="font-weight:500">🌍 世界观/场景 (.txt/.md)</label><input type="file" id="d_world" accept=".txt,.md"></div>
             </div>
-            <div class="field" style="margin:10px 0 0"><label style="font-weight:500">🖼️ 参考图（可选，做图生图，可多选）</label><input type="file" id="d_ref" multiple accept="image/*"></div>
+            <div class="field" style="margin:10px 0 0"><label style="font-weight:500">🖼️ 参考图（可选，图生图/图生视频用，可多选）</label><input type="file" id="d_ref" multiple accept="image/*"></div>
             <div class="receipt" id="d_receipt"></div>
             <label class="switch-line"><input type="checkbox" id="d_auto" checked> 导入故事后，其余阶段（剧本/分镜/生图/视频）仍由 AI 自动补全</label>
         </div>
@@ -193,12 +195,20 @@
             <div class="field"><label>图像模型名（可选）</label><input id="img_model" placeholder="dall-e-3"></div>
             <div class="field"><label>图像尺寸（可选，如 1024x1024）</label><input id="img_size" placeholder="1024x1024"></div>
         </div>
+        <div class="grid2">
+            <div class="field"><label>图像生成模式</label><select id="img_mode"><option value="txt2img">文生图</option><option value="img2img">图生图（使用上传参考图）</option></select></div>
+            <div class="field"><label>视频生成模式</label><select id="vid_mode"><option value="txt2vid">文生视频</option><option value="img2vid">图生视频（使用参考图）</option></select></div>
+        </div>
+        <div class="field"><label>图像请求体模板（JSON，用 <code>{{prompt}}</code> 占位；图生图可用 <code>{{image_url}}</code>；留空则使用标准 OpenAI images/generations 格式）</label><textarea id="img_body" rows="2" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
         <div class="field"><label>图像响应取图路径（JSON 点路径；默认 <code>data[0].url</code>，base64 用 <code>data[0].b64_json</code>）</label><input id="img_resp" value="data[0].url"></div>
 
         <div class="field" style="margin-top:18px"><label>🎞️ 视频接口 URL</label><input id="vid_url" placeholder="https://your-video-api/generate"></div>
         <div class="field"><label>视频 API Key</label><input id="vid_key" type="password" placeholder="token..."></div>
+        <div class="grid2">
+            <div class="field"><label>视频模型名（可选）</label><input id="vid_model" placeholder="luma-photon"></div>
+            <div class="field"><label>视频接口参考图字段名（可选，如 <code>image_url</code> / <code>first_frame</code>；若模板里已有 <code>{{image_url}}</code> 可留空）</label><input id="vid_img_field" placeholder="image_url"></div>
+        </div>
         <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位；如需参考图可用 <code>{{image_url}}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}","image_url":"{{image_url}}"}'></textarea></div>
-        <div class="field"><label>视频接口参考图字段名（可选，如 <code>image_url</code> / <code>first_frame</code>；若模板里已有 <code>{{image_url}}</code> 可留空）</label><input id="vid_img_field" placeholder="image_url"></div>
         <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>）</label><input id="vid_resp" value="data[0].url"></div>
 
         <div class="row">
@@ -214,34 +224,71 @@
 
     <!-- 结果：五阶段 -->
     <div id="result" class="hidden">
-        <div class="phase">
+        <div class="phase" id="phase-story">
             <h3>① 故事梗概 <span class="tag">story.md</span></h3>
             <pre id="out-story">（生成中…）</pre>
+            <textarea class="phase-edit" id="edit-story" rows="6" style="display:none"></textarea>
+            <div class="phase-actions" id="actions-story" style="display:none">
+                <button class="btn btn-primary" onclick="confirmStep('story')">✅ 确认并继续</button>
+                <button class="btn btn-ghost" onclick="retryStep('story')">🔄 重新生成</button>
+                <button class="btn btn-ghost" onclick="editStep('story')">✏️ 手动编辑</button>
+            </div>
+            <div class="phase-actions" id="edit-actions-story" style="display:none">
+                <button class="btn btn-primary" onclick="saveEdit('story')">💾 保存并继续</button>
+                <button class="btn btn-ghost" onclick="cancelEdit('story')">取消</button>
+            </div>
         </div>
-        <div class="phase">
+        <div class="phase" id="phase-script">
             <h3>② 专业剧本 <span class="tag">script.md</span></h3>
             <pre id="out-script">（生成中…）</pre>
+            <textarea class="phase-edit" id="edit-script" rows="8" style="display:none"></textarea>
+            <div class="phase-actions" id="actions-script" style="display:none">
+                <button class="btn btn-primary" onclick="confirmStep('script')">✅ 确认并继续</button>
+                <button class="btn btn-ghost" onclick="retryStep('script')">🔄 重新生成</button>
+                <button class="btn btn-ghost" onclick="editStep('script')">✏️ 手动编辑</button>
+            </div>
+            <div class="phase-actions" id="edit-actions-script" style="display:none">
+                <button class="btn btn-primary" onclick="saveEdit('script')">💾 保存并继续</button>
+                <button class="btn btn-ghost" onclick="cancelEdit('script')">取消</button>
+            </div>
         </div>
-        <div class="phase">
+        <div class="phase" id="phase-storyboard">
             <h3>③ 分镜脚本 <span class="tag">storyboard.md</span></h3>
             <pre id="out-storyboard">（生成中…）</pre>
+            <textarea class="phase-edit" id="edit-storyboard" rows="8" style="display:none"></textarea>
+            <div class="phase-actions" id="actions-storyboard" style="display:none">
+                <button class="btn btn-primary" onclick="confirmStep('storyboard')">✅ 确认并继续</button>
+                <button class="btn btn-ghost" onclick="retryStep('storyboard')">🔄 重新生成</button>
+                <button class="btn btn-ghost" onclick="editStep('storyboard')">✏️ 手动编辑</button>
+            </div>
+            <div class="phase-actions" id="edit-actions-storyboard" style="display:none">
+                <button class="btn btn-primary" onclick="saveEdit('storyboard')">💾 保存并继续</button>
+                <button class="btn btn-ghost" onclick="cancelEdit('storyboard')">取消</button>
+            </div>
         </div>
-        <div class="phase">
+        <div class="phase" id="phase-refs">
             <h3>④ 三视图参考图 <span class="tag">references/</span></h3>
             <div class="ref-pause" id="refPause">
                 <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查参考图，如需替换可点击卡片上的「替换」按钮</div>
                 <div class="ref-pause-count" id="refCountdown">02:00</div>
-                <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成视频</button>
+                <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+                    <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成视频</button>
+                    <button class="btn btn-ghost" onclick="retryRefStep()" style="color:var(--warning);border-color:rgba(212,168,83,.45)">🔄 重新生成参考图</button>
+                </div>
             </div>
             <div class="pic-grid" id="out-pics"><div class="note">（生成中…）</div></div>
         </div>
-        <div class="phase">
+        <div class="phase" id="phase-video">
             <h3>⑤ 视频 <span class="tag">Videos/</span></h3>
-            <p class="hint" style="margin:0 0 10px">真实环境会生成可播放视频；当前为本地演示占位（生视频需后端视频接口）。</p>
+            <p class="hint" id="vidIntro" style="margin:0 0 10px">配置视频接口后，将真实生成可播放视频；未配置时显示占位。</p>
             <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
                 <source src="#" type="video/mp4">
             </video>
-            <p class="hint" id="vidHint" style="margin-top:8px">镜头 1/2/3/4 · 真实生成后此处显示可播放视频</p>
+            <p class="hint" id="vidHint" style="margin-top:8px">等待生成 …</p>
+            <div class="phase-actions" id="actions-video" style="display:none">
+                <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
+                <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
+            </div>
         </div>
     </div>
 
@@ -392,6 +439,9 @@ function readRefImages(){
 /* ============ 流水线运行 ============ */
 let running=false;
 let pipelineRefs=[];
+let outputs={story:'',script:'',storyboard:''};
+let stepResolve=null;
+let currentStep=null;
 let refConfirmResolver=null;
 let refConfirmTimer=null;
 let refConfirmSeconds=120;
@@ -414,6 +464,74 @@ function formSummary(f){
   return `标题：${f.title}\n篇幅：${f.length}\n类型：${f.genre}\n风格：${f.style}\n故事前提：${f.premise}\n主角：${f.pname}（${f.pgender}），目标：${f.pgoal}，核心冲突：${f.conflict}`;
 }
 
+function showPhase(name){
+  const result=document.getElementById('result');
+  result.classList.remove('hidden');
+  const phase=document.getElementById('phase-'+name);
+  if(phase) phase.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function hideAllStepActions(){
+  ['story','script','storyboard','video'].forEach(n=>{
+    const a=document.getElementById('actions-'+n); if(a) a.style.display='none';
+    const e=document.getElementById('edit-actions-'+n); if(e) e.style.display='none';
+    const ta=document.getElementById('edit-'+n); if(ta){ ta.style.display='none'; }
+    const pre=document.getElementById('out-'+n); if(pre) pre.style.display='block';
+  });
+  const rp=document.getElementById('refPause'); if(rp) rp.classList.remove('active');
+}
+function waitStepConfirm(name){
+  return new Promise(resolve=>{
+    stepResolve=resolve; currentStep=name;
+    hideAllStepActions();
+    if(name==='refs'){
+      startRefConfirm(resolve);
+    } else {
+      const a=document.getElementById('actions-'+name); if(a){ a.style.display='flex'; }
+      showPhase(name);
+    }
+  });
+}
+function confirmStep(name){
+  if(currentStep!==name || !stepResolve) return;
+  const res=stepResolve; stepResolve=null; currentStep=null;
+  hideAllStepActions();
+  res('continue');
+}
+function retryStep(name){
+  if(currentStep!==name || !stepResolve) return;
+  const res=stepResolve; stepResolve=null; currentStep=null;
+  hideAllStepActions();
+  res('retry');
+}
+function editStep(name){
+  if(currentStep!==name) return;
+  const pre=document.getElementById('out-'+name);
+  const ta=document.getElementById('edit-'+name);
+  if(!pre||!ta) return;
+  ta.value=pre.textContent;
+  pre.style.display='none'; ta.style.display='block';
+  const acts=document.getElementById('actions-'+name); if(acts) acts.style.display='none';
+  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='flex';
+  ta.focus();
+}
+function cancelEdit(name){
+  const pre=document.getElementById('out-'+name);
+  const ta=document.getElementById('edit-'+name);
+  if(ta) ta.style.display='none'; if(pre) pre.style.display='block';
+  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='none';
+  const acts=document.getElementById('actions-'+name); if(acts) acts.style.display='flex';
+}
+function saveEdit(name){
+  const pre=document.getElementById('out-'+name);
+  const ta=document.getElementById('edit-'+name);
+  if(!ta||!pre) return;
+  const text=ta.value;
+  pre.textContent=text; outputs[name]=text;
+  ta.style.display='none'; pre.style.display='block';
+  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='none';
+  confirmStep(name);
+}
+
 async function runPipeline(){
   if(running) return; running=true;
   const btn=document.getElementById('runBtn'); btn.disabled=true;
@@ -429,82 +547,110 @@ async function runPipeline(){
 
   const useImportedStory = imported.story && f.autoImport;
 
-  // 无 AI 且无故事导入时，明确提示而不是 fallback 到不相关的固定示例
+  // 无 AI 且无故事导入时，明确提示而不是 fallback 到固定示例
   if(!useAI && !useImportedStory){
-    const result=document.getElementById('result');
-    result.classList.remove('hidden');
+    resetResultPhases();
+    const result=document.getElementById('result'); result.classList.remove('hidden');
     document.getElementById('out-story').textContent='未配置可用的文本 AI。\n\n请在「设置」页填写云端 API Key，或选择「本地 Ollama」模式；也可以上传「故事正文 (.txt/.md)」后直接运行。';
     document.getElementById('out-script').textContent='（未开始：无文本 AI）';
     document.getElementById('out-storyboard').textContent='（未开始：无文本 AI）';
     document.getElementById('out-pics').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
+    document.getElementById('vidHint').textContent='（未开始：无文本 AI）';
     toast('未配置文本 AI，无法生成原创内容');
     running=false; btn.disabled=false;
     return;
   }
 
+  outputs={story:'',script:'',storyboard:''};
+  pipelineRefs=[];
+
   const result=document.getElementById('result');
   const log=document.getElementById('log');
   const bar=document.getElementById('bar');
-  bar.style.display='block'; log.style.display='block'; log.textContent=''; result.classList.add('hidden');
-  const STEPS=['[1/5] 生成故事梗概 …','[2/5] 将故事转化为专业剧本 …','[3/5] 生成分镜脚本 …','[4/5] 生成三视图参考图 …','[5/5] 生成视频 …','✅ 全部阶段完成。'];
-  let i=0;
-  const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((i+1)/STEPS.length*100)+'%'; i++; };
+  result.classList.add('hidden');
+  resetResultPhases();
+  bar.style.display='block'; log.style.display='block'; log.textContent='';
+  const TOTAL=5;
+  let completed=0;
+  const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((completed+1)/TOTAL*100)+'%'; };
 
-  // ① 故事梗概
-  step(STEPS[0]);
-  let story;
-  if(useImportedStory) story=imported.story;
-  else if(useAI){ try{ story=await generateStory(f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 故事生成失败：'+e.message; story='（生成失败：'+e.message+'）'; } }
-  document.getElementById('out-story').textContent=story;
-  await sleep(380);
+  const steps=[
+    {name:'story', label:'[1/5] 生成故事梗概', gen:async ()=>{
+      if(useImportedStory) outputs.story=imported.story;
+      else if(useAI){ try{ outputs.story=await generateStory(f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 故事生成失败：'+e.message; outputs.story='（生成失败：'+e.message+'）'; } }
+      document.getElementById('out-story').textContent=outputs.story;
+      showPhase('story');
+    }},
+    {name:'script', label:'[2/5] 将故事转化为专业剧本', gen:async ()=>{
+      if(useAI){ try{ outputs.script=await generateScript(outputs.story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; outputs.script='（生成失败：'+e.message+'）'; } }
+      else { outputs.script='（未生成：未配置文本 AI，已使用导入的故事正文）'; }
+      document.getElementById('out-script').textContent=outputs.script;
+      showPhase('script');
+    }},
+    {name:'storyboard', label:'[3/5] 生成分镜脚本', gen:async ()=>{
+      if(useAI){ try{ outputs.storyboard=await generateStoryboard(outputs.script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; outputs.storyboard='（生成失败：'+e.message+'）'; } }
+      else { outputs.storyboard='（未生成：未配置文本 AI）'; }
+      document.getElementById('out-storyboard').textContent=outputs.storyboard;
+      showPhase('storyboard');
+    }},
+    {name:'refs', label:'[4/5] 生成三视图参考图', gen:async ()=>{
+      let elements;
+      if(useAI){ try{ elements=await extractElements(outputs.script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
+      else { elements=[]; }
+      if(!elements.length){
+        elements=[
+          {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`},
+          {id:uid(), name:'主场景', type:'场景', prompt:`${f.genre} scene, ${f.premise}, wide establishing shot, cinematic lighting`}
+        ];
+      }
+      await generateReferenceImages(elements, imported.refs);
+      showPhase('refs');
+    }},
+    {name:'video', label:'[5/5] 生成视频', gen:async ()=>{
+      await generateVideos(outputs.storyboard, pipelineRefs, f);
+      showPhase('video');
+    }}
+  ];
 
-  // ② 专业剧本
-  step(STEPS[1]);
-  let script;
-  if(useAI){ try{ script=await generateScript(story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; script='（生成失败：'+e.message+'）'; } }
-  else { script='（未生成：未配置文本 AI，已使用导入的故事正文）'; }
-  document.getElementById('out-script').textContent=script;
-  await sleep(380);
-
-  // ③ 分镜脚本
-  step(STEPS[2]);
-  let storyboard;
-  if(useAI){ try{ storyboard=await generateStoryboard(script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; storyboard='（生成失败：'+e.message+'）'; } }
-  else { storyboard='（未生成：未配置文本 AI）'; }
-  document.getElementById('out-storyboard').textContent=storyboard;
-  await sleep(380);
-
-  // ④ 三视图参考图
-  step(STEPS[3]);
-  let elements;
-  if(useAI){ try{ elements=await extractElements(script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
-  else { elements=[]; }
-  if(!elements.length){
-    // 无可用元素时，根据主角/场景生成至少一张占位参考图，避免完全空白
-    elements=[
-      {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`},
-      {id:uid(), name:'主场景', type:'场景', prompt:`${f.genre} scene, ${f.premise}, wide establishing shot, cinematic lighting`}
-    ];
+  for(let idx=0; idx<steps.length; idx++){
+    const s=steps[idx];
+    let retrying=false;
+    while(true){
+      step(s.label + (retrying?'（重新生成）':''));
+      await s.gen();
+      completed=idx;
+      const action=await waitStepConfirm(s.name);
+      if(action==='continue'){ completed=idx+1; break; }
+      retrying=true;
+      if(s.name==='story') document.getElementById('out-story').textContent='（重新生成中…）';
+      if(s.name==='script') document.getElementById('out-script').textContent='（重新生成中…）';
+      if(s.name==='storyboard') document.getElementById('out-storyboard').textContent='（重新生成中…）';
+      if(s.name==='refs'){ document.getElementById('out-pics').innerHTML='<div class="note">（重新生成中…）</div>'; pipelineRefs=[]; }
+      if(s.name==='video'){ const v=document.getElementById('out-video'); v.src='#'; document.getElementById('vidHint').textContent='（重新生成中…）'; }
+    }
   }
-  await generateReferenceImages(elements, imported.refs);
-  await sleep(380);
 
-  // 等待用户确认（2 分钟超时自动继续）
-  await waitForReferenceConfirm();
-
-  // ⑤ 视频
-  step(STEPS[4]);
-  await generateVideos(storyboard, pipelineRefs, f);
-
-  step(STEPS[5]);
+  bar.firstElementChild.style.width='100%';
+  log.innerHTML+='\n<b>✅ 全部阶段完成。</b>';
   await sleep(450);
   log.style.display='none'; bar.style.display='none';
   result.classList.remove('hidden');
   result.scrollIntoView({behavior:'smooth'});
   const note = useImportedStory ? '（已用导入的故事正文，其余阶段'+(useAI?'由 AI 生成':'未配置 AI')+'）'
-              : (useAI ? '（文本由你配置的 AI 真实生成，图片/视频按接口配置调用）' : '（未配置 AI）');
+              : (useAI ? '（文本由你配置的 AI 真实生成，图/视频按接口配置调用）' : '（未配置 AI）');
   toast('流水线完成 '+note);
   running=false; btn.disabled=false;
+}
+
+function resetResultPhases(){
+  document.getElementById('out-story').textContent='（生成中…）';
+  document.getElementById('out-script').textContent='（生成中…）';
+  document.getElementById('out-storyboard').textContent='（生成中…）';
+  document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  const v=document.getElementById('out-video'); v.src='#';
+  document.getElementById('vidHint').textContent='等待生成 …';
+  document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
+  hideAllStepActions();
 }
 
 async function generateStory(f, imported){
@@ -580,7 +726,6 @@ async function extractElements(script, f, imported){
   }catch(e){ throw e; }
   const arr=safeParseJSON(text);
   if(Array.isArray(arr)&&arr.length) return arr.map(el=>({id:uid(),name:el.name||'未命名',type:el.type||'道具',prompt:el.prompt||''}));
-  // fallback 简单提取
   return fallbackExtract(script, f);
 }
 
@@ -592,14 +737,12 @@ function safeParseJSON(s){
 }
 function fallbackExtract(script, f){
   const refs=[];
-  // 优先加入主角
   if(f && f.pname) refs.push({id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre||''} ${f.style||''}, character reference sheet, three views, front side back, full body, clean white background`});
   const lines=(script||'').split('\n');
   lines.forEach(line=>{
     const m=line.match(/^人物[：:](.+)$/);
     if(m) m[1].split(/[,，、]/).forEach(n=>{ const name=n.trim(); if(name) refs.push({id:uid(),name,type:'角色',prompt:name+', character reference sheet, three views, full body, clean white background'}); });
   });
-  // 简单去重
   const seen=new Set();
   return refs.filter(r=>{ if(seen.has(r.name)) return false; seen.add(r.name); return true; });
 }
@@ -616,38 +759,29 @@ async function generateReferenceImages(elements, importedImages){
   const mc=getMediaCfg();
   pipelineRefs=[];
 
-  // 导入的参考图优先作为首位元素占位
-  if(importedImages.length){
-    importedImages.slice(0, Math.min(importedImages.length, elements.length||3)).forEach((u, idx)=>{
-      const el=elements[idx]||{id:uid(), name:'参考图 '+(idx+1), type:'参考', prompt:''};
-      pipelineRefs.push({...el, url:u, originalUrl:u});
-    });
-    // 剩余元素继续
-    if(elements.length>importedImages.length){
-      elements.slice(importedImages.length).forEach(el=>pipelineRefs.push({...el, url:'', originalUrl:''}));
+  elements.forEach((el, idx)=>{
+    let inputImage='';
+    if(mc.imgMode==='img2img'){
+      inputImage=importedImages[idx] || (importedImages.length?importedImages[0]:'');
     }
-  } else {
-    elements.forEach(el=>pipelineRefs.push({...el, url:'', originalUrl:''}));
-  }
+    pipelineRefs.push({...el, url:'', originalUrl:'', inputImage});
+  });
 
-  // 渲染占位
   renderRefGrid(picGrid);
 
   if(!mc.imgUrl){
-    // 演示占位图
     pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
     return;
   }
 
-  // 真实调用
   for(let idx=0; idx<pipelineRefs.length; idx++){
     const r=pipelineRefs[idx];
     updateRefCell(idx, '生成中…');
     try{
       const prompt=buildImagePrompt(r);
-      const u=await genImage(prompt, mc);
+      const u=await genImage(prompt, mc, r.inputImage);
       if(u){ r.url=u; r.originalUrl=u; }
-      updateRefCell(idx, u?null:'生成失败（占位）');
+      updateRefCell(idx, u?null:'生成失败（未返回 URL）');
     }catch(e){ updateRefCell(idx, '生成失败：'+e.message.slice(0,30)); }
     await sleep(200);
   }
@@ -677,24 +811,22 @@ function updateRefCell(idx, errMsg){
 }
 
 /* ============ 参考图确认暂停（2 分钟超时） ============ */
-function waitForReferenceConfirm(){
-  return new Promise(resolve=>{
-    refConfirmResolver=resolve;
-    refConfirmSeconds=120;
-    const pause=document.getElementById('refPause');
-    const count=document.getElementById('refCountdown');
-    pause.classList.add('active');
+function startRefConfirm(resolve){
+  refConfirmResolver=resolve;
+  refConfirmSeconds=120;
+  const pause=document.getElementById('refPause');
+  const count=document.getElementById('refCountdown');
+  pause.classList.add('active');
+  count.textContent=fmtTime(refConfirmSeconds);
+  const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=false;
+  document.getElementById('out-pics').scrollIntoView({behavior:'smooth', block:'center'});
+  toast('参考图已生成，请检查或替换；2 分钟后自动继续');
+  if(refConfirmTimer) clearInterval(refConfirmTimer);
+  refConfirmTimer=setInterval(()=>{
+    refConfirmSeconds--;
     count.textContent=fmtTime(refConfirmSeconds);
-    const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=false;
-    document.getElementById('out-pics').scrollIntoView({behavior:'smooth', block:'center'});
-    toast('参考图已生成，请检查或替换；2 分钟后自动继续');
-    if(refConfirmTimer) clearInterval(refConfirmTimer);
-    refConfirmTimer=setInterval(()=>{
-      refConfirmSeconds--;
-      count.textContent=fmtTime(refConfirmSeconds);
-      if(refConfirmSeconds<=0) confirmRefContinue(true);
-    },1000);
-  });
+    if(refConfirmSeconds<=0) confirmRefContinue(true);
+  },1000);
 }
 
 function confirmRefContinue(auto=false){
@@ -703,7 +835,17 @@ function confirmRefContinue(auto=false){
   const pause=document.getElementById('refPause'); pause.classList.remove('active');
   const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=true;
   if(!auto) toast('已确认，继续生成视频');
-  const res=refConfirmResolver; refConfirmResolver=null; res();
+  const res=refConfirmResolver; refConfirmResolver=null;
+  if(stepResolve){ stepResolve=null; currentStep=null; }
+  res('continue');
+}
+
+function retryRefStep(){
+  if(currentStep!=='refs' || !stepResolve) return;
+  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
+  document.getElementById('refPause').classList.remove('active');
+  const res=stepResolve; stepResolve=null; currentStep=null;
+  res('retry');
 }
 
 /* ============ 替换参考图弹窗 ============ */
@@ -737,7 +879,11 @@ async function doRegenerateRef(){
     if(!mc.imgUrl){ await sleep(800); r.url=genManjuPic(r.name, r.prompt); }
     else {
       const prompt=buildImagePrompt(r);
-      const u=await genImage(prompt, mc);
+      let inputImage='';
+      if(mc.imgMode==='img2img'){
+        inputImage=r.url && (r.url.startsWith('http')||r.url.startsWith('data:')) ? r.url : (r.inputImage||'');
+      }
+      const u=await genImage(prompt, mc, inputImage);
       if(u) r.url=u;
       else throw new Error('未返回图片');
     }
@@ -775,15 +921,17 @@ async function generateVideos(storyboard, refs, f){
   const mc=getMediaCfg();
   const vEl=document.getElementById('out-video');
   const vHint=document.getElementById('vidHint');
+  const vIntro=document.getElementById('vidIntro');
   if(!mc.vidUrl){
-    if(vHint) vHint.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
+    if(vIntro) vIntro.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
+    if(vHint) vHint.textContent='未配置视频接口';
     return;
   }
-  // 解析分镜为若干 shot
+  if(vIntro) vIntro.textContent='正在真实生成视频…';
   const shots=parseStoryboard(storyboard);
   if(!shots.length) shots.push({num:1,desc:`漫剧短片：${f.title}。${f.premise}`});
 
-  // 默认取第一张角色参考图作为系列主参考
+  const useImg = mc.vidMode === 'img2vid';
   const mainCharRef=refs.find(r=>r.type==='角色')||refs[0];
   const mainSceneRef=refs.find(r=>r.type==='场景')||refs[1];
 
@@ -793,7 +941,8 @@ async function generateVideos(storyboard, refs, f){
     const primaryRef=matchedRefs[0]||mainCharRef||mainSceneRef;
     const prompt=`${f.title} - 镜头${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。`;
     try{
-      const u=await genVideo(prompt, mc, primaryRef?primaryRef.url:'');
+      const imageUrl = useImg && primaryRef ? primaryRef.url : '';
+      const u=await genVideo(prompt, mc, imageUrl);
       if(u && i===0){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
       else if(vHint) vHint.textContent=`✅ 已生成 ${i+1}/${shots.length} 段视频`;
     }catch(e){ if(vHint) vHint.textContent='⚠️ 视频生成失败：'+e.message.slice(0,40); }
@@ -817,7 +966,6 @@ function matchRefsForShot(shot, refs){
     if(!r.name) return;
     if(shot.desc.includes(r.name)) matched.push(r);
   });
-  // 补充主要角色/场景
   if(!matched.find(r=>r.type==='角色')){ const c=refs.find(r=>r.type==='角色'); if(c) matched.unshift(c); }
   if(!matched.find(r=>r.type==='场景')){ const s=refs.find(r=>r.type==='场景'); if(s) matched.unshift(s); }
   return matched.length?matched:refs.slice(0,2);
@@ -825,9 +973,12 @@ function matchRefsForShot(shot, refs){
 
 function resetPipeline(){
   running=false;
+  outputs={story:'',script:'',storyboard:''};
   pipelineRefs=[];
+  if(stepResolve){ stepResolve=null; currentStep=null; }
   if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
   refConfirmResolver=null;
+  hideAllStepActions();
   document.getElementById('refPause').classList.remove('active');
   document.getElementById('result').classList.add('hidden');
   document.getElementById('log').style.display='none';
@@ -836,6 +987,8 @@ function resetPipeline(){
   document.getElementById('bar').firstElementChild.style.width='0';
   ['out-story','out-script','out-storyboard'].forEach(id=>document.getElementById(id).textContent='（生成中…）');
   document.getElementById('out-pics').innerHTML='<div class="note">（生成中…）</div>';
+  const v=document.getElementById('out-video'); v.src='#';
+  document.getElementById('vidHint').textContent='等待生成 …';
   const rb=document.getElementById('runBtn'); if(rb) rb.disabled=false;
   toast('已重置');
 }
@@ -843,22 +996,23 @@ function resetPipeline(){
 function loadDemo(){
   if(running) return;
   resetPipeline();
+  outputs={story:DEMO.story, script:DEMO.script, storyboard:DEMO.storyboard};
   const result=document.getElementById('result');
   result.classList.remove('hidden');
   document.getElementById('out-story').textContent='【演示示例】\n'+DEMO.story;
   document.getElementById('out-script').textContent='【演示示例】\n'+DEMO.script;
   document.getElementById('out-storyboard').textContent='【演示示例】\n'+DEMO.storyboard;
-  pipelineRefs=DEMO.refs.map(r=>({...r, url:'', originalUrl:''}));
-  // 示例固定使用占位图，不消耗真实接口
+  pipelineRefs=DEMO.refs.map(r=>({...r, url:'', originalUrl:'', inputImage:''}));
   const picGrid=document.getElementById('out-pics');
   renderRefGrid(picGrid);
   pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
+  hideAllStepActions();
   toast('已加载演示示例（与当前创作参数无关）');
   result.scrollIntoView({behavior:'smooth'});
 }
 
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
-const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_resp','vid_url','vid_key','vid_body','vid_img_field','vid_resp'];
+const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
   MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); const v=localStorage.getItem(id); if(el&&v!=null) el.value=v; });
@@ -870,6 +1024,7 @@ function saveMediaCfg(){
   if(vu && vu.startsWith('http://') && !isLocalhostUrl(vu)) toast('⚠️ 视频接口为 HTTP，建议改用 https://（HTTPS 站点下浏览器会拦截该请求）');
   MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); if(el) localStorage.setItem(id, el.value); });
   const h=document.getElementById('mediaCfgHint'); if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓'; setTimeout(()=>h.textContent='',2000); }
+  updateModePill();
 }
 function loadMediaCfg(){
   fillMediaInputs();
@@ -881,22 +1036,34 @@ function getMediaCfg(){
     imgKey:localStorage.getItem('img_key')||'',
     imgModel:localStorage.getItem('img_model')||'',
     imgSize:localStorage.getItem('img_size')||'1024x1024',
+    imgMode:localStorage.getItem('img_mode')||'txt2img',
+    imgBody:localStorage.getItem('img_body')||'',
     imgResp:localStorage.getItem('img_resp')||'data[0].url',
     vidUrl:localStorage.getItem('vid_url')||'',
     vidKey:localStorage.getItem('vid_key')||'',
-    vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}"}',
+    vidModel:localStorage.getItem('vid_model')||'',
+    vidMode:localStorage.getItem('vid_mode')||'img2vid',
+    vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}","image_url":"{{image_url}}"}',
     vidImgField:localStorage.getItem('vid_img_field')||'',
     vidResp:localStorage.getItem('vid_resp')||'data[0].url'
   };
 }
 function resolvePath(obj, path){
-  try{ return path.split('.').reduce((o,k)=> (o==null?undefined:o[k]), obj); }catch(e){ return undefined; }
+  try{ return path.replace(/\[(\d+)\]/g,'.$1').split('.').filter(Boolean).reduce((o,k)=> (o==null?undefined:o[k]), obj); }catch(e){ return undefined; }
 }
-async function genImage(prompt, cfg){
+async function genImage(prompt, cfg, imageUrl){
   if(!cfg.imgUrl) return null;
   if(location.protocol==='https:' && cfg.imgUrl.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
-  const body={ prompt, n:1, size:cfg.imgSize||'1024x1024' };
-  if(cfg.imgModel) body.model=cfg.imgModel;
+  let body;
+  if(cfg.imgBody && cfg.imgBody.trim()){
+    let tpl=cfg.imgBody.replace(/\{\{prompt\}\}/g, prompt);
+    if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
+    try{ body=JSON.parse(tpl); }
+    catch(e){ body={prompt}; if(imageUrl) body.image_url=imageUrl; }
+  } else {
+    body={ prompt, n:1, size:cfg.imgSize||'1024x1024' };
+    if(cfg.imgModel) body.model=cfg.imgModel;
+  }
   const headers={'Content-Type':'application/json'}; if(cfg.imgKey) headers['Authorization']='Bearer '+cfg.imgKey;
   const res=await fetch(cfg.imgUrl,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
@@ -909,15 +1076,15 @@ async function genVideo(prompt, cfg, imageUrl){
   if(!cfg.vidUrl) return null;
   if(location.protocol==='https:' && cfg.vidUrl.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
   let tpl=cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt);
-  if(imageUrl){
-    tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
-    // 若配置了独立的参考图字段且模板未包含 {{image_url}}，则追加
-    if(cfg.vidImgField && !cfg.vidBody.includes('{{image_url}}')){
-      try{ const o=JSON.parse(tpl); o[cfg.vidImgField]=imageUrl; tpl=JSON.stringify(o); }catch(e){}
-    }
-  }
+  if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
   let bodyTpl;
-  try{ bodyTpl=JSON.parse(tpl); }catch(e){ bodyTpl={prompt}; if(imageUrl&&cfg.vidImgField) bodyTpl[cfg.vidImgField]=imageUrl; }
+  try{ bodyTpl=JSON.parse(tpl); }
+  catch(e){ bodyTpl={prompt}; if(imageUrl&&cfg.vidImgField) bodyTpl[cfg.vidImgField]=imageUrl; }
+  if(cfg.vidModel) bodyTpl.model=cfg.vidModel;
+  if(!imageUrl){
+    delete bodyTpl.image_url;
+    if(cfg.vidImgField) delete bodyTpl[cfg.vidImgField];
+  }
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
   const res=await fetch(cfg.vidUrl,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
@@ -925,6 +1092,20 @@ async function genVideo(prompt, cfg, imageUrl){
   const val=resolvePath(data, cfg.vidResp);
   if(!val) throw new Error('响应中未找到视频 URL（路径 '+cfg.vidResp+'）');
   return val;
+}
+
+function updateModePill(){
+  const cfg=getAIConfig();
+  const mc=getMediaCfg();
+  const pill=document.getElementById('modePill');
+  const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
+  const mediaOn = mc.imgUrl || mc.vidUrl;
+  if(aiOn || mediaOn){
+    let t='🔑 已配置：'; if(aiOn) t+='文本真实生成'; if(mediaOn) t+=(aiOn?'，':'')+'图/视频真实生成';
+    pill.className='mode-pill live'; pill.textContent=t;
+  } else {
+    pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（无需 Key，预置示例）';
+  }
 }
 
 /* 初始化：提示当前 AI 状态 */
