@@ -464,6 +464,17 @@
 
     <!-- 主内容区 -->
     <div class="main-content">
+        <!-- 配置迁移 -->
+        <div class="settings-group" style="border:1px solid var(--accent);border-radius:12px;padding:18px 20px;margin-bottom:36px;background:var(--bg-secondary);">
+            <div class="group-title"><span>🔄</span><span>配置迁移（跨域名 / 设备）</span></div>
+            <div class="group-desc">用于在 <code>sagebool.github.io</code> 与 <code>book.storylucas.top</code> 等不同域名，或不同设备间迁移 AI 模型等配置。导出文本<b>包含 API Key 等敏感信息</b>，请妥善保管、勿泄露他人。</div>
+            <div style="display:flex;gap:10px;margin:14px 0;">
+                <button onclick="exportConfig()" style="padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;">📤 导出配置</button>
+                <button onclick="importConfig()" style="padding:9px 18px;background:var(--bg-tertiary);color:var(--text-primary);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;">📥 导入配置</button>
+            </div>
+            <textarea id="migrateText" class="input-box" style="width:100%;min-height:120px;font-family:monospace;font-size:12px;line-height:1.6;" placeholder="点击「导出配置」生成文本并自动复制；或在此粘贴其他域名导出的文本后点「导入配置」。"></textarea>
+        </div>
+
         <!-- AI 模型设置 -->
         <div class="settings-group">
             <div class="group-title">
@@ -735,6 +746,49 @@
             } else {
                 console.log('[Toast]', message);
             }
+        }
+
+        // 配置迁移：导出 / 导入（跨域名、跨设备）
+        function getMigrateKeys(){
+            const keys = [
+                'useLocalAI','cloudBaseUrl','cloudModel','cloudApiKey',
+                'ollamaEndpoint','localModel','ollamaModels','ollamaConnected','modelStrategy',
+                'sagebook_sync_platform','sagebook_gist_token','sagebook_gist_id',
+                'sagebook_gitee_token','sagebook_gitee_repo','sagebook_gitee_path',
+                'sagebook_auto_sync','sagebook_auto_sync_interval'
+            ];
+            document.querySelectorAll('.toggle-switch').forEach(t => { if(t.id && !keys.includes(t.id)) keys.push(t.id); });
+            return keys;
+        }
+
+        function exportConfig(){
+            const cfg = {};
+            getMigrateKeys().forEach(k => { const v = localStorage.getItem(k); if(v !== null) cfg[k] = v; });
+            const text = JSON.stringify(cfg, null, 2);
+            const ta = document.getElementById('migrateText');
+            if(ta){ ta.value = text; ta.focus(); ta.select(); }
+            if(navigator.clipboard && navigator.clipboard.writeText){
+                navigator.clipboard.writeText(text).then(
+                    () => showToast('配置已导出并复制到剪贴板，请妥善保存'),
+                    () => showToast('配置已生成到文本框，请手动复制')
+                );
+            } else {
+                showToast('配置已生成到文本框，请手动复制');
+            }
+        }
+
+        function importConfig(){
+            const ta = document.getElementById('migrateText');
+            const raw = ta ? ta.value.trim() : '';
+            if(!raw){ showToast('请先在文本框粘贴配置文本'); return; }
+            let cfg;
+            try { cfg = JSON.parse(raw); } catch(e){ showToast('配置文本格式错误：' + e.message); return; }
+            if(typeof cfg !== 'object' || cfg === null){ showToast('配置文本格式错误'); return; }
+            const keys = getMigrateKeys();
+            let n = 0;
+            Object.keys(cfg).forEach(k => { if(keys.includes(k)){ localStorage.setItem(k, String(cfg[k])); n++; } });
+            showToast('已导入 ' + n + ' 项配置，正在重新加载…');
+            setTimeout(() => location.reload(), 600);
         }
 
         // 测试连接（通用 OpenAI 兼容：POST {baseUrl}/chat/completions）
