@@ -286,24 +286,33 @@
             </div>
         </div>
         <div class="phase" id="phase-refs">
-            <h3>④ 三视图参考图 <span class="tag">references/</span></h3>
+            <h3>④ 三视图参考图（角色 / 道具） <span class="tag">references/</span></h3>
             <div class="ref-pause" id="refPause">
-                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查参考图，如需替换可点击卡片上的「替换」按钮</div>
+                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查角色/道具参考图，如需替换可点击卡片上的「替换」按钮（场景将在下一步「⑤ 分镜场景图片」生成）</div>
                 <div class="ref-pause-count" id="refCountdown">02:00</div>
                 <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-                    <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成视频</button>
+                    <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成分镜场景图</button>
                     <button class="btn btn-ghost" onclick="retryRefStep()" style="color:var(--warning);border-color:rgba(212,168,83,.45)">🔄 重新生成参考图</button>
                 </div>
             </div>
             <div class="pic-grid" id="out-pics"><div class="note">（等待分镜脚本确认…）</div></div>
         </div>
+        <div class="phase" id="phase-scenes">
+            <h3>⑤ 分镜场景图片 <span class="tag">scenes/</span></h3>
+            <p class="hint" id="scenesHint" style="margin:0 0 10px">基于分镜脚本与已确认的角色/道具参考图，逐镜头生成场景图；未配置图像接口时显示占位图。</p>
+            <div class="pic-grid" id="out-scenes"><div class="note">（等待三视图参考图确认…）</div></div>
+            <div class="phase-actions" id="actions-scenes" style="display:none">
+                <button class="btn btn-primary" onclick="confirmStep('scenes')">✅ 确认并继续</button>
+                <button class="btn btn-ghost" onclick="retryStep('scenes')">🔄 重新生成</button>
+            </div>
+        </div>
         <div class="phase" id="phase-video">
-            <h3>⑤ 视频 <span class="tag">Videos/</span></h3>
+            <h3>⑥ 视频 <span class="tag">Videos/</span></h3>
             <p class="hint" id="vidIntro" style="margin:0 0 10px">配置视频接口后，将真实生成可播放视频；未配置时显示占位。</p>
             <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
                 <source src="#" type="video/mp4">
             </video>
-            <p class="hint" id="vidHint" style="margin-top:8px">（等待参考图确认…）</p>
+            <p class="hint" id="vidHint" style="margin-top:8px">（等待分镜场景图片确认…）</p>
             <div class="phase-actions" id="actions-video" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
                 <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
@@ -433,8 +442,6 @@ const DEMO = {
     { id:'demo_1', name:'林秋', type:'角色', prompt:'a 30-year-old Chinese man, pale face, deep eye sockets, messy wet hair, old dark shirt with mud stains, character reference sheet, three views, front side back, full body, clean white background, cinematic lighting, detailed face, digital art, 4K' },
     { id:'demo_2', name:'邻家小孩', type:'角色', prompt:'an 8-year-old Chinese child, curious expression, school uniform, character reference sheet, three views, front side back, full body, clean white background, soft lighting, digital art, 4K' },
     { id:'demo_3', name:'小偷', type:'角色', prompt:'a masked thief in dark clothes, tense posture, character reference sheet, three views, front side back, full body, clean white background, dramatic lighting, digital art, 4K' },
-    { id:'demo_4', name:'废弃花房', type:'场景', prompt:'abandoned glass greenhouse at stormy night, broken glass, heavy rain, cinematic wide shot, moody lighting, detailed environment, 8K' },
-    { id:'demo_5', name:'林秋公寓客厅', type:'场景', prompt:'small messy apartment living room, morning sunlight through clouds, dust particles, cinematic wide shot, warm lighting, detailed interior, 8K' },
     { id:'demo_6', name:'红玫瑰与花盆', type:'道具', prompt:'withered red rose in a simple clay pot, prop reference sheet, multiple angles, petals curling, dark red like blood, clean white background, studio lighting, detailed, 4K' },
     { id:'demo_7', name:'小剪刀', type:'道具', prompt:'small gardening scissors, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
     { id:'demo_8', name:'撕碎的纸张', type:'道具', prompt:'torn divorce notice papers, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
@@ -465,6 +472,7 @@ function readRefImages(){
 /* ============ 流水线运行 ============ */
 let running=false;
 let pipelineRefs=[];
+let pipelineScenes=[];
 let outputs={story:'',script:'',storyboard:''};
 let stepResolve=null;
 let currentStep=null;
@@ -497,7 +505,7 @@ function showPhase(name){
   if(phase) phase.scrollIntoView({behavior:'smooth', block:'start'});
 }
 function hideAllStepActions(){
-  ['story','script','storyboard','video'].forEach(n=>{
+  ['story','script','storyboard','refs','scenes','video'].forEach(n=>{
     const a=document.getElementById('actions-'+n); if(a) a.style.display='none';
     const e=document.getElementById('edit-actions-'+n); if(e) e.style.display='none';
     const ta=document.getElementById('edit-'+n); if(ta){ ta.style.display='none'; }
@@ -601,6 +609,7 @@ async function runPipeline(){
     document.getElementById('out-script').textContent='（未开始：无文本 AI）';
     document.getElementById('out-storyboard').textContent='（未开始：无文本 AI）';
     document.getElementById('out-pics').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
+    document.getElementById('out-scenes').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
     document.getElementById('vidHint').textContent='（未开始：无文本 AI）';
     toast('未配置文本 AI，无法生成原创内容');
     running=false; btn.disabled=false;
@@ -616,47 +625,51 @@ async function runPipeline(){
   result.classList.add('hidden');
   resetResultPhases();
   bar.style.display='block'; log.style.display='block'; log.textContent='';
-  const TOTAL=5;
+  const TOTAL=6;
   let completed=0;
   const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((completed+1)/TOTAL*100)+'%'; };
 
   const steps=[
-    {name:'story', label:'[1/5] 生成故事梗概', gen:async ()=>{
+    {name:'story', label:'[1/6] 生成故事梗概', gen:async ()=>{
       if(useImportedStory) outputs.story=imported.story;
       else if(useAI){ try{ outputs.story=await generateStory(f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 故事生成失败：'+e.message; outputs.story='（生成失败：'+e.message+'）'; } }
       document.getElementById('out-story').textContent=outputs.story;
       showPhase('story');
     }},
-    {name:'script', label:'[2/5] 将故事转化为专业剧本', gen:async ()=>{
+    {name:'script', label:'[2/6] 将故事转化为专业剧本', gen:async ()=>{
       if(useAI){ try{ outputs.script=await generateScript(outputs.story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; outputs.script='（生成失败：'+e.message+'）'; } }
       else if(useImportedStory) { outputs.script='【⚠️ 未启用文本 AI — 以下内容直接引用导入的故事原文，并非 AI 生成的专业剧本。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n'+imported.story; }
       else { outputs.script='【⚠️ 未启用文本 AI — 请手动编辑专业剧本，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n（示例格式：\n01 夜、内、场景地点\n人物：主角…\n▲全景：…）'; }
       document.getElementById('out-script').textContent=outputs.script;
       showPhase('script');
     }},
-    {name:'storyboard', label:'[3/5] 生成分镜脚本', gen:async ()=>{
+    {name:'storyboard', label:'[3/6] 生成分镜脚本', gen:async ()=>{
       if(useAI){ try{ outputs.storyboard=await generateStoryboard(outputs.script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; outputs.storyboard='（生成失败：'+e.message+'）'; } }
       else { outputs.storyboard='【⚠️ 未启用文本 AI — 以下仅为示例分镜模板，并非根据剧本生成。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n镜头1（15s）· 全景：开场画面。运镜：缓慢推近。\n镜头2（15s）· 中景：主角登场。运镜：横移。\n镜头3（15s）· 特写：关键动作。运镜：推镜。\n镜头4（15s）· 近景：情绪高潮。运镜：固定。'; }
       document.getElementById('out-storyboard').textContent=outputs.storyboard;
       showPhase('storyboard');
     }},
-    {name:'refs', label:'[4/5] 生成三视图参考图', gen:async ()=>{
+    {name:'refs', label:'[4/6] 生成三视图参考图', gen:async ()=>{
       document.getElementById('out-pics').innerHTML='<div class="note">（准备生成参考图…）</div>';
       let elements;
       if(useAI){ try{ elements=await extractElements(outputs.script, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
       else { elements=[]; }
       if(!elements.length){
         elements=[
-          {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`},
-          {id:uid(), name:'主场景', type:'场景', prompt:`${f.genre} scene, ${f.premise}, wide establishing shot, cinematic lighting`}
+          {id:uid(), name:f.pname, type:'角色', prompt:`${f.pname}, ${f.genre} ${f.style} style, character reference sheet, three views, front side back, full body, clean white background`}
         ];
       }
       await generateReferenceImages(elements, imported.refs);
       showPhase('refs');
     }},
-    {name:'video', label:'[5/5] 生成视频', gen:async ()=>{
+    {name:'scenes', label:'[5/6] 生成分镜场景图片', gen:async ()=>{
+      document.getElementById('out-scenes').innerHTML='<div class="note">（准备生成分镜场景图…）</div>';
+      await generateSceneImages(outputs.storyboard, pipelineRefs, f);
+      showPhase('scenes');
+    }},
+    {name:'video', label:'[6/6] 生成视频', gen:async ()=>{
       document.getElementById('vidHint').textContent='（准备生成视频…）';
-      await generateVideos(outputs.storyboard, pipelineRefs, f);
+      await generateVideos(outputs.storyboard, pipelineScenes, pipelineRefs, f);
       showPhase('video');
     }}
   ];
@@ -675,6 +688,7 @@ async function runPipeline(){
       if(s.name==='script') document.getElementById('out-script').textContent='（重新生成中…）';
       if(s.name==='storyboard') document.getElementById('out-storyboard').textContent='（重新生成中…）';
       if(s.name==='refs'){ document.getElementById('out-pics').innerHTML='<div class="note">（重新生成中…）</div>'; pipelineRefs=[]; }
+      if(s.name==='scenes'){ document.getElementById('out-scenes').innerHTML='<div class="note">（重新生成中…）</div>'; pipelineScenes=[]; }
       if(s.name==='video'){ const v=document.getElementById('out-video'); v.src='#'; document.getElementById('vidHint').textContent='（重新生成中…）'; }
     }
   }
@@ -692,10 +706,12 @@ async function runPipeline(){
 }
 
 function resetResultPhases(){
+  pipelineScenes=[];
   document.getElementById('out-story').textContent='（等待开始…）';
   document.getElementById('out-script').textContent='（等待故事梗概确认…）';
   document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
   document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
+  document.getElementById('out-scenes').innerHTML='<div class="note">（等待三视图参考图确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
   document.getElementById('vidHint').textContent='（等待参考图确认…）';
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
@@ -749,22 +765,31 @@ async function generateScript(story, f, imported){
 }
 
 async function generateStoryboard(script, f){
-  const sys=`你是分镜导演。请根据以下【强制创作参数】和剧本生成约 4 个 15 秒分镜，必须保持与创作参数一致：
+  const sys=`你是分镜导演。请严格依据【专业剧本】逐场景拆解为分镜脚本，绝对不允许脱离剧本自行发挥或引入剧本外内容：
 - 标题：${f.title}
 - 类型：${f.genre}
 - 风格：${f.style}
-- 主角：${f.pname}
+- 主角：${f.pname}（必须与剧本中角色名完全一致）
 - 核心冲突：${f.conflict || '（未填写）'}
 
-每个分镜含景别、画面描述、运镜方式、情绪节奏，中文输出。`;
-  const user='【剧本】\n'+script+'\n\n【设定】\n'+formSummary(f);
+硬性要求：
+1. 分镜必须与【专业剧本】中的场景一一对应：每个分镜开头用「（场景X，Ns）」标注对应的剧本场景号与时长；
+2. 分镜数量与剧本场景数大致对应（约 4-6 个）；
+3. 每个分镜包含：镜头号、对应剧本场景号、景别（全景/中景/特写/近景）、画面描述（必须出现该场景的角色姓名与关键动作/台词核心）、运镜方式、时长（秒）、情绪节奏；
+4. 画面描述必须与对应剧本场景的人物、动作、台词一致，不得凭空添加剧本没有的情节或角色；
+5. 中文输出。
+
+输出格式示例：
+镜头1（场景1，15s）· 全景：画面描述。运镜：缓慢推近。
+镜头2（场景1，12s）· 中景：画面描述。运镜：横移。`;
+  const user='【专业剧本】\n'+script+'\n\n【强制创作参数】\n'+formSummary(f)+'\n\n请严格按上述剧本逐场景拆解分镜，确保每一镜都对应剧本中的具体场景与人物。';
   return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
 }
 
 async function extractElements(script, f, imported){
-  const sys=`请从以下剧本中提取所有需要生成参考图的视觉元素，按角色、场景、道具分类。
+  const sys=`请从以下剧本中提取需要生成「三视图参考图」的视觉元素，只提取【角色】和【道具】两类，不要提取场景/环境类元素（场景将在后续「分镜场景图片」阶段逐镜头生成）。
 【强制约束】提取的元素必须与主角「${f.pname}」、类型「${f.genre}」、风格「${f.style}」、故事前提「${f.premise || '（未填写）'}」保持一致，不要引入与剧本无关的现代/都市/其他世界观元素。
-每个元素给出：中文名称、类型（角色/场景/道具）、英文图像生成提示词（含外貌/环境/风格/光照，角色需包含三视图/全身/正侧面，场景需全景，道具需多角度）。
+每个元素给出：中文名称、类型（只能是 角色 或 道具）、英文图像生成提示词（角色需包含三视图/全身/正侧面，道具需多角度，均需含风格与光照）。
 输出为 JSON 数组，不要额外解释：
 [{"name":"${f.pname}","type":"角色","prompt":"..."},...]`;
   let text;
@@ -774,7 +799,7 @@ async function extractElements(script, f, imported){
     text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
   }catch(e){ throw e; }
   const arr=safeParseJSON(text);
-  if(Array.isArray(arr)&&arr.length) return arr.map(el=>({id:uid(),name:el.name||'未命名',type:el.type||'道具',prompt:el.prompt||''}));
+  if(Array.isArray(arr)&&arr.length) return arr.filter(el=>el&&el.name).map(el=>({id:uid(),name:el.name,type: el.type==='角色'?'角色':'道具', prompt:el.prompt||''}));
   return fallbackExtract(script, f);
 }
 
@@ -861,6 +886,62 @@ function updateRefCell(idx, errMsg){
   cap.innerHTML=errMsg?`<b>${esc(r.name)}</b> · <span style="color:var(--error)">${esc(errMsg)}</span>`:`<b>${esc(r.name)}</b>`;
 }
 
+/* ============ 分镜场景图片（三视图确认后生成） ============ */
+function buildScenePrompt(shot, refs, f){
+  const matched=matchRefsForShot(shot, refs); // 角色/道具参考，用于人物与道具一致性
+  const refText=matched.map(r=>r.name+'：'+r.prompt).join('；');
+  return `${f.title} 分镜${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。角色与道具一致性参考：${refText}。电影级构图，场景氛围统一，8K。`;
+}
+async function generateSceneImages(storyboard, refs, f){
+  const grid=document.getElementById('out-scenes');
+  const mc=getMediaCfg();
+  pipelineScenes=[];
+  const shots=parseStoryboard(storyboard);
+  if(!shots.length) shots.push({num:1, scene:null, desc:`${f.title} 场景：${f.premise}`});
+  shots.forEach(s=>{ pipelineScenes.push({num:s.num, scene:s.scene, desc:s.desc, prompt:'', url:'', originalUrl:'', inputImage:''}); });
+  renderScenesGrid(grid);
+
+  const imgUrlStr=String(mc.imgUrl||'').trim();
+  const imgUrlInvalid=imgUrlStr && !/^https?:\/\//i.test(imgUrlStr);
+  if(!imgUrlStr || imgUrlInvalid){
+    pipelineScenes.forEach((s,idx)=>{
+      s.prompt=buildScenePrompt(s, refs, f);
+      s.url=genManjuPic('镜头'+s.num, s.desc); s.originalUrl=s.url;
+      updateSceneCell(idx, imgUrlInvalid?'图像接口 URL 无效：'+imgUrlStr:null);
+    });
+    return;
+  }
+  for(let idx=0; idx<pipelineScenes.length; idx++){
+    const s=pipelineScenes[idx];
+    updateSceneCell(idx, '生成中…');
+    try{
+      s.prompt=buildScenePrompt(s, refs, f);
+      const u=await genImage(s.prompt, mc, '');
+      if(u){ s.url=u; s.originalUrl=u; }
+      updateSceneCell(idx, u?null:'生成失败（未返回 URL）');
+    }catch(e){ updateSceneCell(idx, '生成失败：'+e.message.slice(0,30)); }
+    await sleep(200);
+  }
+}
+function renderScenesGrid(container){
+  container.innerHTML=pipelineScenes.map((s,idx)=>`
+    <div class="pic-cell" data-idx="${idx}">
+      <span class="ref-type">镜头 ${s.num}</span>
+      <img src="${s.url||genManjuPic('镜头'+s.num,s.desc)}" alt="镜头 ${s.num}" onerror="this.style.display='none'">
+      <div class="cap"><b>镜头 ${s.num}</b></div>
+    </div>
+  `).join('');
+}
+function updateSceneCell(idx, errMsg){
+  const container=document.getElementById('out-scenes');
+  const cell=container.children[idx]; if(!cell) return;
+  const s=pipelineScenes[idx];
+  cell.querySelector('img').src=s.url||genManjuPic('镜头'+s.num, s.desc);
+  let cap=cell.querySelector('.cap');
+  if(!cap){ cap=document.createElement('div'); cap.className='cap'; cell.appendChild(cap); }
+  cap.innerHTML=errMsg?`<b>镜头 ${s.num}</b> · <span style="color:var(--error)">${esc(errMsg)}</span>`:`<b>镜头 ${s.num}</b>`;
+}
+
 /* ============ 参考图确认暂停（2 分钟超时） ============ */
 function startRefConfirm(resolve){
   refConfirmResolver=resolve;
@@ -885,7 +966,7 @@ function confirmRefContinue(auto=false){
   if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
   const pause=document.getElementById('refPause'); pause.classList.remove('active');
   const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=true;
-  if(!auto) toast('已确认，继续生成视频');
+  if(!auto) toast('已确认，继续生成分镜场景图');
   const res=refConfirmResolver; refConfirmResolver=null;
   if(stepResolve){ stepResolve=null; currentStep=null; }
   res('continue');
@@ -971,7 +1052,7 @@ function doUploadRef(){
 let videoFailed=false;
 let videoErrorMsg='';
 
-async function generateVideos(storyboard, refs, f){
+async function generateVideos(storyboard, scenes, refs, f){
   const mc=getMediaCfg();
   const vEl=document.getElementById('out-video');
   const vHint=document.getElementById('vidHint');
@@ -982,22 +1063,21 @@ async function generateVideos(storyboard, refs, f){
     if(vHint) vHint.textContent='未配置视频接口';
     return;
   }
-  if(vIntro) vIntro.textContent='正在真实生成视频…';
+  if(vIntro) vIntro.textContent='正在真实生成视频（基于分镜场景图）…';
   const shots=parseStoryboard(storyboard);
-  if(!shots.length) shots.push({num:1,desc:`漫剧短片：${f.title}。${f.premise}`});
+  if(!shots.length) shots.push({num:1, scene:null, desc:`漫剧短片：${f.title}。${f.premise}`});
 
   const useImg = mc.vidMode === 'img2vid';
-  const mainCharRef=refs.find(r=>r.type==='角色')||refs[0];
-  const mainSceneRef=refs.find(r=>r.type==='场景')||refs[1];
   let successCount=0;
 
   for(let i=0;i<shots.length;i++){
     const shot=shots[i];
+    const scene=scenes.find(s=>s.num===shot.num) || scenes[i] || scenes[0];
     const matchedRefs=matchRefsForShot(shot, refs);
-    const primaryRef=matchedRefs[0]||mainCharRef||mainSceneRef;
-    const prompt=`${f.title} - 镜头${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。`;
+    const charRef=matchedRefs.find(r=>r.type==='角色')||refs.find(r=>r.type==='角色');
+    const prompt=`${f.title} - 镜头${shot.num}：${shot.desc}。风格：${f.style}，类型：${f.genre}。` + (charRef?` 主角：${charRef.name}。`:'');
     try{
-      const imageUrl = useImg && primaryRef ? primaryRef.url : '';
+      const imageUrl = useImg && scene && scene.url && scene.url.startsWith('http') ? scene.url : '';
       const u=await genVideo(prompt, mc, imageUrl);
       if(u){
         successCount++;
@@ -1025,8 +1105,14 @@ function parseStoryboard(storyboard){
   const lines=(storyboard||'').split('\n');
   const shots=[];
   lines.forEach(line=>{
-    const m=line.match(/镜头\s*(\d+)[（(]?[^）)]*[）)]?\s*[·|\.\-:]\s*(.+)/);
-    if(m) shots.push({num:+m[1], desc:m[2].trim()});
+    const m=line.match(/镜头\s*(\d+)/);
+    if(m){
+      const num=+m[1];
+      const sm=line.match(/场景\s*(\d+)/);
+      const scene=sm?+sm[1]:null;
+      const descPart=line.replace(/^.*?[·.\-:：]\s*/, '');
+      shots.push({num, scene, desc:descPart.trim()});
+    }
   });
   return shots;
 }
@@ -1046,6 +1132,7 @@ function resetPipeline(){
   running=false;
   outputs={story:'',script:'',storyboard:''};
   pipelineRefs=[];
+  pipelineScenes=[];
   videoFailed=false; videoErrorMsg='';
   if(stepResolve){ stepResolve=null; currentStep=null; }
   if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
@@ -1061,6 +1148,7 @@ function resetPipeline(){
   document.getElementById('out-script').textContent='（等待故事梗概确认…）';
   document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
   document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
+  document.getElementById('out-scenes').innerHTML='<div class="note">（等待三视图参考图确认…）</div>';
   const v=document.getElementById('out-video'); v.src='#';
   document.getElementById('vidHint').textContent='（等待参考图确认…）';
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
@@ -1081,6 +1169,9 @@ function loadDemo(){
   const picGrid=document.getElementById('out-pics');
   renderRefGrid(picGrid);
   pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
+  pipelineScenes=parseStoryboard(DEMO.storyboard).map(s=>({num:s.num, scene:s.scene, desc:s.desc, prompt:'', url:'', originalUrl:'', inputImage:''}));
+  renderScenesGrid(document.getElementById('out-scenes'));
+  pipelineScenes.forEach((s,idx)=>{ s.url=genManjuPic('镜头'+s.num, s.desc); s.originalUrl=s.url; updateSceneCell(idx); });
   hideAllStepActions();
   toast('已加载演示示例（与当前创作参数无关）');
   result.scrollIntoView({behavior:'smooth'});
