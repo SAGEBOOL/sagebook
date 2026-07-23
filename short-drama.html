@@ -193,7 +193,13 @@
         </div>
         <div class="grid2">
             <div class="field"><label>图像模型名（可选）</label><input id="img_model" placeholder="dall-e-3"></div>
-            <div class="field"><label>图像尺寸（可选，如 1024x1024）</label><input id="img_size" placeholder="1024x1024"></div>
+            <div class="field"><label>图像尺寸</label><select id="img_size">
+                <option value="1024x1024">1:1（1024×1024）</option>
+                <option value="1024x576">16:9（1024×576）</option>
+                <option value="576x1024">9:16（576×1024）</option>
+                <option value="682x1024">2:3（682×1024）</option>
+                <option value="1024x768">4:3（1024×768）</option>
+            </select></div>
         </div>
         <div class="grid2">
             <div class="field"><label>图像生成模式</label><select id="img_mode"><option value="txt2img">文生图</option><option value="img2img">图生图（使用上传参考图）</option></select></div>
@@ -495,9 +501,16 @@ function waitStepConfirm(name){
       startRefConfirm(resolve);
     } else {
       const a=document.getElementById('actions-'+name); if(a){ a.style.display='flex'; }
+      if(name==='video') updateVideoActionButtons();
       showPhase(name);
     }
   });
+}
+function updateVideoActionButtons(){
+  const confirmBtn=document.querySelector('#actions-video .btn-primary');
+  const retryBtn=document.querySelector('#actions-video .btn-ghost');
+  if(confirmBtn) confirmBtn.textContent=videoFailed?'⏭ 跳过并完成':'✅ 确认并完成';
+  if(retryBtn) retryBtn.textContent='🔄 重新生成视频';
 }
 function confirmStep(name){
   if(currentStep!==name || !stepResolve) return;
@@ -943,11 +956,15 @@ function doUploadRef(){
 }
 
 /* ============ 视频生成（使用参考图保持一致性） ============ */
+let videoFailed=false;
+let videoErrorMsg='';
+
 async function generateVideos(storyboard, refs, f){
   const mc=getMediaCfg();
   const vEl=document.getElementById('out-video');
   const vHint=document.getElementById('vidHint');
   const vIntro=document.getElementById('vidIntro');
+  videoFailed=false; videoErrorMsg='';
   if(!mc.vidUrl){
     if(vIntro) vIntro.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
     if(vHint) vHint.textContent='未配置视频接口';
@@ -960,6 +977,7 @@ async function generateVideos(storyboard, refs, f){
   const useImg = mc.vidMode === 'img2vid';
   const mainCharRef=refs.find(r=>r.type==='角色')||refs[0];
   const mainSceneRef=refs.find(r=>r.type==='场景')||refs[1];
+  let successCount=0;
 
   for(let i=0;i<shots.length;i++){
     const shot=shots[i];
@@ -969,10 +987,25 @@ async function generateVideos(storyboard, refs, f){
     try{
       const imageUrl = useImg && primaryRef ? primaryRef.url : '';
       const u=await genVideo(prompt, mc, imageUrl);
-      if(u && i===0){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
-      else if(vHint) vHint.textContent=`✅ 已生成 ${i+1}/${shots.length} 段视频`;
-    }catch(e){ if(vHint) vHint.textContent='⚠️ 视频生成失败：'+e.message.slice(0,40); }
+      if(u){
+        successCount++;
+        if(successCount===1){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
+        else if(vHint) vHint.textContent=`✅ 已生成 ${successCount}/${shots.length} 段视频`;
+      } else {
+        throw new Error('接口未返回视频 URL');
+      }
+    }catch(e){
+      videoFailed=true; videoErrorMsg=e.message;
+      if(vHint) vHint.innerHTML=`⚠️ 视频生成失败：${e.message.slice(0,120)}<br><small>点击下方「🔄 重新生成视频」可再次尝试</small>`;
+    }
     await sleep(300);
+  }
+
+  if(videoFailed && successCount===0){
+    if(vIntro) vIntro.textContent='视频生成失败，可点击重新生成再次尝试';
+    const acts=document.getElementById('actions-video'); if(acts) acts.style.display='flex';
+  } else if(successCount>0 && videoFailed){
+    if(vHint) vHint.innerHTML=`⚠️ 部分视频生成失败（成功 ${successCount}/${shots.length}）：${videoErrorMsg.slice(0,80)}<br><small>点击下方「🔄 重新生成视频」可补全剩余镜头</small>`;
   }
 }
 
@@ -1001,6 +1034,7 @@ function resetPipeline(){
   running=false;
   outputs={story:'',script:'',storyboard:''};
   pipelineRefs=[];
+  videoFailed=false; videoErrorMsg='';
   if(stepResolve){ stepResolve=null; currentStep=null; }
   if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
   refConfirmResolver=null;
@@ -1044,7 +1078,20 @@ function loadDemo(){
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
-  MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); const v=localStorage.getItem(id); if(el&&v!=null) el.value=v; });
+  MEDIA_KEYS.forEach(id=>{
+    const el=document.getElementById(id); const v=localStorage.getItem(id);
+    if(!el||v==null) return;
+    if(el.tagName==='SELECT'){
+      const hasOption=Array.from(el.options).some(o=>o.value===v);
+      if(!hasOption){
+        const custom=document.createElement('option'); custom.value=v; custom.textContent=`自定义（${v}）`; custom.selected=true; el.appendChild(custom);
+      } else {
+        el.value=v;
+      }
+    } else {
+      el.value=v;
+    }
+  });
 }
 function saveMediaCfg(){
   const iu=document.getElementById('img_url').value.trim();
