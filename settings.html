@@ -503,6 +503,7 @@
 
                 <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">API Key</label>
                 <input type="password" class="input-box" id="apiKey" placeholder="sk-..." style="margin-top: 4px;">
+                <span id="apiKeyStatus" style="font-size:12px;margin-left:8px;color:var(--text-secondary)"></span>
 
                 <div style="display: flex; gap: 10px; margin-top: 15px;">
                     <button class="btn btn-secondary" id="cloudTestBtn" onclick="testConnection()">🔍 测试连接</button>
@@ -879,8 +880,10 @@
             const baseUrl = document.getElementById('cloudBaseUrl').value.trim();
             const model = document.getElementById('cloudModel').value.trim();
             const apiKey = document.getElementById('apiKey').value;
+            const savedKey = localStorage.getItem('cloudApiKey');
 
-            if (!apiKey) {
+            // 隐私设计：API Key 输入框不回显明文。若本次未填写但本地已存有 Key，则保留原 Key，无需重复输入。
+            if (!apiKey && !savedKey) {
                 showToast('⚠️ 请先填写 API Key');
                 return;
             }
@@ -889,10 +892,19 @@
             if (baseUrl) localStorage.setItem('cloudBaseUrl', baseUrl);
             else localStorage.removeItem('cloudBaseUrl');
             localStorage.setItem('cloudModel', model || 'gpt-4o');
-            localStorage.setItem('cloudApiKey', apiKey);
+            if (apiKey) localStorage.setItem('cloudApiKey', apiKey); // 仅在用户填写时才覆盖旧 Key
             localStorage.removeItem('customEndpoint');
 
-            showToast('✅ 云端模型设置已保存！');
+            updateApiKeyStatus();
+            showToast(apiKey ? '✅ 云端模型设置已保存！' : '✅ 已保存（API Key 沿用之前配置）');
+        }
+
+        // 显示 API Key 是否已配置（隐私：不回显明文，只显示状态）
+        function updateApiKeyStatus(){
+            const el = document.getElementById('apiKeyStatus'); if(!el) return;
+            const saved = localStorage.getItem('cloudApiKey');
+            if(saved){ el.textContent='✅ 已配置（留空则保留原 Key）'; el.style.color='var(--success,#2f8f5b)'; }
+            else { el.textContent='未配置'; el.style.color='var(--text-secondary,#7a776f)'; }
         }
 
         // 格式化文件大小
@@ -1336,6 +1348,7 @@
                     const cb = document.getElementById('cloudBaseUrl');
                     if (cb) cb.value = cloudBaseUrl;
                 }
+                if (typeof updateApiKeyStatus === 'function') updateApiKeyStatus();
                 const modelStrategy = localStorage.getItem('modelStrategy');
                 if (modelStrategy) {
                     const ms = document.getElementById('modelStrategy');
