@@ -204,6 +204,36 @@
         </div>
     </div>
 
+    <!-- 文本 AI 模型配置 -->
+    <details class="card" id="textAICard">
+        <summary class="card-title" style="cursor:pointer;list-style:none">🧠 文本 AI 模型配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">必填 · 用于 ①②③ 文本阶段</span></summary>
+        <div class="note">配置云端大模型（OpenAI 兼容）或本地 Ollama，用于生成故事梗概、剧本、分镜。与「设置」页共用同一套 localStorage 键，配置仅保存在本机浏览器。</div>
+        <div class="field" style="max-width:260px">
+            <label>模式</label>
+            <select id="ai_mode" onchange="onAIModeChange()">
+                <option value="cloud">☁️ 云端大模型</option>
+                <option value="ollama">🖥️ 本地 Ollama</option>
+            </select>
+        </div>
+        <div id="cloudCfg">
+            <div class="grid2">
+                <div class="field"><label>API 地址（Base URL）</label><input id="ai_cloudBaseUrl" placeholder="https://api.openai.com/v1"></div>
+                <div class="field"><label>模型名</label><input id="ai_cloudModel" placeholder="gpt-4o"></div>
+            </div>
+            <div class="field"><label>API Key</label><input id="ai_cloudApiKey" type="password" placeholder="sk-..."></div>
+        </div>
+        <div id="ollamaCfg" style="display:none">
+            <div class="grid2">
+                <div class="field"><label>Ollama 地址</label><input id="ai_ollamaEndpoint" placeholder="http://localhost:11434"></div>
+                <div class="field"><label>模型名</label><input id="ai_localModel" placeholder="qwen2.5:14b"></div>
+            </div>
+        </div>
+        <div class="row">
+            <button class="btn btn-sm btn-primary" onclick="saveTextAIConfig()">💾 保存文本 AI 配置</button>
+            <span id="textAICfgHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+        </div>
+    </details>
+
     <!-- 媒体 AI 接口配置（用户自行填写） -->
     <details class="card" id="mediaCfgCard">
         <summary class="card-title" style="cursor:pointer;list-style:none">🔌 AI 图像 / 视频接口配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">可选 · 留空则图片/视频为本地占位</span></summary>
@@ -1364,6 +1394,55 @@ function loadDemo(){
 const DEFAULT_IMG_STYLE='人物角色五官清晰、写实古风、国风、史诗级电影质感、专业级运镜';
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
+function fillTextAIInputs(){
+  const mode = localStorage.getItem('useLocalAI')==='true' ? 'ollama' : 'cloud';
+  const modeEl = document.getElementById('ai_mode');
+  if(modeEl) modeEl.value = mode;
+  const cloudBaseUrl = localStorage.getItem('cloudBaseUrl') || '';
+  const cloudModel = localStorage.getItem('cloudModel') || '';
+  const cloudApiKey = localStorage.getItem('cloudApiKey') || '';
+  const ollamaEndpoint = localStorage.getItem('ollamaEndpoint') || '';
+  const localModel = localStorage.getItem('localModel') || '';
+  const cBase=document.getElementById('ai_cloudBaseUrl'); if(cBase) cBase.value = cloudBaseUrl;
+  const cModel=document.getElementById('ai_cloudModel'); if(cModel) cModel.value = cloudModel;
+  const cKey=document.getElementById('ai_cloudApiKey'); if(cKey) cKey.value = cloudApiKey;
+  const oEp=document.getElementById('ai_ollamaEndpoint'); if(oEp) oEp.value = ollamaEndpoint;
+  const oModel=document.getElementById('ai_localModel'); if(oModel) oModel.value = localModel;
+  onAIModeChange();
+}
+function onAIModeChange(){
+  const mode = document.getElementById('ai_mode')?.value || 'cloud';
+  const cloudCfg = document.getElementById('cloudCfg');
+  const ollamaCfg = document.getElementById('ollamaCfg');
+  if(cloudCfg) cloudCfg.style.display = mode==='cloud' ? 'block' : 'none';
+  if(ollamaCfg) ollamaCfg.style.display = mode==='ollama' ? 'block' : 'none';
+}
+function saveTextAIConfig(){
+  const modeEl = document.getElementById('ai_mode');
+  const mode = modeEl ? modeEl.value : 'cloud';
+  localStorage.setItem('useLocalAI', mode==='ollama' ? 'true' : 'false');
+  if(mode==='cloud'){
+    const baseUrlEl = document.getElementById('ai_cloudBaseUrl');
+    const modelEl = document.getElementById('ai_cloudModel');
+    const keyEl = document.getElementById('ai_cloudApiKey');
+    localStorage.setItem('cloudBaseUrl', (baseUrlEl?baseUrlEl.value.trim():'') || 'https://api.openai.com/v1');
+    localStorage.setItem('cloudModel', (modelEl?modelEl.value.trim():'') || 'gpt-4o');
+    const key = keyEl ? keyEl.value.trim() : '';
+    if(key) localStorage.setItem('cloudApiKey', key);
+  } else {
+    const epEl = document.getElementById('ai_ollamaEndpoint');
+    const modelEl = document.getElementById('ai_localModel');
+    localStorage.setItem('ollamaEndpoint', (epEl?epEl.value.trim():'') || 'http://localhost:11434');
+    localStorage.setItem('localModel', (modelEl?modelEl.value.trim():'') || 'qwen2.5:14b');
+  }
+  const h = document.getElementById('textAICfgHint');
+  if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓，状态条已更新'; setTimeout(()=>h.textContent='',2500); }
+  updateModePill();
+  // 触发 storage 事件让同一窗口内其它监听也能同步（同页配置时 storage 事件不会自动触发）
+  window.dispatchEvent(new StorageEvent('storage', { key: 'useLocalAI' }));
+  window.dispatchEvent(new StorageEvent('storage', { key: 'cloudApiKey' }));
+}
+
 function fillMediaInputs(){
   MEDIA_KEYS.forEach(id=>{
     const el=document.getElementById(id); const v=localStorage.getItem(id);
@@ -1604,6 +1683,7 @@ function showAIConfigDiag(){
 (function(){
   // 首次访问时把默认风格约束写入 localStorage（仅当从未设置过，用户主动清空后仍为空）
   if(localStorage.getItem('img_style')==null) localStorage.setItem('img_style', DEFAULT_IMG_STYLE);
+  fillTextAIInputs();
   fillMediaInputs();
   updateModePill();
 
