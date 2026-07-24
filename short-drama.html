@@ -818,7 +818,7 @@ async function extractElements(storyboard, f, imported){
 - behavior：行为细节
 - emotion：情绪作用（如天真、热闹、温暖、紧张、害怕）
 - scenes：出现场景（简单说明通常出现在哪些场景）
-- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点；必须包含关键词：full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting。
+- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点。必须基于上面的 identity、age、appearance、clothing、personality、behavior 等设定写出具体描述（如 40-50 years old male, stern face, cunning eyes, tall sturdy build, luxurious dark robes 等），不能只写通用模板。必须包含关键词：full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting。
 
 输出为 JSON 数组，不要额外解释：
 [{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","prompt":"英文角色绘图提示词"},...]`;
@@ -851,20 +851,39 @@ function safeParseJSON(s){
 }
 function hasCJK(s){ return /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(s||''); }
 async function ensureEnglishPrompts(elements, f){
+  const required=['full body','solo','character only','plain white background','no props','no background','no text','no letters','no watermark','no signature','cinematic nostalgic animated style','soft lighting'];
   const out=[];
   for(const el of elements){
     let prompt=(el.prompt||'').trim();
-    if(!prompt || hasCJK(prompt)){
-      try{
-        const sys=`You are a character designer and Stable Diffusion prompt engineer. Rewrite the following into a pure English, tag-style character drawing prompt. Output only the final prompt, no explanation, no Chinese characters. The image must show the character ONLY: solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature. Must include: full body, cinematic nostalgic animated style, soft lighting.`;
-        const user=`Character name: ${el.name}\nIdentity: ${el.identity||''}\nAge: ${el.age||''}\nAppearance: ${el.appearance||''}\nClothing: ${el.clothing||''}\nOriginal prompt: ${prompt || '(empty)'}`;
-        prompt=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-        prompt=(prompt||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
-      }catch(e){ prompt=''; }
-      if(!prompt){
-        prompt=`full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting, ${el.name||'character'}, ${el.appearance||''}`;
-      }
+    // 总是基于完整角色设定重新生成/校验，确保年龄、外貌、穿着、性格、行为都被翻译进 prompt
+    try{
+      const sys=`You are a character designer and Stable Diffusion prompt engineer. Based on the character profile below, write a pure English, tag-style character drawing prompt.
+Rules:
+- MUST reflect the character's specific age, appearance, clothing, personality and behavior. Do NOT use generic placeholders or omit these details.
+- The character must be the ONLY subject: solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature.
+- Must include: full body, cinematic nostalgic animated style, soft lighting.
+- Output ONLY the final prompt, no explanation, no Chinese characters.`;
+      const user=`Character name: ${el.name}
+Identity: ${el.identity||''}
+Age: ${el.age||''}
+Appearance: ${el.appearance||''}
+Clothing: ${el.clothing||''}
+Personality: ${el.personality||''}
+Behavior: ${el.behavior||''}
+Emotion: ${el.emotion||''}
+Scenes: ${el.scenes||''}
+Original prompt: ${prompt || '(empty)'}`;
+      const rewritten=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
+      const cleaned=(rewritten||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
+      if(cleaned) prompt=cleaned;
+    }catch(e){ /* 保留原 prompt 继续兜底 */ }
+    // 兜底：把中文设定直接拼在后面（至少保留信息，图像模型可能部分理解）
+    if(!prompt){
+      prompt=`${el.name||'character'}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
     }
+    // 强制追加缺失的画面约束关键词
+    const lower=prompt.toLowerCase();
+    for(const kw of required){ if(!lower.includes(kw.toLowerCase())) prompt+=', '+kw; }
     out.push({...el, prompt});
   }
   return out;
@@ -875,10 +894,16 @@ function fallbackExtract(storyboard, f){
 }
 
 function buildImagePrompt(el){
-  const base=(el.prompt||'').trim();
-  if(base) return base;
-  if(el.type==='角色') return `full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting, character design`;
-  return `prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K`;
+  const required=['full body','solo','character only','plain white background','no props','no background','no text','no letters','no watermark','no signature','cinematic nostalgic animated style','soft lighting'];
+  let base=(el.prompt||'').trim();
+  // 兜底：即使 el.prompt 为空，也要把角色设定带进去，避免生成通用角色
+  if(!base && el.type==='角色'){
+    base=`${el.name||'character'}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
+  }
+  if(!base) base='character design';
+  const lower=base.toLowerCase();
+  for(const kw of required){ if(!lower.includes(kw.toLowerCase())) base+=', '+kw; }
+  return base;
 }
 
 async function generateReferenceImages(elements, importedImages){
