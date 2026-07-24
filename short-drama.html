@@ -1048,13 +1048,16 @@ function renderScenesGrid(container){
     <div class="pic-cell" data-idx="${idx}">
       <span class="ref-type">镜头 ${s.num}</span>
       <img src="${s.url||genManjuPic('镜头'+s.num,s.desc)}" alt="镜头 ${s.num}" onerror="this.style.display='none'">
-      <div class="cap"><b>镜头 ${s.num}</b></div>
+      <div class="cap"><b>镜头 ${s.num}</b>${s.desc?` · <span>${esc((s.desc||'').slice(0,18))}${(s.desc||'').length>18?'…':''}</span>`:''}</div>
       <details class="ref-detail">
         <summary>英文提示词</summary>
         <div class="ref-detail-body">
           ${s.prompt?`<div class="ref-prompt">${esc(s.prompt)}</div>`:'<div class="ref-prompt">（生成中…）</div>'}
         </div>
       </details>
+      <div class="ref-actions">
+        <button class="btn btn-sm" onclick="openReplaceModal(${idx},'scene')">替换</button>
+      </div>
     </div>
   `).join('');
 }
@@ -1120,14 +1123,25 @@ function refDetailHTML(r){
   if(r.scenes) rows.push(`<div><b>出现场景：</b>${esc(r.scenes)}</div>`);
   return rows.join('');
 }
-function openReplaceModal(idx){
+let replaceKind='ref';
+function openReplaceModal(idx, kind){
+  replaceKind=kind||'ref';
   replaceIdx=idx;
-  const r=pipelineRefs[idx]; if(!r) return;
-  document.getElementById('replaceTitle').textContent='替换参考图：'+r.name+'（'+r.type+'）';
-  document.getElementById('replaceName').value=r.name;
-  document.getElementById('replaceDetail').innerHTML=refDetailHTML(r);
-  document.getElementById('replacePrompt').value=r.prompt||'';
-  document.getElementById('replacePreviewRegen').src=r.url||'';
+  if(replaceKind==='scene'){
+    const s=pipelineScenes[idx]; if(!s) return;
+    document.getElementById('replaceTitle').textContent='替换分镜场景图：镜头 '+s.num;
+    document.getElementById('replaceName').value='镜头 '+s.num;
+    document.getElementById('replaceDetail').innerHTML=`<div><b>分镜描述：</b>${esc(s.desc||'')}</div>`;
+    document.getElementById('replacePrompt').value=s.prompt||'';
+    document.getElementById('replacePreviewRegen').src=s.url||'';
+  } else {
+    const r=pipelineRefs[idx]; if(!r) return;
+    document.getElementById('replaceTitle').textContent='替换参考图：'+r.name+'（'+r.type+'）';
+    document.getElementById('replaceName').value=r.name;
+    document.getElementById('replaceDetail').innerHTML=refDetailHTML(r);
+    document.getElementById('replacePrompt').value=r.prompt||'';
+    document.getElementById('replacePreviewRegen').src=r.url||'';
+  }
   document.getElementById('replaceFile').value='';
   document.getElementById('replacePreviewUpload').style.display='none';
   document.getElementById('replacePreviewUpload').src='';
@@ -1142,25 +1156,28 @@ function switchReplaceTab(tab){
 }
 async function doRegenerateRef(){
   if(replaceIdx<0) return;
-  const r=pipelineRefs[replaceIdx];
-  r.prompt=document.getElementById('replacePrompt').value.trim();
+  const isScene = replaceKind==='scene';
+  const el = isScene ? pipelineScenes[replaceIdx] : pipelineRefs[replaceIdx];
+  if(!el) return;
+  el.prompt=document.getElementById('replacePrompt').value.trim();
   const btn=document.getElementById('replaceRegenBtn'); btn.disabled=true; btn.textContent='生成中…';
   const mc=getMediaCfg();
   try{
-    if(!mc.imgUrl){ await sleep(800); r.url=genManjuPic(r.name, r.prompt); }
+    if(!mc.imgUrl){ await sleep(800); el.url=genManjuPic(isScene?('镜头'+el.num):el.name, el.prompt); }
     else {
-      const prompt=buildImagePrompt(r);
+      const prompt=buildImagePrompt(el);
       let inputImage='';
       if(mc.imgMode==='img2img'){
-        inputImage=r.url && (r.url.startsWith('http')||r.url.startsWith('data:')) ? r.url : (r.inputImage||'');
+        inputImage=el.url && (el.url.startsWith('http')||el.url.startsWith('data:')) ? el.url : (el.inputImage||'');
       }
       const u=await genImage(prompt, mc, inputImage);
-      if(u) r.url=u;
+      if(u) el.url=u;
       else throw new Error('未返回图片');
     }
-    renderRefGrid(document.getElementById('out-pics'));
+    if(isScene){ renderScenesGrid(document.getElementById('out-scenes')); }
+    else { renderRefGrid(document.getElementById('out-pics')); }
     closeReplaceModal();
-    toast('参考图已替换：'+r.name);
+    toast(isScene?('场景图已替换：镜头 '+el.num):('参考图已替换：'+el.name));
   }catch(e){ toast('替换失败：'+e.message); }
   finally{ btn.disabled=false; btn.textContent='🔄 重新生成'; }
 }
@@ -1175,14 +1192,18 @@ function previewReplaceFile(input){
 }
 function doUploadRef(){
   if(replaceIdx<0) return;
+  const isScene = replaceKind==='scene';
+  const el = isScene ? pipelineScenes[replaceIdx] : pipelineRefs[replaceIdx];
+  if(!el) return;
   const file=document.getElementById('replaceFile').files[0];
   if(!file){ toast('请先选择图片'); return; }
   const rd=new FileReader();
   rd.onload=()=>{
-    pipelineRefs[replaceIdx].url=rd.result;
-    updateRefCell(replaceIdx);
+    el.url=rd.result;
+    if(isScene){ const c=document.getElementById('out-scenes').children[replaceIdx]; if(c&&c.querySelector('img')) c.querySelector('img').src=rd.result; }
+    else { updateRefCell(replaceIdx); }
     closeReplaceModal();
-    toast('已上传替换：'+pipelineRefs[replaceIdx].name);
+    toast(isScene?('已上传替换：镜头 '+el.num):('已上传替换：'+el.name));
   };
   rd.readAsDataURL(file);
 }
