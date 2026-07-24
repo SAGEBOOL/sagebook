@@ -1358,6 +1358,7 @@ function loadDemo(){
 }
 
 /* ============ 媒体 AI 接口配置（用户自填） ============ */
+const DEFAULT_IMG_STYLE='人物角色五官清晰、写实古风、国风、史诗级电影质感、专业级运镜';
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
 function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
 function fillMediaInputs(){
@@ -1558,6 +1559,8 @@ function updateModePill(){
 
 /* 初始化：提示当前 AI 状态 */
 (function(){
+  // 首次访问时把默认风格约束写入 localStorage（仅当从未设置过，用户主动清空后仍为空）
+  if(localStorage.getItem('img_style')==null) localStorage.setItem('img_style', DEFAULT_IMG_STYLE);
   fillMediaInputs();
   const cfg=getAIConfig();
   const mc=getMediaCfg();
