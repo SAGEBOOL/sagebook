@@ -1545,38 +1545,43 @@ function buildPollUrl(cfg, taskId){
 
 function updateModePill(){
   const cfg=getAIConfig();
-  const mc=getMediaCfg();
+  const mc=getMediaCfg()||{imgUrl:'',vidUrl:''};
   const pill=document.getElementById('modePill');
+  const hint=document.getElementById('aiHint');
+  if(!pill) return;
   const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
   const mediaOn = mc.imgUrl || mc.vidUrl;
   if(aiOn || mediaOn){
     let t='🔑 已配置：'; if(aiOn) t+='文本真实生成'; if(mediaOn) t+=(aiOn?'，':'')+'图/视频真实生成';
     pill.className='mode-pill live'; pill.textContent=t;
   } else {
-    pill.className='mode-pill demo'; pill.textContent='🎭 演示模式（无需 Key，预置示例）';
+    pill.className='mode-pill demo'; pill.textContent='🎭 未配置文本 AI（点击「加载示例」可看效果，或去「设置」配置）';
+  }
+  if(hint){
+    if(aiOn){
+      hint.textContent = '文本阶段由你配置的 AI 真实生成' + (mediaOn?'，图/视频接口已配置':'');
+    } else {
+      hint.textContent='未配置文本 AI 时，「开始生成」会提示配置；可点击「加载示例」查看演示数据。';
+    }
   }
 }
 
-/* 初始化：提示当前 AI 状态 */
+/* 初始化：提示当前 AI 状态，并实时响应配置变化，避免「返回/切换标签页后必须强制刷新」 */
 (function(){
   // 首次访问时把默认风格约束写入 localStorage（仅当从未设置过，用户主动清空后仍为空）
   if(localStorage.getItem('img_style')==null) localStorage.setItem('img_style', DEFAULT_IMG_STYLE);
   fillMediaInputs();
-  const cfg=getAIConfig();
-  const mc=getMediaCfg();
-  const hint=document.getElementById('aiHint');
-  const pill=document.getElementById('modePill');
-  const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
-  const mediaOn = mc.imgUrl || mc.vidUrl;
-  if(aiOn){
-    let t='🔑 已配置：文本真实生成';
-    if(mediaOn) t+='，图/视频真实生成';
-    pill.className='mode-pill live'; pill.textContent=t;
-    hint.textContent = '文本阶段由你配置的 AI 真实生成' + (mediaOn?'，图/视频接口已配置':'');
-  } else {
-    pill.className='mode-pill demo'; pill.textContent='🎭 未配置文本 AI（点击「加载示例」可看效果，或去「设置」配置）';
-    hint.textContent='未配置文本 AI 时，「开始生成」会提示配置；可点击「加载示例」查看演示数据。';
-  }
+  updateModePill();
+
+  // 跨标签页：在「设置」页保存配置后，本页立即刷新状态（storage 事件只在「其他」标签页触发）
+  const AI_KEYS=['useLocalAI','ollamaEndpoint','localModel','cloudBaseUrl','cloudModel','cloudApiKey','img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
+  window.addEventListener('storage', function(e){
+    if(!e.key || AI_KEYS.indexOf(e.key)>=0) updateModePill();
+  });
+  // 切回本标签页（从「设置」配置后切回来）立即刷新
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) updateModePill(); });
+  // 浏览器前进/后退（bfcache 还原）时刷新，无需强制刷新
+  window.addEventListener('pageshow', function(e){ if(e.persisted) updateModePill(); });
 })();
 </script>
 <script src="text-pressure.js"></script>
