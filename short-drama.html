@@ -30,6 +30,8 @@
         .mode-pill { padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border); }
         .mode-pill.demo { background:rgba(212,168,83,.16);color:var(--warning);border-color:rgba(212,168,83,.4); }
         .mode-pill.live { background:rgba(90,171,122,.16);color:var(--success);border-color:rgba(90,171,122,.4); }
+        .diag-btn { padding:4px 8px;border-radius:20px;font-size:12px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
+        .diag-btn:hover { border-color:var(--accent);color:var(--accent); }
 
         /* 按钮 / 通用 */
         .btn { padding:9px 16px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-primary);border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .2s; }
@@ -152,6 +154,7 @@
         <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④角色参考图 ⑤分镜场景图片 ⑥视频</div>
         <div class="mode-bar">
             <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
+            <button class="diag-btn" onclick="showAIConfigDiag()" title="查看当前 AI 配置读取状态">🔍 诊断</button>
         </div>
     </div>
     <div class="theme-switcher">
@@ -1561,9 +1564,40 @@ function updateModePill(){
     if(aiOn){
       hint.textContent = '文本阶段由你配置的 AI 真实生成' + (mediaOn?'，图/视频接口已配置':'');
     } else {
-      hint.textContent='未配置文本 AI 时，「开始生成」会提示配置；可点击「加载示例」查看演示数据。';
+      hint.textContent='当前域名「'+location.hostname+'」未读到文本 AI 配置；点击 🔍 诊断查看详情，或去「设置」配置。';
     }
   }
+}
+
+/* 配置诊断：显示当前页面实际读到的 localStorage，帮助定位「设置页保存了但这里显示未配置」 */
+function showAIConfigDiag(){
+  const cfg=getAIConfig();
+  const mc=getMediaCfg()||{imgUrl:'',vidUrl:''};
+  const mask = (s)=> s ? (s.slice(0,4)+'***'+s.slice(-4)) : '(空)';
+  const lines=[
+    '【AI 配置诊断】',
+    '当前域名：'+location.hostname,
+    '当前协议：'+location.protocol,
+    '',
+    '文本 AI：',
+    '  mode: '+cfg.mode,
+    '  useLocalAI: '+localStorage.getItem('useLocalAI'),
+    '  cloudApiKey: '+(cfg.cloudApiKey?'已设置 ('+mask(cfg.cloudApiKey)+')':'未设置'),
+    '  cloudModel: '+(cfg.cloudModel||'(空)'),
+    '  cloudBaseUrl: '+(cfg.cloudBaseUrl||'(空)'),
+    '  ollamaEndpoint: '+(cfg.ollamaUrl||'(空)'),
+    '  localModel: '+(cfg.ollamaModel||'(空)'),
+    '',
+    '图像/视频接口：',
+    '  imgUrl: '+(mc.imgUrl?'已设置':'未设置'),
+    '  vidUrl: '+(mc.vidUrl?'已设置':'未设置'),
+    '',
+    '常见原因：',
+    '1. 设置页保存时所在域名与当前域名不同，localStorage 不共享。',
+    '2. 只填了 API 地址/模型名，未填写 API Key。',
+    '3. 浏览器隐私模式/清理数据后配置被清空。'
+  ];
+  alert(lines.join('\n'));
 }
 
 /* 初始化：提示当前 AI 状态，并实时响应配置变化，避免「返回/切换标签页后必须强制刷新」 */
