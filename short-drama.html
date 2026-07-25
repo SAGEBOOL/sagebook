@@ -1027,16 +1027,25 @@ function updateRefCell(idx, errMsg){
 /* ============ 分镜场景图片（三视图确认后生成） ============ */
 function buildScenePrompt(shot, refs, f){
   const matched=matchRefsForShot(shot, refs); // 角色参考，用于人物一致性
+  const refParts=matched.map(r=>{
+    const desc=[r.name, r.age, r.appearance, r.clothing, r.personality].filter(Boolean).join(', ');
+    return `${r.name} (${desc}). Same character as reference image: identical face, same age, same hair, same clothing.`;
+  }).join(' ');
   const refText=matched.map(r=>r.name).join(', ');
-  return `cinematic animated still, ${f.style} style, ${f.genre}, shot ${shot.num}: ${shot.desc}. Lived-in environment with life-like details, character action with clear body language and facial expression, key props present, warm nostalgic lighting (soft sunlight / yellow bulb), ${matched.length?'consistent with characters: '+refText:'no character'}, mid-shot, eye-level, emotional cinematic mood, storybook illustration.`;
+  return `cinematic animated still, ${f.style} style, ${f.genre}, shot ${shot.num}: ${shot.desc}. Character consistency: ${refParts || 'no character'}. Lived-in environment with life-like details, character action with clear body language and facial expression, key props present, warm nostalgic lighting (soft sunlight / yellow bulb), ${matched.length?'consistent with characters: '+refText:'no character'}, mid-shot, eye-level, emotional cinematic mood, storybook illustration.`;
 }
 async function generateScenePromptAI(shot, refs, f){
   const matched=matchRefsForShot(shot, refs);
-  const refText=matched.map(r=>r.name+'：'+r.prompt).join('；');
+  const refText=matched.map(r=>{
+    const detail=[r.age, r.appearance, r.clothing, r.personality, r.behavior].filter(Boolean).join(', ');
+    return `${r.name} -> ${r.prompt} (details: ${detail}). CRITICAL: this exact character must appear with identical face, same age, same hair, same clothing as the reference image.`;
+  }).join('\n');
   const sys=`You are a professional storyboard-to-image prompt writer for cinematic animated shorts. Convert the given storyboard shot into a SINGLE English image prompt that captures "one image = one complete story moment" — a viewer should understand the place, what happens, and why the character acts this way WITHOUT any text or narration.
-Each prompt MUST include: location/setting, time of day, environmental details, character action, facial expression and body language, key objects/props, lighting (specify clearly, e.g. sunlight, yellow bulb, tube light), camera angle (close-up / mid-shot / wide shot, add eye-level or over-the-shoulder when relevant), and overall mood. The environment must feel lived-in and cinematic; lighting should convey a warm, nostalgic atmosphere. Keep a consistent visual style across all shots.
-Output ONLY the English prompt, no explanation, no Chinese characters.`;
-  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description (Chinese, for reference): ${shot.desc}\nCharacter/prop reference prompts for consistency:\n${refText}`;
+Rules:
+1. Each prompt MUST include: location/setting, time of day, environmental details, character action, facial expression and body language, key objects/props, lighting (specify clearly, e.g. sunlight, yellow bulb, tube light), camera angle (close-up / mid-shot / wide shot, add eye-level or over-the-shoulder when relevant), and overall mood. The environment must feel lived-in and cinematic; lighting should convey a warm, nostalgic atmosphere. Keep a consistent visual style across all shots.
+2. CHARACTER CONSISTENCY IS MANDATORY: For EVERY character that appears in the shot, copy the character's specific age, appearance, clothing, hair style/color, and key visual features from the reference prompts into the scene prompt. Explicitly state "identical face, same age, same hair, same clothing as reference image, do not alter the character design". Do NOT change hair color, age, or clothing style between shots.
+3. Output ONLY the English prompt, no explanation, no Chinese characters.`;
+  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description (Chinese, for reference): ${shot.desc}\n\nCharacter/prop reference prompts for consistency (MUST preserve these exact visual traits in the scene):\n${refText}`;
   const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
   return (text||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim() || buildScenePrompt(shot, refs, f);
 }
@@ -1069,8 +1078,15 @@ async function generateSceneImages(storyboard, refs, f, useAI){
     const s=pipelineScenes[idx];
     updateSceneCell(idx, '生成中…');
     try{
-      const u=await genImage(s.prompt, mc, '');
-      if(u){ s.url=u; s.originalUrl=u; }
+      // 把场景涉及的主要角色参考图作为图生图参考图传入（若接口支持 {{image_url}} 模板则生效）
+      const matched=matchRefsForShot(s, refs);
+      const primaryCharacter=matched.find(r=>r.type==='角色') || refs.find(r=>r.type==='角色');
+      let refImageUrl='';
+      if(primaryCharacter && primaryCharacter.url && /^https?:\/\//i.test(primaryCharacter.url)){
+        refImageUrl=primaryCharacter.url;
+      }
+      const u=await genImage(s.prompt, mc, refImageUrl);
+      if(u){ s.url=u; s.originalUrl=u; s.inputImage=refImageUrl; }
       updateSceneCell(idx, u?null:'生成失败（未返回 URL）');
     }catch(e){ updateSceneCell(idx, '生成失败：'+e.message.slice(0,30)); }
     await sleep(200);
