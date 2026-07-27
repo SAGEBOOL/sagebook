@@ -362,6 +362,10 @@
                 <source src="#" type="video/mp4">
             </video>
             <p class="hint" id="vidHint" style="margin-top:8px">（等待分镜场景图片确认…）</p>
+            <div class="pic-grid" id="out-video-gallery" style="margin-top:12px"></div>
+            <div class="phase-actions" style="margin-top:10px">
+                <button class="btn btn-ghost" id="videoPlaylistBtn" onclick="playVideoPlaylist()">▶ 连续播放全部镜头</button>
+            </div>
             <div class="phase-actions" id="actions-video" style="display:none">
                 <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
                 <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
@@ -838,42 +842,33 @@ async function generateStoryboard(script, f){
 }
 
 async function extractElements(storyboard, f, imported){
-  const sys=`你扮演一位擅长角色设计师和 AI 绘图提示词专家。
-请根据下面提供的【分镜脚本】内容，提炼出反复出现的主要角色。所有角色都要符合分镜感觉，并且适合后续反复出现在分镜图片（动画）场景中。
-【画面约束】每个角色参考图必须只出现角色本人：不要背景、不要道具、不要任何文字/字母/签名/水印。每个角色的外貌（发型、服饰颜色、体型、配色）要有明显区分，但所有角色的整体画风、色调、线条质感必须统一，形成同一部作品的角色群像。
-为每个角色输出以下字段：
-- name：角色名字
-- identity：故事身份
-- age：年龄
-- appearance：外貌特征
-- clothing：穿着风格
-- personality：性格特点（2–4 个真实自然的性格特征）
-- behavior：行为细节
-- emotion：情绪作用（如天真、热闹、温暖、紧张、害怕）
-- scenes：出现场景（简单说明通常出现在哪些场景）
-- prompt：一段英文角色绘图提示词，必须是 pure English tag-style，禁止出现任何中文字符或中文标点。必须基于上面的 identity、age、appearance、clothing、personality、behavior 等设定写出具体描述（如 40-50 years old male, stern face, cunning eyes, tall sturdy build, luxurious dark robes 等），不能只写通用模板。必须包含关键词：full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting。
-
-输出为 JSON 数组，不要额外解释：
-[{"name":"角色名字","identity":"故事身份","age":"年龄","appearance":"外貌特征","clothing":"穿着风格","personality":"性格特点","behavior":"行为细节","emotion":"情绪作用","scenes":"出现场景","prompt":"英文角色绘图提示词"},...]`;
+  const sys=agnesAssetsSystemPrompt();
+  let user='【剧本与分镜】\n'+storyboard;
+  if(imported && imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
   let text;
   try{
-    let user='【分镜脚本】\n'+storyboard;
-    if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
     text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
   }catch(e){ throw e; }
-  let arr=safeParseJSON(text);
-  if(Array.isArray(arr)&&arr.length){
-    arr=arr.filter(el=>el&&el.name).map(el=>({
-      id:uid(), type:'角色',
-      name: el.name||'', identity: el.identity||'', age: el.age||'',
-      appearance: el.appearance||'', clothing: el.clothing||'',
-      personality: el.personality||'', behavior: el.behavior||'',
-      emotion: el.emotion||'', scenes: el.scenes||'',
-      prompt: el.prompt||''
-    }));
-    return await ensureEnglishPrompts(arr, f);
-  }
-  return fallbackExtract(storyboard, f);
+  let data;
+  try{
+    const m=(text||'').match(/\{[\s\S]*\}/);
+    data=m?JSON.parse(m[0]):JSON.parse(text);
+  }catch(e){ return fallbackExtract(storyboard, f); }
+  const assets=[];
+  const pushCat=(cat, type, arr)=>{
+    (arr||[]).forEach(it=>{
+      const name=(it&&it.name)||''; const desc=(it&&it.desc)||'';
+      if(!name) return;
+      const a={ id:uid(), category:cat, type, name, desc, identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:'' };
+      a.prompt=buildRefImagePrompt(a);
+      assets.push(a);
+    });
+  };
+  pushCat('characters','角色', data.characters);
+  pushCat('scenes','场景', data.scenes);
+  pushCat('props','道具', data.props);
+  if(!assets.length) return fallbackExtract(storyboard, f);
+  return assets;
 }
 
 function safeParseJSON(s){
@@ -922,20 +917,87 @@ Original prompt: ${prompt || '(empty)'}`;
   return out;
 }
 function fallbackExtract(storyboard, f){
-  if(f && f.pname) return [{id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature, cinematic nostalgic animated style, soft lighting`}];
+  if(f && f.pname){
+    const a={ id:uid(), category:'characters', type:'角色', name:f.pname, identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', desc:f.pname, prompt:'' };
+    a.prompt=buildRefImagePrompt(a);
+    return [a];
+  }
   return [];
 }
 
-function buildImagePrompt(el){
-  const required=['full body','solo','character only','plain white background','no props','no background','no text','no letters','no watermark','no signature','cinematic nostalgic animated style','soft lighting'];
-  let base=(el.prompt||'').trim();
-  // 兜底：即使 el.prompt 为空，也要把角色设定带进去，避免生成通用角色
-  if(!base && el.type==='角色'){
-    base=`${el.name||'character'}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
+/* ============ 内容安全清洗（移植自 Agnes AI Studio） ============ */
+const CONTENT_POLICY_WORDS = [
+  'violence','violent','bloody','blood','gore','murder','kill','killing',
+  'weapon','gun','knife','sword','bomb','explosion','shoot','shooting',
+  'nude','naked','sexual','porn','erotic','drug','alcohol abuse',
+  'torture','suicide','self-harm','racist','discrimination',
+  'wound','wounded','bleeding','corpse','death','dead body',
+  'abuse','assault','battle','war','fight','fighting',
+  '暴力','血腥','杀戮','武器','枪支','色情','毒品',
+  '流血','尸体','撕咬','皮开肉绽','浑身是血','血泊','伤口','鞭打','虐待'
+];
+function sanitizePrompt(prompt){
+  let cleaned=prompt||'';
+  for(const w of CONTENT_POLICY_WORDS){
+    cleaned=cleaned.replace(new RegExp(w,'gi'),' ');
   }
-  if(!base) base='character design';
+  return cleaned.split(/\s+/).filter(Boolean).join(' ');
+}
+
+/* ============ 素材提取 Prompt（移植自 Agnes：角色/场景/道具三类，英文视觉特征） ============ */
+function agnesAssetsSystemPrompt(){
+  return `请严格按照以下要求执行：
+
+1. 首先仔细通读并深度理解输入的全部文本内容；
+
+2. 从文本中精准提取角色、场景、道具三类画面提示词，全程固定纯白色纯色背景，不添加任何背景元素；
+
+3. 【角色提取强制要求】需完整拆解并提取每一位角色的全套细节，包含：
+- 年龄特征（精准标注年龄段/具体年龄、气质年龄感）
+- 外貌特征（五官细节、脸型、肤色、神态、身材体态、面部细节、妆容细节等）
+- 发型细节（发型款式、发色、发长、发饰样式、发饰位置、发丝质感、编发/盘发细节等）
+- 服饰全套细节（服饰形制、款式、颜色、面料材质、纹样图案、配色渐变、配饰、鞋履、穿搭层次、服饰版型细节等）
+
+4. 【场景提取要求】仅提取文本中明确提及的场景核心元素、场景描述词；
+
+5. 【道具提取要求】精准提取文本中出现的所有手持/摆放/随身道具，包含道具样式、材质、颜色、细节特征；
+
+6. 输出格式清晰分类：分「角色画面提示词」「场景画面提示词」「道具画面提示词」三大板块，角色需按单人逐条拆分，细节完整不遗漏、不篡改、不脑补文本外信息，语言为精准画面描述词，适配AIGC生成逻辑。
+
+必须严格输出 JSON 格式：
+{  "characters": [{"name": "角色名", "desc": "详细的英文视觉特征描述，包含年龄、外貌、发型、服饰等全部细节，white background"}],
+  "scenes": [{"name": "场景名", "desc": "详细的英文场景视觉描述，white background"}],
+  "props": [{"name": "道具名", "desc": "详细的英文道具视觉描述，包含样式、材质、颜色、细节特征，white background"}]
+}
+
+注意：
+- 每个角色必须单独拆分，不要合并
+- 描述必须用英文，适合AI图像生成
+- 每个描述末尾加上 "white background, character design sheet, three views"
+- 不要遗漏任何角色、场景或道具`;
+}
+
+/* 为每个素材构建「设计板」参考图提示词（角色含三视图，确保同角色跨镜头一致） */
+function buildRefImagePrompt(asset){
+  const d=(asset.desc||asset.name||'').trim();
+  if(asset.category==='characters' || asset.type==='角色'){
+    return `character design reference sheet, ${d}, full-body front view, front/side/back three-view orthographic, one front face close-up, clothing and hair detail close-ups, standard standing pose, same character throughout, identical face hairstyle and clothing, no deformation, pure white background, only this character, clean layout, high detail`;
+  } else if(asset.category==='scenes' || asset.type==='场景'){
+    return `scene environment design concept art, ${d}, multiple angles, pure white background, no characters, clean layout, high detail`;
+  } else {
+    return `prop design reference sheet, ${d}, multiple views front/side/back and detail close-ups, pure white background, clean layout, high detail`;
+  }
+}
+
+function buildImagePrompt(el){
+  let base=(el.prompt||'').trim();
+  // 兜底：即使 prompt 为空，也要把角色设定/描述带进去，避免生成通用角色
+  if(!base && el.type==='角色'){
+    base=`${el.name||'character'}, ${el.desc||''}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
+  }
+  if(!base) base=(el.desc||el.name||'character design');
   const lower=base.toLowerCase();
-  for(const kw of required){ if(!lower.includes(kw.toLowerCase())) base+=', '+kw; }
+  for(const kw of ['white background','no text','no watermark','no signature']){ if(!lower.includes(kw.toLowerCase())) base+=', '+kw; }
   return base;
 }
 
@@ -1170,6 +1232,7 @@ function refDetailHTML(r){
   if(r.behavior) rows.push(`<div><b>行为细节：</b>${esc(r.behavior)}</div>`);
   if(r.emotion) rows.push(`<div><b>情绪作用：</b>${esc(r.emotion)}</div>`);
   if(r.scenes) rows.push(`<div><b>出现场景：</b>${esc(r.scenes)}</div>`);
+  if(r.desc) rows.push(`<div><b>英文视觉描述：</b>${esc(r.desc)}</div>`);
   return rows.join('');
 }
 let replaceKind='ref';
@@ -1261,54 +1324,68 @@ function doUploadRef(){
 let videoFailed=false;
 let videoErrorMsg='';
 
-function buildVideoPrompt(shot, scenePrompt, f){
-  return `cinematic video, subtle motion, ${scenePrompt}. slight character movement: gentle breathing, small head turn, clothes swaying gently, emotional warm atmosphere, slow camera drift, consistent style.`;
-}
-async function generateVideoPromptAI(shot, scenePrompt, refs, f){
-  const sys=`You are a video prompt engineer for AI image-to-video generation of cinematic animated shorts. Based on the storyboard shot and its image prompt, write an English video prompt that drives subtle, natural, controllable motion.
-Requirements:
-- Combine the shot content and the image prompt; do NOT drop character, setting, object, emotion, or environment details.
-- Motion must be natural, slight, and controlled: blinking, turning head slightly, breathing, clothes swaying gently, fingers twitching, body leaning forward a little.
-- NO large movements (no running, jumping, big turns, complex multi-person interaction) to avoid deformation.
-- Each prompt MUST include: character action, facial expression & body language, object interaction, environment motion, lighting change, camera movement, emotional atmosphere.
-Keep style consistent with the image prompts. Output ONLY the English prompt, no explanation, no Chinese characters.`;
-  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description: ${shot.desc}\nImage prompt (for reference): ${scenePrompt}`;
-  const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-  return (text||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim() || buildVideoPrompt(shot, scenePrompt, f);
+/* 构建视频提示词（移植自 Agnes：强制嵌入角色/道具/场景外观，禁止把参考设计板放进视频） */
+function buildVideoPrompt(shot, matchedAssets, f){
+  let prompt = (shot && shot.prompt) ? shot.prompt : (shot && shot.desc ? shot.desc : 'cinematic animated short scene');
+  if(matchedAssets && matchedAssets.length){
+    const charParts=[], sceneParts=[], propParts=[];
+    matchedAssets.forEach(a=>{
+      let d=(a.desc||a.prompt||'');
+      ['three views','three-view','character design sheet','design board','front view','side view','back view','orthographic','design sheet','multiple views','close-up detail','detail showcase','white background'].forEach(t=>{ d=d.replace(new RegExp(t,'gi'),' '); });
+      d=d.split(/\s+/).filter(Boolean).join(' ').trim();
+      if(!d) return;
+      if(a.category==='characters' || a.type==='角色') charParts.push(`${a.name}: ${d}`);
+      else if(a.category==='scenes' || a.type==='场景') sceneParts.push(d);
+      else propParts.push(d);
+    });
+    const parts=[];
+    if(charParts.length) parts.push('Character appearance (MUST match exactly): '+charParts.join('; '));
+    if(propParts.length) parts.push('Props: '+propParts.join('; '));
+    if(sceneParts.length) parts.push('Scene: '+sceneParts.join('; '));
+    if(parts.length) prompt=`${prompt}. ${parts.join('. ')}. Use the provided reference image ONLY to lock character appearance and identity, NOT as the first frame.`;
+  }
+  prompt=`${prompt}. The video MUST open directly on the real cinematic scene — never show any design sheet, character board, three-view orthographic, or reference layout. Begin immediately with the story.`;
+  return sanitizePrompt(prompt);
 }
 async function generateVideos(storyboard, scenes, refs, f, useAI){
   const mc=getMediaCfg();
   const vEl=document.getElementById('out-video');
   const vHint=document.getElementById('vidHint');
   const vIntro=document.getElementById('vidIntro');
+  const gallery=document.getElementById('out-video-gallery');
   videoFailed=false; videoErrorMsg='';
+  if(gallery) gallery.innerHTML='';
   if(!mc.vidUrl){
     if(vIntro) vIntro.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
     if(vHint) vHint.textContent='未配置视频接口';
     return;
   }
-  if(vIntro) vIntro.textContent='正在真实生成视频（基于分镜场景图）…';
+  if(vIntro) vIntro.textContent='正在真实生成视频（以角色参考图为种子，确保人物一致）…';
   const shots=parseStoryboard(storyboard);
-  if(!shots.length) shots.push({num:1, scene:null, desc:`漫剧短片：${f.title}。${f.premise}`});
+  if(!shots.length) shots.push({num:1, scene:null, desc:`漫剧短片：${f.title}。${f.premise}`, prompt:''});
 
-  const useImg = mc.vidMode === 'img2vid';
-  let successCount=0;
   const vidPrompts=[];
+  const vidUrls=[];
+  let successCount=0;
 
   for(let i=0;i<shots.length;i++){
     const shot=shots[i];
     const scene=scenes.find(s=>s.num===shot.num) || scenes[i] || scenes[0];
+    if(scene && scene.prompt) shot.prompt=scene.prompt;
     const matchedRefs=matchRefsForShot(shot, refs);
-    const scenePrompt = scene && scene.prompt ? scene.prompt : '';
-    let prompt;
-    if(useAI){ try{ prompt=await generateVideoPromptAI(shot, scenePrompt, refs, f); }catch(e){ prompt=buildVideoPrompt(shot, scenePrompt, f); } }
-    else prompt=buildVideoPrompt(shot, scenePrompt, f);
+    const prompt=buildVideoPrompt(shot, matchedRefs, f);
     vidPrompts.push({num:shot.num, prompt});
+    // 种子图：优先用匹配到的角色/场景参考图（Agnes 做法：以参考图为种子保证人物一致）
+    // 仅当参考图为可访问的 http(s) URL 时才作为图生视频种子；data: 占位图则仅用提示词约束外观
+    let primaryImage='';
+    const charRef=matchedRefs.find(r=>r.type==='角色' && r.url);
+    const anyRef=matchedRefs.find(r=>r.url);
+    const seed = charRef ? charRef.url : (anyRef ? anyRef.url : (scene && scene.url && /^https?:\/\//i.test(scene.url) ? scene.url : ''));
+    if(seed && /^https?:\/\//i.test(seed)) primaryImage=seed;
     try{
-      const imageUrl = useImg && scene && scene.url && scene.url.startsWith('http') ? scene.url : '';
-      const u=await genVideo(prompt, mc, imageUrl);
+      const u=await genVideo(prompt, mc, primaryImage);
       if(u){
-        successCount++;
+        successCount++; vidUrls.push(u);
         if(successCount===1){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
         else if(vHint) vHint.textContent=`✅ 已生成 ${successCount}/${shots.length} 段视频`;
       } else {
@@ -1316,9 +1393,18 @@ async function generateVideos(storyboard, scenes, refs, f, useAI){
       }
     }catch(e){
       videoFailed=true; videoErrorMsg=e.message;
-      if(vHint) vHint.innerHTML=`⚠️ 视频生成失败：${e.message.slice(0,120)}<br><small>点击下方「🔄 重新生成视频」可再次尝试</small>`;
+      if(vHint) vHint.innerHTML=`⚠️ 镜头 ${shot.num} 视频生成失败：${e.message.slice(0,120)}<br><small>点击「🔄 重新生成视频」可再次尝试</small>`;
     }
     await sleep(300);
+  }
+
+  // 渲染全部镜头视频画廊，便于逐条核对人物一致性
+  if(gallery){
+    if(vidUrls.length){
+      gallery.innerHTML=vidUrls.map((u,i)=>`<div class="pic-cell"><span class="ref-type">镜头 ${i+1}</span><video class="vid-cell" controls preload="metadata" src="${u}" onerror="this.style.display='none'"></video></div>`).join('');
+    } else if(!videoFailed){
+      gallery.innerHTML='<div class="note">未生成视频</div>';
+    }
   }
 
   if(videoFailed && successCount===0){
@@ -1328,6 +1414,16 @@ async function generateVideos(storyboard, scenes, refs, f, useAI){
     if(vHint) vHint.innerHTML=`⚠️ 部分视频生成失败（成功 ${successCount}/${shots.length}）：${videoErrorMsg.slice(0,80)}<br><small>点击下方「🔄 重新生成视频」可补全剩余镜头</small>`;
   }
   fillVideoPromptSummary(vidPrompts);
+}
+
+function playVideoPlaylist(){
+  const gallery=document.getElementById('out-video-gallery');
+  if(!gallery) return;
+  const cells=[...gallery.querySelectorAll('video')];
+  if(!cells.length){ toast('暂无可播放的视频'); return; }
+  cells.forEach((v,idx)=>{ v.onended=()=>{ if(idx+1<cells.length) cells[idx+1].play(); }; });
+  cells[0].scrollIntoView({behavior:'smooth',block:'center'});
+  cells[0].play();
 }
 
 function parseStoryboard(storyboard){
