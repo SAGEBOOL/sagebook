@@ -202,6 +202,14 @@
             <button class="btn btn-ghost" onclick="loadDemo()">🎭 加载示例</button>
             <span id="aiHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
         </div>
+        <div class="row" style="margin-top:10px;align-items:center">
+            <label class="lbl" style="margin:0">⚙️ 生成引擎</label>
+            <select id="genMode" onchange="onGenModeChange()" style="max-width:340px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
+                <option value="local">本地配置（页面内 AI 接口）</option>
+                <option value="agnes">Agnes 后端（本地 http://localhost:8787）</option>
+            </select>
+            <span id="genModeHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+        </div>
     </div>
 
     <!-- 文本 AI 模型配置 -->
@@ -345,6 +353,7 @@
             </div>
             <div class="pic-grid" id="out-pics"><div class="note">（等待分镜脚本确认…）</div></div>
             <div class="ref-prompt-summary" id="refsPromptSummary"></div>
+            <div class="phase-actions" id="actions-refs" style="display:none"></div>
         </div>
         <div class="phase" id="phase-scenes">
             <h3>⑤ 分镜场景图片 <span class="tag">scenes/</span></h3>
@@ -629,6 +638,8 @@ function saveEdit(name){
 }
 
 async function runPipeline(){
+  const mode=document.getElementById('genMode') ? document.getElementById('genMode').value : 'local';
+  if(mode==='agnes'){ await runPipelineAgnes(); return; }
   if(running) return; running=true;
   const btn=document.getElementById('runBtn'); btn.disabled=true;
   const f=collectForm();
@@ -772,6 +783,135 @@ function resetResultPhases(){
   document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
   hideAllStepActions();
 }
+
+/* ============ Agnes 后端生成引擎（本地 http://localhost:8787） ============ */
+const AGNES_BASE = 'http://localhost:8787';
+
+function onGenModeChange(){
+  const sel=document.getElementById('genMode');
+  const hint=document.getElementById('genModeHint');
+  if(!sel || !hint) return;
+  if(sel.value==='agnes'){
+    hint.textContent='将在本机 '+AGNES_BASE+' 调用 Agnes 后端（需后端已启动）';
+  } else {
+    hint.textContent='';
+  }
+}
+
+function agnesFileUrl(localFile, base){
+  if(!localFile) return '';
+  return base + '/' + String(localFile).replace(/^\//,'');
+}
+
+function renderAgnesRefs(assets, base){
+  const c=document.getElementById('out-pics');
+  if(!c) return;
+  const rp=document.getElementById('refPause'); if(rp) rp.style.display='none';
+  c.innerHTML = assets.map(a=>{
+    const url=agnesFileUrl(a.local_file, base) || a.image_url || '';
+    const catLabel={characters:'角色',scenes:'场景',props:'道具'}[a.category]||'素材';
+    return '<div class="pic-cell"><img src="'+url+'" alt="'+esc(a.name||'')+'" loading="lazy"><div class="cap">'+esc(a.name||'')+'<span style="float:right;opacity:.6">'+catLabel+'</span></div></div>';
+  }).join('');
+}
+
+function renderAgnesVideos(videoResults, base){
+  const g=document.getElementById('out-video-gallery');
+  if(!g) return;
+  const done=videoResults.filter(v=>v.status==='completed' && v.local_file);
+  g.innerHTML = done.map(v=>{
+    const src=agnesFileUrl(v.local_file, base);
+    return '<div class="pic-cell"><video src="'+src+'" controls muted playsinline style="width:100%;aspect-ratio:16/9;object-fit:cover;background:#000"></video><div class="cap">镜头 '+(v.shot_index!=null?v.shot_index:'?')+'</div></div>';
+  }).join('');
+  const hint=document.getElementById('vidHint');
+  if(hint) hint.textContent='✅ 已生成 '+done.length+' 段视频（以角色参考图为种子图，保证人物一致）';
+}
+
+async function runPipelineAgnes(){
+  if(running) return; running=true;
+  const btn=document.getElementById('runBtn'); if(btn) btn.disabled=true;
+  const f=collectForm();
+  const base=AGNES_BASE;
+
+  // 探测后端存活
+  let alive=false;
+  try{ const r=await fetch(base+'/api/drama/models',{method:'GET'}); alive=r.ok; }catch(e){ alive=false; }
+  if(!alive){
+    setPipelineStatus('err','⚠️ 无法连接 Agnes 后端（'+base+'）。请先在本机启动：<br><code>cd agnes-backend &amp;&amp; /Users/jerryh/.workbuddy/binaries/python/envs/agnes/bin/python app.py</code>');
+    running=false; if(btn) btn.disabled=false; return;
+  }
+
+  // 把结构化创作参数拼成一段自然语言 prompt
+  const pp=[];
+  if(f.title) pp.push('标题《'+f.title+'》');
+  if(f.genre) pp.push(f.genre+'风格');
+  if(f.style) pp.push('基调：'+f.style);
+  if(f.premise) pp.push('故事前提：'+f.premise);
+  if(f.pname) pp.push('主角：'+f.pname+(f.pgender?('（'+f.pgender+'）'):''));
+  if(f.pgoal) pp.push('目标：'+f.pgoal);
+  if(f.conflict) pp.push('冲突：'+f.conflict);
+  const prompt=pp.join('，')+'。请生成一个简短动画短剧。';
+
+  const result=document.getElementById('result');
+  const log=document.getElementById('log');
+  const bar=document.getElementById('bar');
+  result.classList.add('hidden');
+  resetResultPhases();
+  bar.style.display='block'; log.style.display='block'; log.textContent='';
+
+  setPipelineStatus('ok','✅ 已连接 Agnes 后端，正在生成（参考图 → 以参考图为种子图生视频，保证角色一致）…');
+  document.getElementById('out-pics').innerHTML='<div class="note">（连接 Agnes 后端中…）</div>';
+
+  let startResp;
+  try{
+    const r=await fetch(base+'/api/drama/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt, shot_duration:5})});
+    startResp=await r.json();
+  }catch(e){ setPipelineStatus('err','⚠️ 启动流水线失败：'+e.message); running=false; if(btn) btn.disabled=false; return; }
+  if(!startResp || !startResp.success){ setPipelineStatus('err','⚠️ 后端返回：'+((startResp&&startResp.error)||'未知错误')); running=false; if(btn) btn.disabled=false; return; }
+  const dramaId=startResp.drama_id;
+  log.innerHTML+='<b>›</b> 已提交任务 '+dramaId;
+
+  let confirmed=false, lastStatus='';
+  while(true){
+    await sleep(4000);
+    let st;
+    try{ const r=await fetch(base+'/api/drama/status/'+dramaId); st=await r.json(); }catch(e){ continue; }
+    if(st.status!==lastStatus){ lastStatus=st.status; log.innerHTML+='\n<b>›</b> 状态：'+st.status+' — '+(st.message||''); }
+
+    if(st.story) document.getElementById('out-story').textContent=st.story;
+    if(st.script) document.getElementById('out-script').textContent=st.script;
+    if(st.storyboard){
+      const sb=typeof st.storyboard==='object' ? JSON.stringify(st.storyboard,null,2) : st.storyboard;
+      document.getElementById('out-storyboard').textContent=sb;
+    }
+    if(st.assets && st.assets.length){ renderAgnesRefs(st.assets, base); showPhase('refs'); }
+    if(st.video_results && st.video_results.length){ renderAgnesVideos(st.video_results, base); }
+
+    if(st.status==='paused' && !confirmed){
+      const acts=document.getElementById('actions-refs');
+      if(acts){
+        acts.style.display='flex';
+        acts.innerHTML='<button class="btn btn-primary" onclick="agnesResume(\''+dramaId+'\')">✅ 确认参考图，继续生成视频</button>';
+      }
+    }
+    if(st.status==='completed' || st.status==='failed'){
+      if(st.merged_video){ const v=document.getElementById('out-video'); v.src=agnesFileUrl(st.merged_video, base); v.load(); }
+      log.innerHTML += (st.status==='completed' ? '\n<b>✅ 短剧生成完成。</b>' : '\n<b>⚠️ 生成失败：</b>'+(st.message||''));
+      break;
+    }
+  }
+  bar.firstElementChild.style.width='100%';
+  await sleep(450);
+  log.style.display='none'; bar.style.display='none';
+  result.classList.remove('hidden');
+  running=false; if(btn) btn.disabled=false;
+}
+
+async function agnesResume(dramaId){
+  const base=AGNES_BASE;
+  try{ await fetch(base+'/api/drama/resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drama_id:dramaId})}); }catch(e){}
+  const acts=document.getElementById('actions-refs'); if(acts){ acts.style.display='none'; acts.innerHTML=''; }
+}
+
 
 async function generateStory(f, imported){
   const sys=`你是专业短剧/漫剧故事策划。请严格遵守以下【强制创作参数】生成故事梗概，绝对不允许脱离这些参数自行发挥：
