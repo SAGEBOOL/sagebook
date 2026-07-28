@@ -210,10 +210,15 @@
             </select>
             <span id="genModeHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
         </div>
-        <div class="row" id="agnesUrlRow" style="display:none;margin-top:8px;align-items:center">
+        <div class="row" id="agnesUrlRow" style="display:none;margin-top:8px;align-items:center;flex-wrap:wrap;gap:10px">
             <label class="lbl" style="margin:0">🔗 Agnes 后端地址</label>
             <input id="agnesBaseUrl" placeholder="http://localhost:8787" oninput="localStorage.setItem('agnesBaseUrl', this.value.trim())" style="max-width:440px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
             <span id="agnesUrlHint" class="hint" style="color:var(--text-tertiary);font-size:12px">部署到公网后，把这里改成你的后端地址即可（自动保存）</span>
+        </div>
+        <div class="row" id="agnesKeyRow" style="display:none;margin-top:8px;align-items:center;flex-wrap:wrap;gap:10px">
+            <label class="lbl" style="margin:0">🔑 你的 API Key</label>
+            <input id="agnesApiKey" type="password" placeholder="sk-...（你自己的 Agnes / 厂商 Key）" oninput="localStorage.setItem('agnesApiKey', this.value.trim())" style="max-width:440px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
+            <span class="hint" style="color:var(--text-tertiary);font-size:12px">仅随本次请求发往你的后端临时使用，不存储、不泄露；留空则使用后端已配置的服务端 Key。</span>
         </div>
     </div>
 
@@ -794,11 +799,19 @@ const AGNES_BASE_DEFAULT = 'http://localhost:8787';
 function getAgnesBase(){
   return (localStorage.getItem('agnesBaseUrl') || AGNES_BASE_DEFAULT).trim() || AGNES_BASE_DEFAULT;
 }
+function getAgnesApiKey(){
+  return (localStorage.getItem('agnesApiKey') || '').trim();
+}
 function syncAgnesUrlInput(){
-  const row=document.getElementById('agnesUrlRow');
-  const inp=document.getElementById('agnesBaseUrl');
-  if(row) row.style.display = (document.getElementById('genMode').value==='agnes') ? 'flex' : 'none';
-  if(inp) inp.value = getAgnesBase();
+  const isAgnes = (document.getElementById('genMode').value==='agnes');
+  const urlRow=document.getElementById('agnesUrlRow');
+  const keyRow=document.getElementById('agnesKeyRow');
+  const urlInp=document.getElementById('agnesBaseUrl');
+  const keyInp=document.getElementById('agnesApiKey');
+  if(urlRow) urlRow.style.display = isAgnes ? 'flex' : 'none';
+  if(keyRow) keyRow.style.display = isAgnes ? 'flex' : 'none';
+  if(urlInp) urlInp.value = getAgnesBase();
+  if(keyInp) keyInp.value = getAgnesApiKey();
 }
 
 function onGenModeChange(){
@@ -846,6 +859,8 @@ async function runPipelineAgnes(){
   const btn=document.getElementById('runBtn'); if(btn) btn.disabled=true;
   const f=collectForm();
   const base=getAgnesBase();
+  const agnKey=getAgnesApiKey();
+  const creds=agnKey ? {api_key:agnKey} : {};
 
   // 探测后端存活
   let alive=false;
@@ -878,10 +893,17 @@ async function runPipelineAgnes(){
 
   let startResp;
   try{
-    const r=await fetch(base+'/api/drama/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt, shot_duration:5})});
+    const r=await fetch(base+'/api/drama/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt, shot_duration:5, creds})});
     startResp=await r.json();
   }catch(e){ setPipelineStatus('err','⚠️ 启动流水线失败：'+e.message); running=false; if(btn) btn.disabled=false; return; }
-  if(!startResp || !startResp.success){ setPipelineStatus('err','⚠️ 后端返回：'+((startResp&&startResp.error)||'未知错误')); running=false; if(btn) btn.disabled=false; return; }
+  if(!startResp || !startResp.success){
+    let msg=((startResp&&startResp.error)||'未知错误');
+    if((startResp&&startResp.error) && /API Key/.test(startResp.error) && !agnKey){
+      msg+='（当前 Agnes 模式未填写你的 API Key，请在上方「🔑 你的 API Key」输入框中填写；或让后端已配置服务端 Key。）';
+    }
+    setPipelineStatus('err','⚠️ 后端返回：'+msg);
+    running=false; if(btn) btn.disabled=false; return;
+  }
   const dramaId=startResp.drama_id;
   log.innerHTML+='<b>›</b> 已提交任务 '+dramaId;
 
@@ -923,7 +945,9 @@ async function runPipelineAgnes(){
 
 async function agnesResume(dramaId){
   const base=getAgnesBase();
-  try{ await fetch(base+'/api/drama/resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drama_id:dramaId})}); }catch(e){}
+  const agnKey=getAgnesApiKey();
+  const creds=agnKey ? {api_key:agnKey} : {};
+  try{ await fetch(base+'/api/drama/resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drama_id:dramaId, creds})}); }catch(e){}
   const acts=document.getElementById('actions-refs'); if(acts){ acts.style.display='none'; acts.innerHTML=''; }
 }
 
