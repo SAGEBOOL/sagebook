@@ -14,7 +14,7 @@
         }
         body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;line-height:1.6; }
         .container { max-width:1000px;margin:0 auto;padding:20px; }
-        .header { text-align:center;padding:28px 20px 10px;position:relative; }
+        .header { text-align:center;padding:30px 20px 14px;position:relative; }
         .logo-link { display:inline-flex;align-items:center;gap:6px;font-size:24px;font-weight:800;color:var(--text-primary);text-decoration:none;cursor:pointer; }
         .logo-ico { font-size:26px; }
         .title { font-size:26px;font-weight:700;color:var(--accent);margin-top:8px;letter-spacing:0.02em; }
@@ -68,6 +68,20 @@
         .footer a { color:var(--accent);text-decoration:none;margin:0 6px; }
         .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-hover);border:1px solid var(--border);color:var(--text-primary);padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none; }
         .toast.show { opacity:1; }
+        /* 模式指示灯（沿用原页面） */
+        .mode-bar { display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap; }
+        .mode-pill { padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border); }
+        .mode-pill.demo { background:rgba(212,168,83,.16);color:var(--warning);border-color:rgba(212,168,83,.4); }
+        .mode-pill.live { background:rgba(90,171,122,.16);color:var(--success);border-color:rgba(90,171,122,.4); }
+        .diag-btn { padding:4px 8px;border-radius:20px;font-size:12px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
+        .diag-btn:hover { border-color:var(--accent);color:var(--accent); }
+        /* 页脚（沿用原页面统一底部） */
+        .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
+        .footer a { color:var(--accent);text-decoration:none; }
+        .footer .sep { color:var(--text-muted);margin:0 6px; }
+        .footer .footer-legal { margin-top:14px; font-size:13px; }
+        .footer .footer-links { margin-top:8px; font-size:12px; color:var(--text-muted); }
+        .footer .footer-links a { margin:0 2px; }
     </style>
 </head>
 <body>
@@ -76,11 +90,15 @@
     <button class="theme-btn" data-t="light" onclick="setTheme('light')">☀️</button>
 </div>
 
-<div class="header">
-    <a class="logo-link" href="index.html"><span class="logo-ico">📖</span><span>SAGE BOOK</span></a>
-    <div class="title">短剧｜漫剧创作工作台</div>
-    <div class="subtitle">按「故事 → 角色 → 场景 → 镜头 → 剧本 → 提示词 → 导出」流水线生成可拍摄资产</div>
-</div>
+    <div class="header">
+        <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
+        <div class="title">短剧｜漫剧创作工作台</div>
+        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④角色参考图 ⑤分镜场景图片 ⑥视频</div>
+        <div class="mode-bar">
+            <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
+            <button class="diag-btn" onclick="showAIConfigDiag()" title="查看当前 AI 配置读取状态">🔍 诊断</button>
+        </div>
+    </div>
 
 <div class="container">
 
@@ -512,6 +530,37 @@ function exportAll(){
   toast('已下载 3 个文件 ✓');
 }
 
+/* ============ AI 配置诊断（沿用原页面） ============ */
+function showAIConfigDiag(){
+  const cfg=getAIConfig()||{};
+  const mc=getMediaCfg()||{imgUrl:'',vidUrl:''};
+  const mask = (s)=> s ? (s.slice(0,4)+'***'+s.slice(-4)) : '(空)';
+  const lines=[
+    '【AI 配置诊断】',
+    '当前域名：'+location.hostname,
+    '当前协议：'+location.protocol,
+    '',
+    '文本 AI：',
+    '  mode: '+cfg.mode,
+    '  useLocalAI: '+localStorage.getItem('useLocalAI'),
+    '  cloudApiKey: '+(cfg.cloudApiKey?'已设置 ('+mask(cfg.cloudApiKey)+')':'未设置'),
+    '  cloudModel: '+(cfg.cloudModel||'(空)'),
+    '  cloudBaseUrl: '+(cfg.cloudBaseUrl||'(空)'),
+    '  ollamaEndpoint: '+(cfg.ollamaUrl||'(空)'),
+    '  localModel: '+(cfg.ollamaModel||'(空)'),
+    '',
+    '图像/视频接口：',
+    '  imgUrl: '+(mc.imgUrl?'已设置':'未设置'),
+    '  vidUrl: '+(mc.vidUrl?'已设置':'未设置'),
+    '',
+    '常见原因：',
+    '1. 设置页保存时所在域名与当前域名不同，localStorage 不共享。',
+    '2. 只填了 API 地址/模型名，未填写 API Key。',
+    '3. 浏览器隐私模式/清理数据后配置被清空。'
+  ];
+  alert(lines.join('\n'));
+}
+
 /* ============ 初始化 ============ */
 function onMediaEngineChange(){
   const v=document.getElementById('mediaEngine').value;
@@ -525,5 +574,11 @@ function init(){
 }
 init();
 </script>
+
+<footer class="footer">
+    <div>SAGE BOOK v1.6 | Created by DSArt-Design | 2025-2026 | 你的创作主场 Powered by Ollama · OpenAI · Claude · Qwen · GLM</div>
+    <div class="footer-legal"><a href="copyright.html">版权声明</a> · <a href="privacy.html">隐私条款</a> · <a href="terms.html">使用条款</a></div>
+    <div class="footer-links">友情链接｜<a href="https://storylucas.top/" target="_blank" rel="noopener">NON九界</a>｜<a href="https://sagebool.github.io/lifeline/" target="_blank" rel="noopener">人生运势K线图</a>｜<a href="https://sagebool.github.io/crystal-calculator/" target="_blank" rel="noopener">水晶运势计算器</a></div>
+</footer>
 </body>
 </html>
