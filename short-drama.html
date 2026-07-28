@@ -13,8 +13,8 @@
             --bg-primary:#f7f5f0;--bg-secondary:#ffffff;--bg-tertiary:#efece6;--bg-hover:#e6e2da;--bg-input:#ffffff;--bg-card:#ffffff;--text-primary:#1c1b19;--text-secondary:#4a4843;--text-tertiary:#7a776f;--text-muted:#9a968c;--border:#d8d4cc;--accent:#c2410c;--accent-hover:#b85a3a;--accent-light:#d97757;--accent-glow:rgba(217,119,87,0.2);--success:#2f8f5b;--warning:#b07a1f;--error:#c0392b;
         }
         body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);min-height:100vh;line-height:1.6; }
-        .container { max-width:1200px;margin:0 auto;padding:20px; }
-        .header { text-align:center;padding:30px 20px 14px;position:relative; }
+        .container { max-width:1000px;margin:0 auto;padding:20px; }
+        .header { text-align:center;padding:28px 20px 10px;position:relative; }
         .logo-link { display:inline-flex;align-items:center;gap:6px;font-size:24px;font-weight:800;color:var(--text-primary);text-decoration:none;cursor:pointer; }
         .logo-ico { font-size:26px; }
         .title { font-size:26px;font-weight:700;color:var(--accent);margin-top:8px;letter-spacing:0.02em; }
@@ -23,17 +23,7 @@
         .theme-btn { padding:6px 10px;border:1px solid var(--border);background:var(--bg-tertiary);color:var(--text-secondary);border-radius:8px;cursor:pointer;font-size:13px;transition:all .2s; }
         .theme-btn:hover { border-color:var(--accent); }
         .theme-btn.active { background:var(--accent);color:white;border-color:var(--accent); }
-        .cursor-target { cursor:pointer; }
 
-        /* 模式指示灯 */
-        .mode-bar { display:flex;justify-content:center;align-items:center;gap:10px;margin:10px 0 4px;flex-wrap:wrap; }
-        .mode-pill { padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border); }
-        .mode-pill.demo { background:rgba(212,168,83,.16);color:var(--warning);border-color:rgba(212,168,83,.4); }
-        .mode-pill.live { background:rgba(90,171,122,.16);color:var(--success);border-color:rgba(90,171,122,.4); }
-        .diag-btn { padding:4px 8px;border-radius:20px;font-size:12px;background:transparent;border:1px solid var(--border);color:var(--text-secondary);cursor:pointer; }
-        .diag-btn:hover { border-color:var(--accent);color:var(--accent); }
-
-        /* 按钮 / 通用 */
         .btn { padding:9px 16px;border:1px solid var(--border);background:var(--bg-hover);color:var(--text-primary);border-radius:10px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .2s; }
         .btn:hover { border-color:var(--accent); }
         .btn:disabled { opacity:.5;cursor:not-allowed; }
@@ -41,427 +31,199 @@
         .btn-primary:hover { background:var(--accent-hover); }
         .btn-ghost { background:transparent; }
         .btn-sm { padding:6px 12px;font-size:12px;border-radius:8px; }
-        .btn-warning { background:var(--warning);color:#1a1200;border-color:var(--warning); }
-        .btn-warning:hover { background:#c49a45; }
 
         .card { background:var(--bg-tertiary);border:1px solid var(--border);border-radius:12px;padding:18px;margin:14px 0; }
-        .card-title { font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
-        .row { display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:14px 0 0; }
         .note { font-size:13px;color:var(--text-secondary);background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:8px 0; }
         .note.warn { border-color:rgba(212,168,83,.4);color:var(--warning); }
         .note.ok { border-color:rgba(90,171,122,.4);color:var(--success); }
         .note.err { border-color:rgba(224,85,85,.4);color:var(--error); }
 
-        /* 表单字段 */
         .field { margin:12px 0; }
         .field label { display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px; }
         .field input, .field textarea, .field select { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:9px 11px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s; }
         .field input:focus, .field textarea:focus, .field select:focus { border-color:var(--accent); }
         .field textarea { resize:vertical; line-height:1.6; }
-        .grid2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
-        /* 配置板块 */
-        .cfg-board { margin:14px 0;padding:14px 14px 4px;border:1px solid var(--border);border-radius:10px;background:var(--bg-input); }
-        .cfg-board-title { font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px; }
-        .grid3 { display:grid;grid-template-columns:repeat(3,1fr);gap:12px; }
-        @media (max-width:680px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+        .hint { font-size:12px;color:var(--text-tertiary); }
 
-        /* 文件导入区 */
-        .import-zone { margin-top:16px;padding:14px;border:1px dashed var(--border);border-radius:10px;background:var(--bg-input); }
-        .import-zone .lbl { font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:10px; }
-        .import-zone .hint { font-size:12px;color:var(--text-tertiary); }
-        .receipt { margin-top:8px;font-size:12px;color:var(--success);min-height:16px; }
-        .switch-line { display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);margin-top:10px; }
-        .switch-line input { width:auto; }
-
-        /* 进度 */
-        .bar { height:8px;background:var(--bg-tertiary);border-radius:999px;overflow:hidden;margin:14px 0 4px;display:none; }
-        .bar>i { display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-light));transition:width .4s; }
-        .progress { background:#0f172a;color:#e2e8f0;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;min-height:120px;display:none;white-space:pre-wrap;line-height:1.7;margin:10px 0 4px;max-height:300px;overflow:auto; }
-        .progress b { color:#7dd3fc; }
-
-        /* 结果阶段 */
-        .phase { margin:14px 0; }
-        .phase h3 { font-size:16px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;color:var(--accent); }
-        .phase h3 .tag { font-size:12px;background:var(--accent-glow);color:var(--accent-light);padding:2px 10px;border-radius:20px;font-weight:500; }
-        .phase pre { white-space:pre-wrap;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:360px;overflow:auto;font-size:13px;line-height:1.6;margin:0; }
-        .phase-actions { display:flex;gap:8px;margin-top:10px;flex-wrap:wrap; }
-        .phase-edit { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text-primary);font-size:13px;line-height:1.6;margin-top:8px;font-family:inherit; }
-        .pic-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin:12px 0; }
-        .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative; }
-        .pic-cell img { width:100%;aspect-ratio:2/3;object-fit:cover;display:block;background:var(--bg-tertiary); }
-        .pic-cell .cap { font-size:12px;color:var(--text-secondary);padding:8px 10px; }
-        .pic-cell .cap b { color:var(--text-primary); }
-        .pic-cell .ref-actions { display:flex;gap:6px;padding:0 10px 10px; }
-        .ref-type { position:absolute;top:8px;left:8px;background:rgba(0,0,0,.72);color:#fff;font-size:11px;padding:3px 9px;border-radius:12px;z-index:2; }
-        .ref-detail { font-size:12px;color:var(--text-secondary);padding:4px 10px 8px;border-top:1px solid var(--border); }
-        .ref-detail summary { cursor:pointer;color:var(--text-secondary);user-select:none;padding:2px 0; }
-        .ref-detail-body { margin-top:6px;line-height:1.55; }
-        .ref-detail-body div { margin-bottom:3px; }
-        .ref-detail-body b { color:var(--text-primary); }
-        .ref-prompt { margin-top:6px;padding:6px 8px;background:var(--bg-tertiary);border-radius:6px;color:var(--text-primary);word-break:break-word; }
-        .ref-detail-readonly { font-size:12px;color:var(--text-secondary);background:var(--bg-tertiary);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin:4px 0 10px;line-height:1.55; }
-        .ref-detail-readonly div { margin-bottom:4px; }
-        .ref-detail-readonly b { color:var(--text-primary); }
-        .ref-prompt-summary { margin:14px 0 4px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px; }
-        .ref-prompt-summary .rps-title { font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:8px; }
-        .ref-prompt-summary .rps-row { display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px dashed var(--border); }
-        .ref-prompt-summary .rps-row:first-of-type { border-top:none; }
-        .ref-prompt-summary .rps-name { flex:0 0 120px;font-weight:600;color:var(--text-primary);font-size:12px;padding-top:2px; }
-        .ref-prompt-summary .rps-code { flex:1;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;line-height:1.5;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word; }
-        video.vid { width:100%;max-width:480px;border-radius:8px;border:1px solid var(--border);background:#000;display:block;margin-top:4px; }
-        .hidden { display:none; }
-
-        /* 参考图暂停确认条 */
-        .ref-pause { background:rgba(212,168,83,.16);border:1px solid rgba(212,168,83,.45);border-radius:12px;padding:16px;margin:10px 0;text-align:center;display:none; }
-        .ref-pause.active { display:block; }
-        .ref-pause-text { font-weight:600;color:var(--warning);margin-bottom:10px; }
-        .ref-pause-count { font-size:20px;font-weight:700;color:var(--warning);margin-bottom:10px;font-variant-numeric:tabular-nums; }
-        .ref-pause .btn-warning { font-weight:600; }
-
-        /* 替换弹窗 */
-        .modal-backdrop { position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;justify-content:center;align-items:center;z-index:300;padding:20px; }
-        .modal-backdrop.active { display:flex; }
-        .modal { background:var(--bg-secondary);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:90vh;overflow:auto;padding:20px; }
-        .modal-title { font-size:16px;font-weight:700;margin-bottom:14px;color:var(--accent); }
-        .modal-tabs { display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--border); }
-        .modal-tab { padding:8px 14px;background:transparent;border:none;color:var(--text-secondary);font-size:13px;cursor:pointer;border-bottom:2px solid transparent; }
-        .modal-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
-        .modal-section { display:none; }
-        .modal-section.active { display:block; }
-        .modal-preview { width:100%;max-height:260px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);margin:10px 0; }
-        .modal-row { display:flex;justify-content:flex-end;gap:8px;margin-top:16px; }
-
+        .stepper { display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0; }
+        .stepper .s { font-size:12px;padding:4px 10px;border:1px solid var(--border);border-radius:16px;color:var(--text-secondary);cursor:pointer; }
+        .stepper .s:hover { border-color:var(--accent);color:var(--accent); }
+        .step { border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:14px 0;background:var(--bg-secondary); }
+        .step-head { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px; }
+        .step-num { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-weight:700;font-size:13px;flex:none; }
+        .step-head h3 { font-size:16px;margin:0;flex:1; }
+        .step-status { font-size:12px;padding:3px 10px;border-radius:14px;border:1px solid var(--border);color:var(--text-tertiary); }
+        .step-status.ok { color:var(--success);border-color:rgba(90,171,122,.4); }
+        .step-status.warn { color:var(--warning);border-color:rgba(212,168,83,.4); }
+        .step-status.err { color:var(--error);border-color:rgba(224,85,85,.4); }
+        .out { width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text-primary);font-size:13px;line-height:1.6;margin-top:8px;font-family:inherit;resize:vertical; }
+        .ref-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px; }
+        .pic-cell { background:var(--bg-input);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+        .pic-cell img { width:100%;display:block; }
+        .pic-cell video.vid { width:100%;display:block;background:#000; }
+        .pic-cell .ph { padding:18px;font-size:12px;color:var(--text-tertiary);text-align:center; }
+        .pic-cell .ph.err { color:var(--error); }
+        .ref-detail { font-size:12px;color:var(--text-secondary);padding:4px 10px 8px; }
         .footer { text-align:center;padding:30px 20px;font-size:13px;color:var(--text-secondary);border-top:1px solid var(--border);margin-top:40px; }
-        .footer a { color:var(--accent);text-decoration:none; }
-        .footer .sep { color:var(--text-muted);margin:0 6px; }
-        .footer .footer-legal { margin-top:14px; font-size:13px; }
-        .footer .footer-links { margin-top:8px; font-size:12px; color:var(--text-muted); }
-        .footer .footer-links a { margin:0 2px; }
+        .footer a { color:var(--accent);text-decoration:none;margin:0 6px; }
         .toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg-hover);border:1px solid var(--border);color:var(--text-primary);padding:10px 18px;border-radius:10px;font-size:13px;z-index:200;opacity:0;transition:opacity .25s;pointer-events:none; }
         .toast.show { opacity:1; }
-        .spinner { display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px; }
-        @keyframes spin { to { transform:rotate(360deg); } }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="text-pressure.css">
-<script src="knowledge.js"></script>
 </head>
 <body>
+<div class="theme-switcher">
+    <button class="theme-btn" data-t="dark" onclick="setTheme('dark')">🌙</button>
+    <button class="theme-btn" data-t="light" onclick="setTheme('light')">☀️</button>
+</div>
+
+<div class="header">
+    <a class="logo-link" href="index.html"><span class="logo-ico">📖</span><span>SAGE BOOK</span></a>
+    <div class="title">短剧｜漫剧创作工作台</div>
+    <div class="subtitle">按「故事 → 角色 → 场景 → 镜头 → 剧本 → 提示词 → 导出」流水线生成可拍摄资产</div>
+</div>
+
 <div class="container">
-    <div class="header">
-        <a class="logo-link" href="index.html"><span class="logo-ico">📚</span><span class="logo-txt brand-text" data-text="SAGEBOOK">SAGEBOOK</span></a>
-        <div class="title">短剧｜漫剧创作工作台</div>
-        <div class="subtitle">漫剧自动化生产流水线 · 故事设定 → ①故事梗概 ②专业剧本 ③分镜脚本 ④角色参考图 ⑤分镜场景图片 ⑥视频</div>
-        <div class="mode-bar">
-            <span class="mode-pill demo" id="modePill">🎭 演示模式（无需 Key，预置示例）</span>
-            <button class="diag-btn" onclick="showAIConfigDiag()" title="查看当前 AI 配置读取状态">🔍 诊断</button>
-        </div>
-    </div>
-    <div class="theme-switcher">
-        <button class="theme-btn" onclick="setTheme('dark')">🌙 暗</button>
-        <button class="theme-btn" onclick="setTheme('light')">☀️ 亮</button>
-        <button class="theme-btn" onclick="setTheme('system')">🖥️ 跟随</button>
-    </div>
 
-    <!-- 参数表单 -->
+    <!-- 顶部工具条 -->
     <div class="card">
-        <div class="card-title">🎬 漫剧流水线 · 创作参数</div>
-        <div class="grid2">
-            <div class="field"><label>标题</label><input id="f_title" value="剑宗遗孤"></div>
-            <div class="field"><label>篇幅</label><input id="f_length" value="短篇"></div>
+        <div class="field" style="max-width:460px">
+            <label>文本生成引擎</label>
+            <div class="hint">读「设置」页已存的云端 Key / 本地 Ollama，本页不重复填。无配置时点「载入示例」可看结构。</div>
         </div>
-        <div class="grid2">
-            <div class="field"><label>类型</label><input id="f_genre" value="玄幻"></div>
-            <div class="field"><label>风格</label><input id="f_style" value="爽文"></div>
-        </div>
-        <div class="field"><label>故事前提</label><textarea id="f_premise" rows="2">女主苏瑶被宗门背叛后重生复仇</textarea></div>
-        <div class="grid2">
-            <div class="field"><label>主角名</label><input id="f_pname" value="苏瑶"></div>
-            <div class="field"><label>性别</label><input id="f_pgender" value="女"></div>
-        </div>
-        <div class="grid2">
-            <div class="field"><label>主角目标</label><input id="f_pgoal" value="为师父报仇"></div>
-            <div class="field"><label>核心冲突</label><input id="f_conflict" value="仇人竟是亲生父亲"></div>
-        </div>
-
-        <div class="import-zone">
-            <div class="lbl">📎 导入本地文件（可选；图生图/图生视频需上传参考图）</div>
-            <div class="grid3">
-                <div class="field" style="margin:0"><label style="font-weight:500">📄 故事正文 (.txt/.md)</label><input type="file" id="d_story" accept=".txt,.md"></div>
-                <div class="field" style="margin:0"><label style="font-weight:500">👤 人物设定 (.txt/.md)</label><input type="file" id="d_chars" accept=".txt,.md"></div>
-                <div class="field" style="margin:0"><label style="font-weight:500">🌍 世界观/场景 (.txt/.md)</label><input type="file" id="d_world" accept=".txt,.md"></div>
-            </div>
-            <div class="field" style="margin:10px 0 0"><label style="font-weight:500">🖼️ 参考图（可选，图生图/图生视频用，可多选）</label><input type="file" id="d_ref" multiple accept="image/*"></div>
-            <div class="receipt" id="d_receipt"></div>
-            <label class="switch-line"><input type="checkbox" id="d_auto" checked> 导入故事后，其余阶段（剧本/分镜/生图/视频）仍由 AI 自动补全</label>
-        </div>
-
-        <div class="row">
-            <button class="btn btn-primary" id="runBtn" onclick="runPipeline()">🚀 开始生成</button>
-            <button class="btn btn-ghost" onclick="resetPipeline()">重置</button>
-            <button class="btn btn-ghost" onclick="loadDemo()">🎭 加载示例</button>
-            <span id="aiHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
-        </div>
-        <div class="row" style="margin-top:10px;align-items:center">
-            <label class="lbl" style="margin:0">⚙️ 生成引擎</label>
-            <select id="genMode" onchange="onGenModeChange()" style="max-width:340px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
-                <option value="local">本地配置（页面内 AI 接口）</option>
-                <option value="agnes">Agnes 后端（可配置地址）</option>
-            </select>
-            <span id="genModeHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
-        </div>
-        <div class="row" id="agnesUrlRow" style="display:none;margin-top:8px;align-items:center;flex-wrap:wrap;gap:10px">
-            <label class="lbl" style="margin:0">🔗 Agnes 后端地址</label>
-            <input id="agnesBaseUrl" placeholder="http://localhost:8787" oninput="localStorage.setItem('agnesBaseUrl', this.value.trim())" style="max-width:440px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
-            <span id="agnesUrlHint" class="hint" style="color:var(--text-tertiary);font-size:12px">部署到公网后，把这里改成你的后端地址即可（自动保存）</span>
-        </div>
-        <div class="row" id="agnesKeyRow" style="display:none;margin-top:8px;align-items:center;flex-wrap:wrap;gap:10px">
-            <label class="lbl" style="margin:0">🔑 你的 API Key</label>
-            <input id="agnesApiKey" type="password" placeholder="sk-...（你自己的 Agnes / 厂商 Key）" oninput="localStorage.setItem('agnesApiKey', this.value.trim())" style="max-width:440px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
-            <span class="hint" style="color:var(--text-tertiary);font-size:12px">仅随本次请求发往你的后端临时使用，不存储、不泄露；留空则使用后端已配置的服务端 Key。</span>
-        </div>
-    </div>
-
-    <!-- 文本 AI 模型配置 -->
-    <details class="card" id="textAICard">
-        <summary class="card-title" style="cursor:pointer;list-style:none">🧠 文本 AI 模型配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">必填 · 用于 ①②③ 文本阶段</span></summary>
-        <div class="note">配置云端大模型（OpenAI 兼容）或本地 Ollama，用于生成故事梗概、剧本、分镜。与「设置」页共用同一套 localStorage 键，配置仅保存在本机浏览器。</div>
-        <div class="field" style="max-width:260px">
-            <label>模式</label>
-            <select id="ai_mode" onchange="onAIModeChange()">
-                <option value="cloud">☁️ 云端大模型</option>
-                <option value="ollama">🖥️ 本地 Ollama</option>
+        <div class="field" style="max-width:300px;display:inline-block;vertical-align:top;margin-right:14px">
+            <label>媒体引擎（参考图 / 视频）</label>
+            <select id="mediaEngine" onchange="onMediaEngineChange()">
+                <option value="settings">设置页媒体配置</option>
+                <option value="agnes">Agnes 后端</option>
             </select>
         </div>
-        <div id="cloudCfg">
-            <div class="grid2">
-                <div class="field"><label>API 地址（Base URL）</label><input id="ai_cloudBaseUrl" placeholder="https://api.openai.com/v1"></div>
-                <div class="field"><label>模型名</label><input id="ai_cloudModel" placeholder="gpt-4o"></div>
-            </div>
-            <div class="field"><label>API Key</label><input id="ai_cloudApiKey" type="password" placeholder="sk-..."></div>
+        <div class="field" id="agnesAddrRow" style="display:none;max-width:440px;display:inline-block;vertical-align:top">
+            <label>🔗 Agnes 后端地址</label>
+            <input id="agnesBaseUrl" placeholder="http://localhost:8787" oninput="localStorage.setItem('agnesBaseUrl',this.value.trim())">
         </div>
-        <div id="ollamaCfg" style="display:none">
-            <div class="grid2">
-                <div class="field"><label>Ollama 地址</label><input id="ai_ollamaEndpoint" placeholder="http://localhost:11434"></div>
-                <div class="field"><label>模型名</label><input id="ai_localModel" placeholder="qwen2.5:14b"></div>
-            </div>
+        <div class="row" style="margin-top:6px">
+            <button class="btn btn-primary" onclick="runPipeline()">▶ 一键运行流水线</button>
+            <button class="btn" onclick="loadDemo()">载入示例</button>
+            <button class="btn btn-ghost" onclick="clearAll()">清空</button>
+            <a class="btn btn-ghost" href="settings.html">去设置 AI</a>
+        </div>
+    </div>
+
+    <!-- 步骤导航 -->
+    <div class="stepper">
+        <span class="s" onclick="scrollTo('step0')">0 输入</span>
+        <span class="s" onclick="scrollTo('step1')">1 角色圣经</span>
+        <span class="s" onclick="scrollTo('step2')">2 场景</span>
+        <span class="s" onclick="scrollTo('step3')">3 分镜</span>
+        <span class="s" onclick="scrollTo('step4')">4 剧本</span>
+        <span class="s" onclick="scrollTo('step5')">5 提示词</span>
+        <span class="s" onclick="scrollTo('step6')">6 导出</span>
+    </div>
+
+    <!-- Step 0 -->
+    <section class="step" id="step0">
+        <div class="step-head"><span class="step-num">0</span><h3>输入</h3><span class="step-status" id="status0">待输入</span></div>
+        <div class="field">
+            <label>小说章节 / 梗概 / 一句话创意</label>
+            <textarea id="inpText" rows="8" placeholder="粘贴《九界归尘》某章正文，或写一句话创意……"></textarea>
+        </div>
+        <div class="note">默认世界观：《九界归尘》（东方玄幻 / 国潮）。有正文直接进场景拆解；仅一句话创意会先扩写为短纲。</div>
+    </section>
+
+    <!-- Step 1 -->
+    <section class="step" id="step1">
+        <div class="step-head"><span class="step-num">1</span><h3>角色圣经 & 风格锚点</h3><span class="step-status" id="status1">等待</span>
+            <button class="btn btn-sm btn-primary" onclick="genBible()">生成角色圣经</button>
+        </div>
+        <div class="field">
+            <label>角色设定卡 + 视觉风格锚点（可编辑；英文锚点会复用到视频提示词）</label>
+            <textarea id="outBible" class="out" rows="12" placeholder="AI 生成的角色设定卡与视觉风格锚点"></textarea>
         </div>
         <div class="row">
-            <button class="btn btn-sm btn-primary" onclick="saveTextAIConfig()">💾 保存文本 AI 配置</button>
-            <span id="textAICfgHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+            <button class="btn btn-sm" onclick="genRefImages()">🎨 生成角色参考图</button>
+            <span class="hint" id="refHint">从角色圣经提取元素，按媒体引擎出图</span>
         </div>
-    </details>
+        <div id="refGrid" class="ref-grid"></div>
+    </section>
 
-    <!-- 媒体 AI 接口配置（用户自行填写） -->
-    <details class="card" id="mediaCfgCard">
-        <summary class="card-title" style="cursor:pointer;list-style:none">🔌 AI 图像 / 视频接口配置 <span class="tag" style="font-size:12px;background:var(--bg-tertiary);color:var(--text-tertiary);padding:2px 10px;border-radius:20px">可选 · 留空则图片/视频为本地占位</span></summary>
-        <div class="note">填写你自己的图像 / 视频生成接口，流水线第 ④⑤ 阶段将真实调用；留空则使用本地占位（不影响文本阶段）。配置仅保存在本机浏览器。</div>
-        <div class="grid2">
-            <div class="field"><label>🖼️ 图像接口 URL（OpenAI 兼容 images/generations）</label><input id="img_url" placeholder="https://api.openai.com/v1/images/generations"></div>
-            <div class="field"><label>图像 API Key</label><input id="img_key" type="password" placeholder="sk-..."></div>
+    <!-- Step 2 -->
+    <section class="step" id="step2">
+        <div class="step-head"><span class="step-num">2</span><h3>场景拆解</h3><span class="step-status" id="status2">等待</span>
+            <button class="btn btn-sm btn-primary" onclick="genScenes()">拆解场景</button>
         </div>
-        <div class="grid2">
-            <div class="field"><label>图像模型名（可选）</label><input id="img_model" placeholder="dall-e-3"></div>
-            <div class="field"><label>图像尺寸</label><select id="img_size">
-                <option value="1024x1024">1:1（1024×1024）</option>
-                <option value="1024x576">16:9（1024×576）</option>
-                <option value="576x1024">9:16（576×1024）</option>
-                <option value="682x1024">2:3（682×1024）</option>
-                <option value="1024x768">4:3（1024×768）</option>
-            </select></div>
+        <div class="field">
+            <label>场景表（Markdown 表格，可编辑）</label>
+            <textarea id="outScenes" class="out" rows="10" placeholder="| 场景编号 | INT/EXT | 地点 | 时间 | 在场人物 | 核心节拍 | 情绪 | 时长(秒) |"></textarea>
         </div>
-        <div class="grid2">
-            <div class="field"><label>图像生成模式</label><select id="img_mode"><option value="txt2img">文生图</option><option value="img2img">图生图（使用上传参考图）</option></select></div>
-            <div class="field"><label>视频生成模式</label><select id="vid_mode"><option value="txt2vid">文生视频</option><option value="img2vid">图生视频（使用参考图）</option></select></div>
-        </div>
-        <!-- 图像生成通用风格约束提示词 板块 -->
-        <div class="cfg-board">
-            <div class="cfg-board-title">🎨 图像生成通用风格约束提示词</div>
-            <p class="hint" style="color:var(--text-tertiary);font-size:12px;margin:0 0 8px">以下提示词会作为前缀，自动加在每一张参考图（人物／场景／道具）的生成提示词之前，保证所有图风格统一。</p>
-            <div class="field"><label>通用风格约束提示词（作用于所有图片）</label><textarea id="img_style" rows="2" placeholder="例如：写实风格，电影级光影，8k 高清，细节丰富，统一美术风格"></textarea></div>
-            <div class="grid2">
-                <div class="field"><label>图像请求体模板（JSON，<code>{{prompt}}</code> 占位；图生图可用 <code>{{image_url}}</code>；留空则用标准 OpenAI 格式）</label><textarea id="img_body" rows="2" placeholder='{"prompt":"{{prompt}}"}'></textarea></div>
-                <div class="field"><label>图像响应取图路径（默认 <code>data[0].url</code>，base64 用 <code>data[0].b64_json</code>）</label><input id="img_resp" value="data[0].url"></div>
-            </div>
-        </div>
+    </section>
 
-        <div class="field" style="margin-top:18px"><label>🎞️ 视频接口 URL</label><input id="vid_url" placeholder="https://your-video-api/generate"></div>
-        <div class="field"><label>视频 API Key</label><input id="vid_key" type="password" placeholder="token..."></div>
-        <div class="grid2">
-            <div class="field"><label>视频模型名（可选）</label><input id="vid_model" placeholder="luma-photon"></div>
-            <div class="field"><label>视频接口参考图字段名（可选，如 <code>image_url</code> / <code>first_frame</code>；若模板里已有 <code>{{image_url}}</code> 可留空）</label><input id="vid_img_field" placeholder="image_url"></div>
+    <!-- Step 3 -->
+    <section class="step" id="step3">
+        <div class="step-head"><span class="step-num">3</span><h3>镜头语言（分镜表）</h3><span class="step-status" id="status3">等待</span>
+            <button class="btn btn-sm btn-primary" onclick="genShots()">生成分镜</button>
         </div>
-        <div class="field"><label>视频请求体模板（JSON，用 <code>{{prompt}}</code> 占位；如需参考图可用 <code>{{image_url}}</code>）</label><textarea id="vid_body" rows="3" placeholder='{"prompt":"{{prompt}}","image_url":"{{image_url}}"}'></textarea></div>
-        <div class="field"><label>视频响应取视频 URL 路径（JSON 点路径，默认 <code>data[0].url</code>；Agnes 等异步接口由系统自动轮询，此项可留默认）</label><input id="vid_resp" value="data[0].url"></div>
-        <p class="hint" style="color:var(--text-tertiary);font-size:12px;margin:4px 0 0">Agnes 视频：接口 URL 填 <code>https://apihub.agnes-ai.com/v1/videos</code>，模型名填 <code>agnes-video-v2.0</code>，图生视频字段用 <code>image</code>（系统会自动把模板里的 <code>image_url</code> 归一化）。该接口为异步，生成后会自动轮询直到完成。</p>
+        <div class="field">
+            <label>分镜表（Markdown 表格，可编辑）</label>
+            <textarea id="outShots" class="out" rows="12" placeholder="| 镜号 | 景别 | 机位 | 运动 | 时长(s) | 画面内容 | 声音/配乐 | 情绪 |"></textarea>
+        </div>
+    </section>
 
+    <!-- Step 4 -->
+    <section class="step" id="step4">
+        <div class="step-head"><span class="step-num">4</span><h3>Fountain 剧本</h3><span class="step-status" id="status4">等待</span>
+            <button class="btn btn-sm btn-primary" onclick="genFountain()">生成剧本</button>
+        </div>
+        <div class="field">
+            <label>Fountain 标准剧本（可编辑，可导入 Celtx / WriterDuet）</label>
+            <textarea id="outFountain" class="out" rows="12" placeholder="INT. 废弃花房 - 夜&#10;&#10;暴雨如注。"></textarea>
+        </div>
+        <button class="btn btn-sm" onclick="downloadFile('剧本.fountain', document.getElementById('outFountain').value, 'text/plain')">⬇ 下载 .fountain</button>
+    </section>
+
+    <!-- Step 5 -->
+    <section class="step" id="step5">
+        <div class="step-head"><span class="step-num">5</span><h3>视频提示词包</h3><span class="step-status" id="status5">等待</span>
+            <button class="btn btn-sm btn-primary" onclick="genVideoPrompts()">生成提示词</button>
+        </div>
+        <div class="field">
+            <label>每个镜头的英文视频提示词 + 中文说明（可编辑；人物外观复用角色圣经锚点）</label>
+            <textarea id="outVideoPrompts" class="out" rows="12" placeholder="| 镜号 | 中文说明 | English Prompt |"></textarea>
+        </div>
+    </section>
+
+    <!-- Step 6 -->
+    <section class="step" id="step6">
+        <div class="step-head"><span class="step-num">6</span><h3>导出 & 视频生成</h3><span class="step-status" id="status6">等待</span></div>
         <div class="row">
-            <button class="btn btn-sm" onclick="saveMediaCfg()">💾 保存接口配置</button>
-            <button class="btn btn-sm btn-ghost" onclick="loadMediaCfg()">↺ 载入已存配置</button>
-            <span id="mediaCfgHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+            <button class="btn btn-sm" onclick="exportAll()">⬇ 下载全部（Fountain + 分镜 + 提示词）</button>
+            <button class="btn btn-sm btn-primary" onclick="genVideos()">🎬 生成视频</button>
         </div>
-    </details>
+        <div id="vidGrid" class="ref-grid"></div>
+    </section>
 
-    <!-- 进度 -->
-    <div class="bar" id="bar"><i></i></div>
-    <div class="progress" id="log"></div>
-
-    <!-- 结果：五阶段 -->
-    <div id="result" class="hidden">
-        <div id="pipeline-status" class="note hidden" style="margin-bottom:14px"></div>
-        <div class="phase" id="phase-story">
-            <h3>① 故事梗概 <span class="tag">story.md</span></h3>
-            <pre id="out-story">（等待开始…）</pre>
-            <textarea class="phase-edit" id="edit-story" rows="6" style="display:none"></textarea>
-            <div class="phase-actions" id="actions-story" style="display:none">
-                <button class="btn btn-primary" onclick="confirmStep('story')">✅ 确认并继续</button>
-                <button class="btn btn-ghost" onclick="retryStep('story')">🔄 重新生成</button>
-                <button class="btn btn-ghost" onclick="editStep('story')">✏️ 手动编辑</button>
-            </div>
-            <div class="phase-actions" id="edit-actions-story" style="display:none">
-                <button class="btn btn-primary" onclick="saveEdit('story')">💾 保存并继续</button>
-                <button class="btn btn-ghost" onclick="cancelEdit('story')">取消</button>
-            </div>
-        </div>
-        <div class="phase" id="phase-script">
-            <h3>② 专业剧本 <span class="tag">script.md</span></h3>
-            <pre id="out-script">（等待故事梗概确认…）</pre>
-            <textarea class="phase-edit" id="edit-script" rows="8" style="display:none"></textarea>
-            <div class="phase-actions" id="actions-script" style="display:none">
-                <button class="btn btn-primary" onclick="confirmStep('script')">✅ 确认并继续</button>
-                <button class="btn btn-ghost" onclick="retryStep('script')">🔄 重新生成</button>
-                <button class="btn btn-ghost" onclick="editStep('script')">✏️ 手动编辑</button>
-            </div>
-            <div class="phase-actions" id="edit-actions-script" style="display:none">
-                <button class="btn btn-primary" onclick="saveEdit('script')">💾 保存并继续</button>
-                <button class="btn btn-ghost" onclick="cancelEdit('script')">取消</button>
-            </div>
-        </div>
-        <div class="phase" id="phase-storyboard">
-            <h3>③ 分镜脚本 <span class="tag">storyboard.md</span></h3>
-            <pre id="out-storyboard">（等待专业剧本确认…）</pre>
-            <textarea class="phase-edit" id="edit-storyboard" rows="8" style="display:none"></textarea>
-            <div class="phase-actions" id="actions-storyboard" style="display:none">
-                <button class="btn btn-primary" onclick="confirmStep('storyboard')">✅ 确认并继续</button>
-                <button class="btn btn-ghost" onclick="retryStep('storyboard')">🔄 重新生成</button>
-                <button class="btn btn-ghost" onclick="editStep('storyboard')">✏️ 手动编辑</button>
-            </div>
-            <div class="phase-actions" id="edit-actions-storyboard" style="display:none">
-                <button class="btn btn-primary" onclick="saveEdit('storyboard')">💾 保存并继续</button>
-                <button class="btn btn-ghost" onclick="cancelEdit('storyboard')">取消</button>
-            </div>
-        </div>
-        <div class="phase" id="phase-refs">
-            <h3>④ 角色参考图（角色设定） <span class="tag">references/</span></h3>
-            <div class="ref-pause" id="refPause">
-                <div class="ref-pause-text">⏸ 流水线已暂停 — 请检查角色参考图，如需替换可点击卡片上的「替换」按钮（场景将在下一步「⑤ 分镜场景图片」生成）</div>
-                <div class="ref-pause-count" id="refCountdown">02:00</div>
-                <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-                    <button class="btn btn-warning" id="refContinueBtn" onclick="confirmRefContinue()">✅ 确认并继续生成分镜场景图</button>
-                    <button class="btn btn-ghost" onclick="retryRefStep()" style="color:var(--warning);border-color:rgba(212,168,83,.45)">🔄 重新生成参考图</button>
-                </div>
-            </div>
-            <div class="pic-grid" id="out-pics"><div class="note">（等待分镜脚本确认…）</div></div>
-            <div class="ref-prompt-summary" id="refsPromptSummary"></div>
-            <div class="phase-actions" id="actions-refs" style="display:none"></div>
-        </div>
-        <div class="phase" id="phase-scenes">
-            <h3>⑤ 分镜场景图片 <span class="tag">scenes/</span></h3>
-            <p class="hint" id="scenesHint" style="margin:0 0 10px">基于分镜脚本与已确认的角色/道具参考图，逐镜头生成场景图；未配置图像接口时显示占位图。</p>
-            <div class="pic-grid" id="out-scenes"><div class="note">（等待角色参考图确认…）</div></div>
-            <div class="phase-actions" id="actions-scenes" style="display:none">
-                <button class="btn btn-primary" onclick="confirmStep('scenes')">✅ 确认并继续</button>
-                <button class="btn btn-ghost" onclick="retryStep('scenes')">🔄 重新生成</button>
-            </div>
-        </div>
-        <div class="phase" id="phase-video">
-            <h3>⑥ 视频 <span class="tag">Videos/</span></h3>
-            <p class="hint" id="vidIntro" style="margin:0 0 10px">配置视频接口后，将真实生成可播放视频；未配置时显示占位。</p>
-            <video class="vid" id="out-video" controls poster="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='270'><rect width='480' height='270' fill='%23111'/><polygon points='205,100 205,170 265,135' fill='%23fff'/></svg>">
-                <source src="#" type="video/mp4">
-            </video>
-            <p class="hint" id="vidHint" style="margin-top:8px">（等待分镜场景图片确认…）</p>
-            <div class="pic-grid" id="out-video-gallery" style="margin-top:12px"></div>
-            <div class="phase-actions" style="margin-top:10px">
-                <button class="btn btn-ghost" id="videoPlaylistBtn" onclick="playVideoPlaylist()">▶ 连续播放全部镜头</button>
-            </div>
-            <div class="phase-actions" id="actions-video" style="display:none">
-                <button class="btn btn-primary" onclick="confirmStep('video')">✅ 确认并完成</button>
-                <button class="btn btn-ghost" onclick="retryStep('video')">🔄 重新生成视频</button>
-            </div>
-            <div class="ref-prompt-summary" id="videoPromptSummary"></div>
-        </div>
-    </div>
-
-    <div style="margin-top:20px" class="row">
-        <button class="btn btn-ghost" onclick="location.href='index.html'">📚 返回首页</button>
+    <div class="footer">
+        <a href="index.html">首页</a> ·
+        <a href="settings.html">设置</a> ·
+        <a href="privacy.html">隐私</a>
+        <div style="margin-top:8px;color:var(--text-tertiary)">SAGE BOOK · 短剧创作工作台</div>
     </div>
 </div>
-
-<!-- 替换参考图弹窗 -->
-<div class="modal-backdrop" id="replaceModal">
-    <div class="modal">
-        <div class="modal-title" id="replaceTitle">替换参考图</div>
-        <div class="modal-tabs">
-            <button class="modal-tab active" onclick="switchReplaceTab('regen')">🔄 重新生成</button>
-            <button class="modal-tab" onclick="switchReplaceTab('upload')">📁 本地上传</button>
-        </div>
-        <div class="modal-section active" id="tab-regen">
-            <div class="field"><label>参考图名称</label><input id="replaceName" readonly></div>
-            <div id="replaceDetail" class="ref-detail-readonly"></div>
-            <div class="field"><label>图像生成提示词（英文效果最佳）</label><textarea id="replacePrompt" rows="5"></textarea></div>
-            <img class="modal-preview" id="replacePreviewRegen" src="" alt="预览">
-            <div class="modal-row">
-                <button class="btn btn-ghost" onclick="closeReplaceModal()">取消</button>
-                <button class="btn btn-primary" onclick="doRegenerateRef()" id="replaceRegenBtn">🔄 重新生成</button>
-            </div>
-        </div>
-        <div class="modal-section" id="tab-upload">
-            <div class="field"><label>选择本地图片</label><input type="file" id="replaceFile" accept="image/*" onchange="previewReplaceFile(this)"></div>
-            <img class="modal-preview" id="replacePreviewUpload" src="" alt="预览" style="display:none">
-            <div class="modal-row">
-                <button class="btn btn-ghost" onclick="closeReplaceModal()">取消</button>
-                <button class="btn btn-primary" onclick="doUploadRef()">📤 使用此图</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<footer class="footer">
-    <div>SAGE BOOK v1.6 | Created by DSArt-Design | 2025-2026 | 你的创作主场 Powered by Ollama · OpenAI · Claude · Qwen · GLM</div>
-    <div class="footer-legal"><a href="copyright.html">版权声明</a> · <a href="privacy.html">隐私条款</a> · <a href="terms.html">使用条款</a></div>
-    <div class="footer-links">友情链接｜<a href="https://storylucas.top/" target="_blank" rel="noopener">NON九界</a>｜<a href="https://sagebool.github.io/lifeline/" target="_blank" rel="noopener">人生运势K线图</a>｜<a href="https://sagebool.github.io/crystal-calculator/" target="_blank" rel="noopener">水晶运势计算器</a></div>
-</footer>
 
 <script>
-/* ============ 主题 ============ */
-function setTheme(t){
-  const h=document.documentElement;
-  if(t==='system'){ const d=window.matchMedia('(prefers-color-scheme:dark)').matches; h.setAttribute('data-theme',d?'dark':'light'); }
-  else h.setAttribute('data-theme',t);
-  document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));
-  const map={dark:'🌙 暗',light:'☀️ 亮',system:'🖥️ 跟随'};
-  const cur=[...document.querySelectorAll('.theme-btn')].find(b=>b.textContent.trim()===map[t]);
-  if(cur) cur.classList.add('active');
-}
-(function(){ const saved=localStorage.getItem('sagebook_theme')||'dark'; setTheme(saved); document.querySelectorAll('.theme-btn').forEach(b=>b.onclick=()=>{ setTheme(b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); localStorage.setItem('sagebook_theme',b.textContent.includes('暗')?'dark':b.textContent.includes('亮')?'light':'system'); }); })();
-
-/* ============ 工具 ============ */
+/* ============ 基础工具 ============ */
 function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function hashStr(s){ let h=0; for(let i=0;i<(s||'').length;i++){ h=(h*31+s.charCodeAt(i))>>>0; } return h; }
-function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
+function toast(msg){ let t=document.querySelector('.toast'); if(!t){ t=document.createElement('div'); t.className='toast'; document.body.appendChild(t);} t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2400); }
 function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
-function fmtTime(sec){ const m=String(Math.floor(sec/60)).padStart(2,'0'); const s=String(sec%60).padStart(2,'0'); return `${m}:${s}`; }
-function uid(){ return 'ref_'+Math.random().toString(36).slice(2,9); }
-function setPipelineStatus(type, html){
-  const el=document.getElementById('pipeline-status'); if(!el) return;
-  el.className='note '+(type==='err'?'err':type==='warn'?'warn':type==='ok'?'ok':'');
-  el.style.marginBottom='14px';
-  el.innerHTML=html||'';
-  el.style.display=html?'block':'none';
-}
+function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+function setStatus(i,text,cls){ const el=document.getElementById('status'+i); if(el){ el.textContent=text; el.className='step-status'+(cls?(' '+cls):''); } }
 
-/* ============ 站点既有 AI（与设置页共享键） ============ */
+const state = { bible:'', scenes:'', shots:'', fountain:'', videoPrompts:[], refs:[] };
+
+/* ============ 主题 ============ */
+function setTheme(t){ document.documentElement.setAttribute('data-theme',t); localStorage.setItem('theme',t); updateThemeBtns(); }
+function updateThemeBtns(){ document.querySelectorAll('.theme-btn').forEach(b=>b.classList.toggle('active', b.dataset.t===document.documentElement.getAttribute('data-theme'))); }
+
+/* ============ AI 配置（与设置页共享键） ============ */
 function getAIConfig(){
   const useLocal = localStorage.getItem('useLocalAI')==='true';
   return {
@@ -477,8 +239,8 @@ async function callSiteAI(messages){
   const c=getAIConfig();
   if(c.mode==='ollama'){
     const url=c.ollamaUrl.replace(/\/+$/,'')+'/api/chat';
-    if(location.protocol==='https:'&&url.startsWith('http://')) throw new Error('混合内容限制：HTTPS 页面无法访问本地 Ollama(http://)。请用本地服务器运行本站，或切到「云端」模式。');
-    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:c.ollamaModel,messages,stream:false,options:{temperature:0.7}}),signal:AbortSignal.timeout(90000)});
+    if(location.protocol==='https:'&&url.startsWith('http://')) throw new Error('混合内容限制：HTTPS 页面无法访问本地 Ollama(http://)。请切到「云端」模式或用本地服务器运行。');
+    const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:c.ollamaModel,messages,stream:false,options:{temperature:0.7}}),signal:AbortSignal.timeout(120000)});
     if(!res.ok) throw new Error('Ollama 调用失败：'+res.status);
     const data=await res.json(); return data.message?.content||'';
   } else {
@@ -486,1300 +248,22 @@ async function callSiteAI(messages){
     let base=(c.cloudBaseUrl||'https://api.openai.com/v1').replace(/\/+$/,'');
     if(location.protocol==='https:'&&base.startsWith('http://')) throw new Error('混合内容限制：HTTPS 页面无法请求 HTTP 地址。');
     const url=base.endsWith('/chat/completions')?base:base+'/chat/completions';
-    const res=await fetch(url,{method:'POST',headers:{Authorization:`Bearer ${c.cloudApiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:c.cloudModel,messages,temperature:0.7}),signal:AbortSignal.timeout(90000)});
+    const res=await fetch(url,{method:'POST',headers:{Authorization:`Bearer ${c.cloudApiKey}`,'Content-Type':'application/json'},body:JSON.stringify({model:c.cloudModel,messages,temperature:0.7}),signal:AbortSignal.timeout(120000)});
     if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
     const data=await res.json(); return data.choices?.[0]?.message?.content||'';
   }
 }
 
-/* ============ 占位图生成（漫剧风格） ============ */
-function genManjuPic(name, hint){
-  const h=hashStr((name||'')+(hint||'x'));
-  const c1=`hsl(${h%360},42%,52%)`, c2=`hsl(${(h*2)%360},48%,30%)`;
-  const label=esc((name||'元素').slice(0,10));
-  const svg=`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='300' viewBox='0 0 200 300'>
-    <defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>
-    <rect width='200' height='300' fill='url(#g)'/>
-    <circle cx='100' cy='110' r='42' fill='rgba(255,255,255,.18)'/>
-    <rect x='52' y='160' width='96' height='120' rx='10' fill='rgba(255,255,255,.14)'/>
-    <text x='100' y='292' text-anchor='middle' fill='rgba(255,255,255,.92)' font-size='14' font-family='sans-serif'>${label}</text>
-  </svg>`;
-  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
-}
-
-/* ============ 演示示例（无 Key 时使用） ============ */
-const DEMO = {
-  story: "暴雨如注的深夜，废弃的花房在雷声中摇摇欲坠。林秋浑身湿透，死死护着怀中那盆唯一的红玫瑰。这是已故妻子留下的最后遗物，也是他在这座冷漠城市中仅存的温情寄托。\n\n次日清晨，邻居小孩好奇地凑过来：「叔叔，这花快死了，为什么还留着？」林秋沉默不语。然而，一场突如其来的入室盗窃打破了宁静。小偷为了抢夺值钱物品，粗暴地推倒了花盆。泥土飞溅，玫瑰折断，鲜红的汁液染红了林秋的白衬衫。愤怒瞬间爆发，林秋冲上去与小偷搏斗，最终将其制服报警。\n\n警察带走小偷后，林秋瘫坐在地，望着断成两截的玫瑰，泪水终于决堤。就在他绝望之际，他发现断茎处竟然冒出了一颗嫩绿的新芽。那一刻，林秋明白，死亡并非终结，而是新生的序章。",
-  script: "01 夜、内、废弃花房\n人物：林秋（30岁，面色苍白，眼窝深陷，发丝凌乱湿漉，身穿沾满泥点的深色旧衬衫）\n\n▲全景：暴雨如注的深夜，狂风呼啸。一座破败的玻璃花房在雷声中剧烈摇晃，玻璃碎片不时掉落。\n▲中景：林秋浑身湿透，雨水顺着他的脸颊滚落。他蜷缩在花房中央，双臂死死护着怀中一个简陋的花盆。\n▲特写：花盆中，一株红玫瑰在风雨中飘摇。花瓣边缘微微卷曲，呈现出明显的枯萎迹象，颜色暗红如血。\n▲近景：林秋眼神空洞而绝望，望着怀中的玫瑰。\n林秋vo（低沉、沙哑）：这是婉儿留下的最后一点遗存。在这座冷漠的城市里，它是我唯一还活着的证据。\n▲闪回画面（快速剪辑）：\n1. 撕碎的离婚通知书。\n2. 空荡荡的离婚协议书。\n3. 林秋独自坐在黑暗房间里的剪影。\n▲近景：林秋的双手颤抖着抚摸玫瑰干枯的花瓣，泪水混着雨水滴落。\n林秋vo：失业、离婚、孤独……生活将我逼入绝境。就像这朵花一样，正在一点点死去。\n\n02 日、内、林秋公寓客厅\n人物：林秋（30岁）、邻家小孩（8岁，天真好奇，穿着校服）\n\n▲全景：次日清晨，阳光穿透云层，洒进略显凌乱的客厅，空气中漂浮着尘埃。\n▲中景：林秋坐在小板凳上，手持一把小剪刀，小心翼翼地修剪玫瑰的枯叶。",
-  storyboard: "镜头1（15s）· 全景→特写：暴雨夜花房，林秋护花。运镜：缓慢推近。\n镜头2（15s）· 中景：林秋与玫瑰特写交切。运镜：摇镜。\n镜头3（15s）· 动作：小偷推倒花盆，林秋愤怒搏斗。运镜：快速横移。\n镜头4（15s）· 近景：断茎新芽，林秋落泪微笑。运镜：缓慢推近。",
-  refs: [
-    { id:'demo_1', name:'林秋', type:'角色', prompt:'a 30-year-old Chinese man, pale face, deep eye sockets, messy wet hair, old dark shirt with mud stains, character reference sheet, three views, front side back, full body, clean white background, cinematic lighting, detailed face, digital art, 4K' },
-    { id:'demo_2', name:'邻家小孩', type:'角色', prompt:'an 8-year-old Chinese child, curious expression, school uniform, character reference sheet, three views, front side back, full body, clean white background, soft lighting, digital art, 4K' },
-    { id:'demo_3', name:'小偷', type:'角色', prompt:'a masked thief in dark clothes, tense posture, character reference sheet, three views, front side back, full body, clean white background, dramatic lighting, digital art, 4K' },
-    { id:'demo_6', name:'红玫瑰与花盆', type:'道具', prompt:'withered red rose in a simple clay pot, prop reference sheet, multiple angles, petals curling, dark red like blood, clean white background, studio lighting, detailed, 4K' },
-    { id:'demo_7', name:'小剪刀', type:'道具', prompt:'small gardening scissors, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
-    { id:'demo_8', name:'撕碎的纸张', type:'道具', prompt:'torn divorce notice papers, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
-    { id:'demo_9', name:'口罩', type:'道具', prompt:'black fabric face mask, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' },
-    { id:'demo_10', name:'手机', type:'道具', prompt:'smartphone showing calling screen, prop reference sheet, multiple angles, clean white background, studio lighting, detailed, 4K' }
-  ]
-};
-
-/* ============ 文件导入回执 ============ */
-function dReceipt(){
-  const b=document.getElementById('d_receipt'); const t=[];
-  ['d_story','d_chars','d_world'].forEach(id=>{const f=document.getElementById(id); if(f&&f.files[0]) t.push('✓ '+f.files[0].name);});
-  const r=document.getElementById('d_ref'); if(r&&r.files.length) t.push('✓ 参考图 '+r.files.length+' 张');
-  b.textContent=t.length?'已导入：'+t.join('，'):'';
-}
-['d_story','d_chars','d_world','d_ref'].forEach(id=>{const f=document.getElementById(id); if(f) f.addEventListener('change',dReceipt);});
-
-function readFileText(input){
-  return new Promise(res=>{ const f=input.files[0]; if(!f) return res(''); const rd=new FileReader(); rd.onload=()=>res(rd.result||''); rd.onerror=()=>res(''); rd.readAsText(f); });
-}
-function readRefImages(){
-  return new Promise(res=>{ const f=document.getElementById('d_ref'); const files=f?([...f.files]):[]; if(!files.length) return res([]);
-    let done=0; const out=[];
-    files.forEach(file=>{ const rd=new FileReader(); rd.onload=()=>{ out.push(rd.result); if(++done===files.length) res(out); }; rd.onerror=()=>{ if(++done===files.length) res(out); }; rd.readAsDataURL(file); });
-  });
-}
-
-/* ============ 流水线运行 ============ */
-let running=false;
-let pipelineRefs=[];
-let pipelineScenes=[];
-let outputs={story:'',script:'',storyboard:''};
-let stepResolve=null;
-let currentStep=null;
-let refConfirmResolver=null;
-let refConfirmTimer=null;
-let refConfirmSeconds=120;
-
-function collectForm(){
-  return {
-    title:document.getElementById('f_title').value.trim()||'未命名',
-    length:document.getElementById('f_length').value.trim()||'短篇',
-    genre:document.getElementById('f_genre').value.trim()||'玄幻',
-    style:document.getElementById('f_style').value.trim()||'爽文',
-    premise:document.getElementById('f_premise').value.trim(),
-    pname:document.getElementById('f_pname').value.trim()||'主角',
-    pgender:document.getElementById('f_pgender').value.trim(),
-    pgoal:document.getElementById('f_pgoal').value.trim(),
-    conflict:document.getElementById('f_conflict').value.trim(),
-    autoImport:document.getElementById('d_auto').checked
-  };
-}
-function formSummary(f){
-  return `标题：${f.title}\n篇幅：${f.length}\n类型：${f.genre}\n风格：${f.style}\n故事前提：${f.premise}\n主角：${f.pname}（${f.pgender}），目标：${f.pgoal}，核心冲突：${f.conflict}`;
-}
-
-function showPhase(name){
-  const result=document.getElementById('result');
-  result.classList.remove('hidden');
-  const phase=document.getElementById('phase-'+name);
-  if(phase) phase.scrollIntoView({behavior:'smooth', block:'start'});
-}
-function hideAllStepActions(){
-  ['story','script','storyboard','refs','scenes','video'].forEach(n=>{
-    const a=document.getElementById('actions-'+n); if(a) a.style.display='none';
-    const e=document.getElementById('edit-actions-'+n); if(e) e.style.display='none';
-    const ta=document.getElementById('edit-'+n); if(ta){ ta.style.display='none'; }
-    const pre=document.getElementById('out-'+n); if(pre) pre.style.display='block';
-  });
-  const rp=document.getElementById('refPause'); if(rp) rp.classList.remove('active');
-}
-function waitStepConfirm(name){
-  return new Promise(resolve=>{
-    stepResolve=resolve; currentStep=name;
-    hideAllStepActions();
-    if(name==='refs'){
-      startRefConfirm(resolve);
-    } else {
-      const a=document.getElementById('actions-'+name); if(a){ a.style.display='flex'; }
-      if(name==='video') updateVideoActionButtons();
-      showPhase(name);
-    }
-  });
-}
-function updateVideoActionButtons(){
-  const confirmBtn=document.querySelector('#actions-video .btn-primary');
-  const retryBtn=document.querySelector('#actions-video .btn-ghost');
-  if(confirmBtn) confirmBtn.textContent=videoFailed?'⏭ 跳过并完成':'✅ 确认并完成';
-  if(retryBtn) retryBtn.textContent='🔄 重新生成视频';
-}
-function confirmStep(name){
-  if(currentStep!==name || !stepResolve) return;
-  const res=stepResolve; stepResolve=null; currentStep=null;
-  hideAllStepActions();
-  res('continue');
-}
-function retryStep(name){
-  if(currentStep!==name || !stepResolve) return;
-  const res=stepResolve; stepResolve=null; currentStep=null;
-  hideAllStepActions();
-  res('retry');
-}
-function editStep(name){
-  if(currentStep!==name) return;
-  const pre=document.getElementById('out-'+name);
-  const ta=document.getElementById('edit-'+name);
-  if(!pre||!ta) return;
-  ta.value=pre.textContent;
-  pre.style.display='none'; ta.style.display='block';
-  const acts=document.getElementById('actions-'+name); if(acts) acts.style.display='none';
-  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='flex';
-  ta.focus();
-}
-function cancelEdit(name){
-  const pre=document.getElementById('out-'+name);
-  const ta=document.getElementById('edit-'+name);
-  if(ta) ta.style.display='none'; if(pre) pre.style.display='block';
-  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='none';
-  const acts=document.getElementById('actions-'+name); if(acts) acts.style.display='flex';
-}
-function saveEdit(name){
-  const pre=document.getElementById('out-'+name);
-  const ta=document.getElementById('edit-'+name);
-  if(!ta||!pre) return;
-  const text=ta.value;
-  pre.textContent=text; outputs[name]=text;
-  ta.style.display='none'; pre.style.display='block';
-  const eacts=document.getElementById('edit-actions-'+name); if(eacts) eacts.style.display='none';
-  confirmStep(name);
-}
-
-async function runPipeline(){
-  const mode=document.getElementById('genMode') ? document.getElementById('genMode').value : 'local';
-  if(mode==='agnes'){ await runPipelineAgnes(); return; }
-  if(running) return; running=true;
-  const btn=document.getElementById('runBtn'); btn.disabled=true;
-  const f=collectForm();
-  const cfg=getAIConfig();
-  const useAI=!!(cfg.cloudApiKey)||cfg.mode==='ollama';
-
-  const imported={ story:'', chars:'', world:'', refs:[] };
-  imported.story=await readFileText(document.getElementById('d_story'));
-  imported.chars=await readFileText(document.getElementById('d_chars'));
-  imported.world=await readFileText(document.getElementById('d_world'));
-  imported.refs=await readRefImages();
-
-  const useImportedStory = imported.story && f.autoImport;
-
-  // 在结果区顶部显示当前 AI 状态，避免用户误以为降级内容是 AI 生成
-  const mediaCfg=getMediaCfg();
-  const mediaOn=!!(mediaCfg.imgUrl)||!!(mediaCfg.vidUrl);
-  if(!useAI && !mediaOn){
-    setPipelineStatus('err', '⚠️ 当前处于<strong>演示/手动模式</strong>：未配置文本 AI，也未配置图像/视频接口。故事/剧本/分镜将使用导入原文或示例模板，参考图/视频为占位图。请前往「设置」配置文本 AI，并在本页填写图像/视频接口 URL。');
-  } else if(!useAI){
-    setPipelineStatus('warn', '⚠️ 当前未启用<strong>文本 AI</strong>：专业剧本、分镜脚本将直接使用导入的故事正文或示例模板。请前往「设置」配置云端 API Key 或本地 Ollama，以获得 AI 生成的剧本和分镜。');
-  } else if(!mediaOn){
-    setPipelineStatus('warn', 'ℹ️ 文本 AI 已启用，但未配置图像/视频接口，参考图和视频将显示占位图。如需真实生图/生视频，请在本页填写图像/视频接口 URL。');
-  } else {
-    setPipelineStatus('ok', '✅ 文本 AI 与图像/视频接口均已配置，将真实生成剧本、分镜、参考图与视频。');
-  }
-
-  // 无 AI 且无故事导入时，明确提示而不是 fallback 到固定示例
-  if(!useAI && !useImportedStory){
-    resetResultPhases();
-    const result=document.getElementById('result'); result.classList.remove('hidden');
-    document.getElementById('out-story').textContent='未配置可用的文本 AI。\n\n请在「设置」页填写云端 API Key，或选择「本地 Ollama」模式；也可以上传「故事正文 (.txt/.md)」后直接运行。';
-    document.getElementById('out-script').textContent='（未开始：无文本 AI）';
-    document.getElementById('out-storyboard').textContent='（未开始：无文本 AI）';
-    document.getElementById('out-pics').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
-    document.getElementById('out-scenes').innerHTML='<div class="note">（未开始：无文本 AI）</div>';
-    document.getElementById('vidHint').textContent='（未开始：无文本 AI）';
-    toast('未配置文本 AI，无法生成原创内容');
-    running=false; btn.disabled=false;
-    return;
-  }
-
-  outputs={story:'',script:'',storyboard:''};
-  pipelineRefs=[];
-
-  const result=document.getElementById('result');
-  const log=document.getElementById('log');
-  const bar=document.getElementById('bar');
-  result.classList.add('hidden');
-  resetResultPhases();
-  bar.style.display='block'; log.style.display='block'; log.textContent='';
-  const TOTAL=6;
-  let completed=0;
-  const step=(txt)=>{ log.innerHTML+=(log.innerHTML?'\n':'')+'<b>›</b> '+txt; bar.firstElementChild.style.width=Math.round((completed+1)/TOTAL*100)+'%'; };
-
-  const steps=[
-    {name:'story', label:'[1/6] 生成故事梗概', gen:async ()=>{
-      if(useImportedStory) outputs.story=imported.story;
-      else if(useAI){ try{ outputs.story=await generateStory(f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 故事生成失败：'+e.message; outputs.story='（生成失败：'+e.message+'）'; } }
-      document.getElementById('out-story').textContent=outputs.story;
-      showPhase('story');
-    }},
-    {name:'script', label:'[2/6] 将故事转化为专业剧本', gen:async ()=>{
-      if(useAI){ try{ outputs.script=await generateScript(outputs.story, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 剧本生成失败：'+e.message; outputs.script='（生成失败：'+e.message+'）'; } }
-      else if(useImportedStory) { outputs.script='【⚠️ 未启用文本 AI — 以下内容直接引用导入的故事原文，并非 AI 生成的专业剧本。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n'+imported.story; }
-      else { outputs.script='【⚠️ 未启用文本 AI — 请手动编辑专业剧本，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n（示例格式：\n01 夜、内、场景地点\n人物：主角…\n▲全景：…）'; }
-      document.getElementById('out-script').textContent=outputs.script;
-      showPhase('script');
-    }},
-    {name:'storyboard', label:'[3/6] 生成分镜脚本', gen:async ()=>{
-      if(useAI){ try{ outputs.storyboard=await generateStoryboard(outputs.script, f); }catch(e){ log.innerHTML+='\n  ⚠️ 分镜生成失败：'+e.message; outputs.storyboard='（生成失败：'+e.message+'）'; } }
-      else { outputs.storyboard='【⚠️ 未启用文本 AI — 以下仅为示例分镜模板，并非根据剧本生成。请手动编辑，或前往「设置」配置云端 API Key / 本地 Ollama 后重新生成。】\n\n镜头1（15s）· 全景：开场画面。运镜：缓慢推近。\n镜头2（15s）· 中景：主角登场。运镜：横移。\n镜头3（15s）· 特写：关键动作。运镜：推镜。\n镜头4（15s）· 近景：情绪高潮。运镜：固定。'; }
-      document.getElementById('out-storyboard').textContent=outputs.storyboard;
-      showPhase('storyboard');
-    }},
-    {name:'refs', label:'[4/6] 生成角色参考图', gen:async ()=>{
-      document.getElementById('out-pics').innerHTML='<div class="note">（准备生成参考图…）</div>';
-      let elements;
-      if(useAI){ try{ elements=await extractElements(outputs.storyboard, f, imported); }catch(e){ log.innerHTML+='\n  ⚠️ 元素提取失败：'+e.message; elements=[]; } }
-      else { elements=[]; }
-      if(!elements.length){
-        elements=[
-          {id:uid(), name:f.pname, type:'角色', identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:`${f.pname}, full body, pure white background, no props, cinematic nostalgic animated style, soft lighting`}
-        ];
-      }
-      await generateReferenceImages(elements, imported.refs);
-      showPhase('refs');
-    }},
-    {name:'scenes', label:'[5/6] 生成分镜场景图片', gen:async ()=>{
-      document.getElementById('out-scenes').innerHTML='<div class="note">（准备生成分镜场景图…）</div>';
-      await generateSceneImages(outputs.storyboard, pipelineRefs, f, useAI);
-      showPhase('scenes');
-    }},
-    {name:'video', label:'[6/6] 生成视频', gen:async ()=>{
-      document.getElementById('vidHint').textContent='（准备生成视频…）';
-      await generateVideos(outputs.storyboard, pipelineScenes, pipelineRefs, f, useAI);
-      showPhase('video');
-    }}
-  ];
-
-  for(let idx=0; idx<steps.length; idx++){
-    const s=steps[idx];
-    let retrying=false;
-    while(true){
-      step(s.label + (retrying?'（重新生成）':''));
-      await s.gen();
-      completed=idx;
-      const action=await waitStepConfirm(s.name);
-      if(action==='continue'){ completed=idx+1; break; }
-      retrying=true;
-      if(s.name==='story') document.getElementById('out-story').textContent='（重新生成中…）';
-      if(s.name==='script') document.getElementById('out-script').textContent='（重新生成中…）';
-      if(s.name==='storyboard') document.getElementById('out-storyboard').textContent='（重新生成中…）';
-      if(s.name==='refs'){ document.getElementById('out-pics').innerHTML='<div class="note">（重新生成中…）</div>'; pipelineRefs=[]; }
-      if(s.name==='scenes'){ document.getElementById('out-scenes').innerHTML='<div class="note">（重新生成中…）</div>'; pipelineScenes=[]; }
-      if(s.name==='video'){ const v=document.getElementById('out-video'); v.src='#'; document.getElementById('vidHint').textContent='（重新生成中…）'; }
-    }
-  }
-
-  bar.firstElementChild.style.width='100%';
-  log.innerHTML+='\n<b>✅ 全部阶段完成。</b>';
-  await sleep(450);
-  log.style.display='none'; bar.style.display='none';
-  result.classList.remove('hidden');
-  result.scrollIntoView({behavior:'smooth'});
-  const note = useImportedStory ? '（已用导入的故事正文，其余阶段'+(useAI?'由 AI 生成':'未配置 AI')+'）'
-              : (useAI ? '（文本由你配置的 AI 真实生成，图/视频按接口配置调用）' : '（未配置 AI）');
-  toast('流水线完成 '+note);
-  running=false; btn.disabled=false;
-}
-
-function resetResultPhases(){
-  pipelineScenes=[];
-  document.getElementById('out-story').textContent='（等待开始…）';
-  document.getElementById('out-script').textContent='（等待故事梗概确认…）';
-  document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
-  document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
-  document.getElementById('out-scenes').innerHTML='<div class="note">（等待角色参考图确认…）</div>';
-  const v=document.getElementById('out-video'); v.src='#';
-  document.getElementById('vidHint').textContent='（等待参考图确认…）';
-  document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
-  hideAllStepActions();
-}
-
-/* ============ Agnes 后端生成引擎（地址可配置，默认本地） ============ */
-const AGNES_BASE_DEFAULT = 'http://localhost:8787';
-function getAgnesBase(){
-  return (localStorage.getItem('agnesBaseUrl') || AGNES_BASE_DEFAULT).trim() || AGNES_BASE_DEFAULT;
-}
-function getAgnesApiKey(){
-  return (localStorage.getItem('agnesApiKey') || '').trim();
-}
-function syncAgnesUrlInput(){
-  const isAgnes = (document.getElementById('genMode').value==='agnes');
-  const urlRow=document.getElementById('agnesUrlRow');
-  const keyRow=document.getElementById('agnesKeyRow');
-  const urlInp=document.getElementById('agnesBaseUrl');
-  const keyInp=document.getElementById('agnesApiKey');
-  if(urlRow) urlRow.style.display = isAgnes ? 'flex' : 'none';
-  if(keyRow) keyRow.style.display = isAgnes ? 'flex' : 'none';
-  if(urlInp) urlInp.value = getAgnesBase();
-  if(keyInp) keyInp.value = getAgnesApiKey();
-}
-
-function onGenModeChange(){
-  const sel=document.getElementById('genMode');
-  const hint=document.getElementById('genModeHint');
-  if(!sel || !hint) return;
-  if(sel.value==='agnes'){
-    syncAgnesUrlInput();
-    hint.textContent='将调用 Agnes 后端（'+getAgnesBase()+'）——需后端已启动/可访问';
-  } else {
-    hint.textContent='';
-  }
-}
-
-function agnesFileUrl(localFile, base){
-  if(!localFile) return '';
-  return base + '/' + String(localFile).replace(/^\//,'');
-}
-
-function renderAgnesRefs(assets, base){
-  const c=document.getElementById('out-pics');
-  if(!c) return;
-  const rp=document.getElementById('refPause'); if(rp) rp.style.display='none';
-  c.innerHTML = assets.map(a=>{
-    const url=agnesFileUrl(a.local_file, base) || a.image_url || '';
-    const catLabel={characters:'角色',scenes:'场景',props:'道具'}[a.category]||'素材';
-    return '<div class="pic-cell"><img src="'+url+'" alt="'+esc(a.name||'')+'" loading="lazy"><div class="cap">'+esc(a.name||'')+'<span style="float:right;opacity:.6">'+catLabel+'</span></div></div>';
-  }).join('');
-}
-
-function renderAgnesVideos(videoResults, base){
-  const g=document.getElementById('out-video-gallery');
-  if(!g) return;
-  const done=videoResults.filter(v=>v.status==='completed' && v.local_file);
-  g.innerHTML = done.map(v=>{
-    const src=agnesFileUrl(v.local_file, base);
-    return '<div class="pic-cell"><video src="'+src+'" controls muted playsinline style="width:100%;aspect-ratio:16/9;object-fit:cover;background:#000"></video><div class="cap">镜头 '+(v.shot_index!=null?v.shot_index:'?')+'</div></div>';
-  }).join('');
-  const hint=document.getElementById('vidHint');
-  if(hint) hint.textContent='✅ 已生成 '+done.length+' 段视频（以角色参考图为种子图，保证人物一致）';
-}
-
-async function runPipelineAgnes(){
-  if(running) return; running=true;
-  const btn=document.getElementById('runBtn'); if(btn) btn.disabled=true;
-  const f=collectForm();
-  const base=getAgnesBase();
-  const agnKey=getAgnesApiKey();
-  const creds=agnKey ? {api_key:agnKey} : {};
-
-  // 探测后端存活
-  let alive=false;
-  try{ const r=await fetch(base+'/api/drama/models',{method:'GET'}); alive=r.ok; }catch(e){ alive=false; }
-  if(!alive){
-    setPipelineStatus('err','⚠️ 无法连接 Agnes 后端（'+base+'）。请先在本机启动：<br><code>cd agnes-backend &amp;&amp; /Users/jerryh/.workbuddy/binaries/python/envs/agnes/bin/python app.py</code>');
-    running=false; if(btn) btn.disabled=false; return;
-  }
-
-  // 把结构化创作参数拼成一段自然语言 prompt
-  const pp=[];
-  if(f.title) pp.push('标题《'+f.title+'》');
-  if(f.genre) pp.push(f.genre+'风格');
-  if(f.style) pp.push('基调：'+f.style);
-  if(f.premise) pp.push('故事前提：'+f.premise);
-  if(f.pname) pp.push('主角：'+f.pname+(f.pgender?('（'+f.pgender+'）'):''));
-  if(f.pgoal) pp.push('目标：'+f.pgoal);
-  if(f.conflict) pp.push('冲突：'+f.conflict);
-  const prompt=pp.join('，')+'。请生成一个简短动画短剧。';
-
-  const result=document.getElementById('result');
-  const log=document.getElementById('log');
-  const bar=document.getElementById('bar');
-  result.classList.add('hidden');
-  resetResultPhases();
-  bar.style.display='block'; log.style.display='block'; log.textContent='';
-
-  setPipelineStatus('ok','✅ 已连接 Agnes 后端，正在生成（参考图 → 以参考图为种子图生视频，保证角色一致）…');
-  document.getElementById('out-pics').innerHTML='<div class="note">（连接 Agnes 后端中…）</div>';
-
-  let startResp;
-  try{
-    const r=await fetch(base+'/api/drama/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt, shot_duration:5, creds})});
-    startResp=await r.json();
-  }catch(e){ setPipelineStatus('err','⚠️ 启动流水线失败：'+e.message); running=false; if(btn) btn.disabled=false; return; }
-  if(!startResp || !startResp.success){
-    let msg=((startResp&&startResp.error)||'未知错误');
-    if((startResp&&startResp.error) && /API Key/.test(startResp.error) && !agnKey){
-      msg+='（当前 Agnes 模式未填写你的 API Key，请在上方「🔑 你的 API Key」输入框中填写；或让后端已配置服务端 Key。）';
-    }
-    setPipelineStatus('err','⚠️ 后端返回：'+msg);
-    running=false; if(btn) btn.disabled=false; return;
-  }
-  const dramaId=startResp.drama_id;
-  log.innerHTML+='<b>›</b> 已提交任务 '+dramaId;
-
-  let confirmed=false, lastStatus='';
-  while(true){
-    await sleep(4000);
-    let st;
-    try{ const r=await fetch(base+'/api/drama/status/'+dramaId); st=await r.json(); }catch(e){ continue; }
-    if(st.status!==lastStatus){ lastStatus=st.status; log.innerHTML+='\n<b>›</b> 状态：'+st.status+' — '+(st.message||''); }
-
-    if(st.story) document.getElementById('out-story').textContent=st.story;
-    if(st.script) document.getElementById('out-script').textContent=st.script;
-    if(st.storyboard){
-      const sb=typeof st.storyboard==='object' ? JSON.stringify(st.storyboard,null,2) : st.storyboard;
-      document.getElementById('out-storyboard').textContent=sb;
-    }
-    if(st.assets && st.assets.length){ renderAgnesRefs(st.assets, base); showPhase('refs'); }
-    if(st.video_results && st.video_results.length){ renderAgnesVideos(st.video_results, base); }
-
-    if(st.status==='paused' && !confirmed){
-      const acts=document.getElementById('actions-refs');
-      if(acts){
-        acts.style.display='flex';
-        acts.innerHTML='<button class="btn btn-primary" onclick="agnesResume(\''+dramaId+'\')">✅ 确认参考图，继续生成视频</button>';
-      }
-    }
-    if(st.status==='completed' || st.status==='failed'){
-      if(st.merged_video){ const v=document.getElementById('out-video'); v.src=agnesFileUrl(st.merged_video, base); v.load(); }
-      log.innerHTML += (st.status==='completed' ? '\n<b>✅ 短剧生成完成。</b>' : '\n<b>⚠️ 生成失败：</b>'+(st.message||''));
-      break;
-    }
-  }
-  bar.firstElementChild.style.width='100%';
-  await sleep(450);
-  log.style.display='none'; bar.style.display='none';
-  result.classList.remove('hidden');
-  running=false; if(btn) btn.disabled=false;
-}
-
-async function agnesResume(dramaId){
-  const base=getAgnesBase();
-  const agnKey=getAgnesApiKey();
-  const creds=agnKey ? {api_key:agnKey} : {};
-  try{ await fetch(base+'/api/drama/resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drama_id:dramaId, creds})}); }catch(e){}
-  const acts=document.getElementById('actions-refs'); if(acts){ acts.style.display='none'; acts.innerHTML=''; }
-}
-
-
-async function generateStory(f, imported){
-  const sys=`你是专业短剧/漫剧故事策划。请严格遵守以下【强制创作参数】生成故事梗概，绝对不允许脱离这些参数自行发挥：
-- 标题：${f.title}
-- 篇幅：${f.length}
-- 类型：${f.genre}
-- 风格：${f.style}
-- 故事前提：${f.premise || '（未填写）'}
-- 主角姓名：${f.pname}（性别：${f.pgender}）
-- 主角目标：${f.pgoal || '（未填写）'}
-- 核心冲突：${f.conflict || '（未填写）'}
-
-要求：
-1. 写一段约 400 字的故事梗概，包含起因、经过、高潮、结局；
-2. 主角姓名必须与【强制创作参数】完全一致；
-3. 必须体现主角目标和核心冲突；
-4. 情节完整、画面感强、适合改编为 1-2 分钟短剧；
-5. 中文输出。`;
-  let user='请根据以上【强制创作参数】创作故事梗概。';
-  if(imported.chars) user+='\n\n【人物设定参考】\n'+imported.chars;
-  if(imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
-  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-}
-
-async function generateScript(story, f, imported){
-  const sys=`你是专业短剧/漫剧编剧。请根据【强制创作参数】和【故事梗概】改编为专业剧本格式，绝对不允许脱离创作参数：
-- 标题：${f.title}
-- 类型：${f.genre}
-- 风格：${f.style}
-- 主角姓名：${f.pname}（性别：${f.pgender}）
-- 主角目标：${f.pgoal || '（未填写）'}
-- 核心冲突：${f.conflict || '（未填写）'}
-
-剧本格式要求：
-1. 每个场景以「场景号 时间（日/夜）、内外景、地点」开头；
-2. 列出该场景出现的人物及外貌/服装/状态描写；
-3. 使用 ▲全景 / ▲中景 / ▲特写 / ▲近景 标注镜头景别；
-4. 包含动作描写、人物台词（标注说话人）、VO 旁白、闪回画面、情绪标注；
-5. 主角名称必须与【强制创作参数】一致；
-6. 中文输出。`;
-  let user='【故事梗概】\n'+story;
-  user+='\n\n【短剧设定】\n'+formSummary(f);
-  if(imported.chars) user+='\n\n【人物设定参考】\n'+imported.chars;
-  if(imported.world) user+='\n\n【场景参考】\n'+imported.world;
-  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-}
-
-async function generateStoryboard(script, f){
-  const sys=`你是分镜导演。请严格依据【专业剧本】逐场景拆解为分镜脚本，绝对不允许脱离剧本自行发挥或引入剧本外内容：
-- 标题：${f.title}
-- 类型：${f.genre}
-- 风格：${f.style}
-- 主角：${f.pname}（必须与剧本中角色名完全一致）
-- 核心冲突：${f.conflict || '（未填写）'}
-
-硬性要求：
-1. 分镜必须与【专业剧本】中的场景一一对应：每个分镜开头用「（场景X，Ns）」标注对应的剧本场景号与时长；
-2. 分镜数量与剧本场景数大致对应（约 4-6 个）；
-3. 每个分镜包含：镜头号、对应剧本场景号、景别（全景/中景/特写/近景）、画面描述（必须出现该场景的角色姓名与关键动作/台词核心）、运镜方式、时长（秒）、情绪节奏；
-4. 画面描述必须与对应剧本场景的人物、动作、台词一致，不得凭空添加剧本没有的情节或角色；
-5. 中文输出。
-
-输出格式示例：
-镜头1（场景1，15s）· 全景：画面描述。运镜：缓慢推近。
-镜头2（场景1，12s）· 中景：画面描述。运镜：横移。`;
-  const user='【专业剧本】\n'+script+'\n\n【强制创作参数】\n'+formSummary(f)+'\n\n请严格按上述剧本逐场景拆解分镜，确保每一镜都对应剧本中的具体场景与人物。';
-  return await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-}
-
-async function extractElements(storyboard, f, imported){
-  const sys=agnesAssetsSystemPrompt();
-  let user='【剧本与分镜】\n'+storyboard;
-  if(imported && imported.world) user+='\n\n【世界观/场景参考】\n'+imported.world;
-  let text;
-  try{
-    text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-  }catch(e){ throw e; }
-  let data;
-  try{
-    const m=(text||'').match(/\{[\s\S]*\}/);
-    data=m?JSON.parse(m[0]):JSON.parse(text);
-  }catch(e){ return fallbackExtract(storyboard, f); }
-  const assets=[];
-  const pushCat=(cat, type, arr)=>{
-    (arr||[]).forEach(it=>{
-      const name=(it&&it.name)||''; const desc=(it&&it.desc)||'';
-      if(!name) return;
-      const a={ id:uid(), category:cat, type, name, desc, identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', prompt:'' };
-      a.prompt=buildRefImagePrompt(a);
-      assets.push(a);
-    });
-  };
-  pushCat('characters','角色', data.characters);
-  pushCat('scenes','场景', data.scenes);
-  pushCat('props','道具', data.props);
-  if(!assets.length) return fallbackExtract(storyboard, f);
-  return assets;
-}
-
-function safeParseJSON(s){
-  try{
-    const m=(s||'').match(/\[[\s\S]*\]/);
-    return m?JSON.parse(m[0]):JSON.parse(s);
-  }catch(e){ return null; }
-}
-function hasCJK(s){ return /[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(s||''); }
-async function ensureEnglishPrompts(elements, f){
-  const required=['full body','solo','character only','plain white background','no props','no background','no text','no letters','no watermark','no signature','cinematic nostalgic animated style','soft lighting'];
-  const out=[];
-  for(const el of elements){
-    let prompt=(el.prompt||'').trim();
-    // 总是基于完整角色设定重新生成/校验，确保年龄、外貌、穿着、性格、行为都被翻译进 prompt
-    try{
-      const sys=`You are a character designer and Stable Diffusion prompt engineer. Based on the character profile below, write a pure English, tag-style character drawing prompt.
-Rules:
-- MUST reflect the character's specific age, appearance, clothing, personality and behavior. Do NOT use generic placeholders or omit these details.
-- The character must be the ONLY subject: solo, character only, plain white background, no props, no background, no text, no letters, no watermark, no signature.
-- Must include: full body, cinematic nostalgic animated style, soft lighting.
-- Output ONLY the final prompt, no explanation, no Chinese characters.`;
-      const user=`Character name: ${el.name}
-Identity: ${el.identity||''}
-Age: ${el.age||''}
-Appearance: ${el.appearance||''}
-Clothing: ${el.clothing||''}
-Personality: ${el.personality||''}
-Behavior: ${el.behavior||''}
-Emotion: ${el.emotion||''}
-Scenes: ${el.scenes||''}
-Original prompt: ${prompt || '(empty)'}`;
-      const rewritten=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-      const cleaned=(rewritten||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim();
-      if(cleaned) prompt=cleaned;
-    }catch(e){ /* 保留原 prompt 继续兜底 */ }
-    // 兜底：把中文设定直接拼在后面（至少保留信息，图像模型可能部分理解）
-    if(!prompt){
-      prompt=`${el.name||'character'}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
-    }
-    // 强制追加缺失的画面约束关键词
-    const lower=prompt.toLowerCase();
-    for(const kw of required){ if(!lower.includes(kw.toLowerCase())) prompt+=', '+kw; }
-    out.push({...el, prompt});
-  }
-  return out;
-}
-function fallbackExtract(storyboard, f){
-  if(f && f.pname){
-    const a={ id:uid(), category:'characters', type:'角色', name:f.pname, identity:'', age:'', appearance:'', clothing:'', personality:'', behavior:'', emotion:'', scenes:'', desc:f.pname, prompt:'' };
-    a.prompt=buildRefImagePrompt(a);
-    return [a];
-  }
-  return [];
-}
-
-/* ============ 内容安全清洗（移植自 Agnes AI Studio） ============ */
-const CONTENT_POLICY_WORDS = [
-  'violence','violent','bloody','blood','gore','murder','kill','killing',
-  'weapon','gun','knife','sword','bomb','explosion','shoot','shooting',
-  'nude','naked','sexual','porn','erotic','drug','alcohol abuse',
-  'torture','suicide','self-harm','racist','discrimination',
-  'wound','wounded','bleeding','corpse','death','dead body',
-  'abuse','assault','battle','war','fight','fighting',
-  '暴力','血腥','杀戮','武器','枪支','色情','毒品',
-  '流血','尸体','撕咬','皮开肉绽','浑身是血','血泊','伤口','鞭打','虐待'
-];
-function sanitizePrompt(prompt){
-  let cleaned=prompt||'';
-  for(const w of CONTENT_POLICY_WORDS){
-    cleaned=cleaned.replace(new RegExp(w,'gi'),' ');
-  }
-  return cleaned.split(/\s+/).filter(Boolean).join(' ');
-}
-
-/* ============ 素材提取 Prompt（移植自 Agnes：角色/场景/道具三类，英文视觉特征） ============ */
-function agnesAssetsSystemPrompt(){
-  return `请严格按照以下要求执行：
-
-1. 首先仔细通读并深度理解输入的全部文本内容；
-
-2. 从文本中精准提取角色、场景、道具三类画面提示词，全程固定纯白色纯色背景，不添加任何背景元素；
-
-3. 【角色提取强制要求】需完整拆解并提取每一位角色的全套细节，包含：
-- 年龄特征（精准标注年龄段/具体年龄、气质年龄感）
-- 外貌特征（五官细节、脸型、肤色、神态、身材体态、面部细节、妆容细节等）
-- 发型细节（发型款式、发色、发长、发饰样式、发饰位置、发丝质感、编发/盘发细节等）
-- 服饰全套细节（服饰形制、款式、颜色、面料材质、纹样图案、配色渐变、配饰、鞋履、穿搭层次、服饰版型细节等）
-
-4. 【场景提取要求】仅提取文本中明确提及的场景核心元素、场景描述词；
-
-5. 【道具提取要求】精准提取文本中出现的所有手持/摆放/随身道具，包含道具样式、材质、颜色、细节特征；
-
-6. 输出格式清晰分类：分「角色画面提示词」「场景画面提示词」「道具画面提示词」三大板块，角色需按单人逐条拆分，细节完整不遗漏、不篡改、不脑补文本外信息，语言为精准画面描述词，适配AIGC生成逻辑。
-
-必须严格输出 JSON 格式：
-{  "characters": [{"name": "角色名", "desc": "详细的英文视觉特征描述，包含年龄、外貌、发型、服饰等全部细节，white background"}],
-  "scenes": [{"name": "场景名", "desc": "详细的英文场景视觉描述，white background"}],
-  "props": [{"name": "道具名", "desc": "详细的英文道具视觉描述，包含样式、材质、颜色、细节特征，white background"}]
-}
-
-注意：
-- 每个角色必须单独拆分，不要合并
-- 描述必须用英文，适合AI图像生成
-- 每个描述末尾加上 "white background, character design sheet, three views"
-- 不要遗漏任何角色、场景或道具`;
-}
-
-/* 为每个素材构建「设计板」参考图提示词（角色含三视图，确保同角色跨镜头一致） */
-function buildRefImagePrompt(asset){
-  const d=(asset.desc||asset.name||'').trim();
-  if(asset.category==='characters' || asset.type==='角色'){
-    return `character design reference sheet, ${d}, full-body front view, front/side/back three-view orthographic, one front face close-up, clothing and hair detail close-ups, standard standing pose, same character throughout, identical face hairstyle and clothing, no deformation, pure white background, only this character, clean layout, high detail`;
-  } else if(asset.category==='scenes' || asset.type==='场景'){
-    return `scene environment design concept art, ${d}, multiple angles, pure white background, no characters, clean layout, high detail`;
-  } else {
-    return `prop design reference sheet, ${d}, multiple views front/side/back and detail close-ups, pure white background, clean layout, high detail`;
-  }
-}
-
-function buildImagePrompt(el){
-  let base=(el.prompt||'').trim();
-  // 兜底：即使 prompt 为空，也要把角色设定/描述带进去，避免生成通用角色
-  if(!base && el.type==='角色'){
-    base=`${el.name||'character'}, ${el.desc||''}, ${el.age||''}, ${el.appearance||''}, ${el.clothing||''}, ${el.personality||''}`;
-  }
-  if(!base) base=(el.desc||el.name||'character design');
-  const lower=base.toLowerCase();
-  for(const kw of ['white background','no text','no watermark','no signature']){ if(!lower.includes(kw.toLowerCase())) base+=', '+kw; }
-  return base;
-}
-
-async function generateReferenceImages(elements, importedImages){
-  const picGrid=document.getElementById('out-pics');
-  const mc=getMediaCfg();
-  pipelineRefs=[];
-
-  elements.forEach((el, idx)=>{
-    let inputImage='';
-    if(mc.imgMode==='img2img'){
-      inputImage=importedImages[idx] || (importedImages.length?importedImages[0]:'');
-    }
-    pipelineRefs.push({...el, url:'', originalUrl:'', inputImage});
-  });
-
-  renderRefGrid(picGrid);
-
-  const imgUrlStr=String(mc.imgUrl||'').trim();
-  const imgUrlInvalid=imgUrlStr && !/^https?:\/\//i.test(imgUrlStr);
-  if(!imgUrlStr || imgUrlInvalid){
-    pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx, imgUrlInvalid?'图像接口 URL 无效：'+imgUrlStr:null); });
-    return;
-  }
-
-  for(let idx=0; idx<pipelineRefs.length; idx++){
-    const r=pipelineRefs[idx];
-    updateRefCell(idx, '生成中…');
-    try{
-      const prompt=buildImagePrompt(r);
-      const u=await genImage(prompt, mc, r.inputImage);
-      if(u){ r.url=u; r.originalUrl=u; }
-      updateRefCell(idx, u?null:'生成失败（未返回 URL）');
-    }catch(e){ updateRefCell(idx, '生成失败：'+e.message.slice(0,30)); }
-    await sleep(200);
-  }
-}
-
-function renderRefGrid(container){
-  container.innerHTML=pipelineRefs.map((r,idx)=>`
-    <div class="pic-cell" data-idx="${idx}">
-      <span class="ref-type">${esc(r.type)}</span>
-      <img src="${r.url||genManjuPic(r.name,r.prompt)}" alt="${esc(r.name)}" onerror="this.style.display='none'">
-      <div class="cap"><b>${esc(r.name)}</b>${r.identity?` · <span>${esc(r.identity)}</span>`:''}</div>
-      <details class="ref-detail">
-        <summary>角色设定</summary>
-        <div class="ref-detail-body">
-          ${r.age?`<div><b>年龄：</b>${esc(r.age)}</div>`:''}
-          ${r.appearance?`<div><b>外貌：</b>${esc(r.appearance)}</div>`:''}
-          ${r.clothing?`<div><b>穿着：</b>${esc(r.clothing)}</div>`:''}
-          ${r.personality?`<div><b>性格：</b>${esc(r.personality)}</div>`:''}
-          ${r.behavior?`<div><b>行为：</b>${esc(r.behavior)}</div>`:''}
-          ${r.emotion?`<div><b>情绪：</b>${esc(r.emotion)}</div>`:''}
-          ${r.scenes?`<div><b>场景：</b>${esc(r.scenes)}</div>`:''}
-          ${r.prompt?`<div class="ref-prompt"><b>英文提示词：</b>${esc(r.prompt)}</div>`:''}
-        </div>
-      </details>
-      <div class="ref-actions">
-        <button class="btn btn-sm" onclick="openReplaceModal(${idx})">替换</button>
-      </div>
-    </div>
-  `).join('');
-  fillRefPromptSummary();
-}
-
-function fillRefPromptSummary(){
-  const el=document.getElementById('refsPromptSummary');
-  if(!el) return;
-  if(!pipelineRefs || !pipelineRefs.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="rps-title">各角色英文提示词</div>'+pipelineRefs.map((r,i)=>`<div class="rps-row"><span class="rps-name">${i+1}. ${esc(r.name)}</span><code class="rps-code">${esc(r.prompt)}</code></div>`).join('');
-}
-function fillVideoPromptSummary(list){
-  const el=document.getElementById('videoPromptSummary');
-  if(!el) return;
-  if(!list || !list.length){ el.innerHTML=''; return; }
-  el.innerHTML='<div class="rps-title">各镜头视频英文提示词</div>'+list.map((v,i)=>`<div class="rps-row"><span class="rps-name">${i+1}. 镜头${v.num}</span><code class="rps-code">${esc(v.prompt)}</code></div>`).join('');
-}
-
-function updateRefCell(idx, errMsg){
-  const container=document.getElementById('out-pics');
-  const cell=container.children[idx]; if(!cell) return;
-  const r=pipelineRefs[idx];
-  cell.querySelector('img').src=r.url||genManjuPic(r.name,r.prompt);
-  let cap=cell.querySelector('.cap');
-  if(!cap){ cap=document.createElement('div'); cap.className='cap'; cell.appendChild(cap); }
-  cap.innerHTML=errMsg?`<b>${esc(r.name)}</b> · <span style="color:var(--error)">${esc(errMsg)}</span>`:`<b>${esc(r.name)}</b>`;
-}
-
-/* ============ 分镜场景图片（三视图确认后生成） ============ */
-function buildScenePrompt(shot, refs, f){
-  const matched=matchRefsForShot(shot, refs); // 角色参考，用于人物一致性
-  const refParts=matched.map(r=>{
-    const desc=[r.name, r.age, r.appearance, r.clothing, r.personality].filter(Boolean).join(', ');
-    return `${r.name} (${desc}). Same character as reference image: identical face, same age, same hair, same clothing.`;
-  }).join(' ');
-  const refText=matched.map(r=>r.name).join(', ');
-  return `cinematic animated still, ${f.style} style, ${f.genre}, shot ${shot.num}: ${shot.desc}. Character consistency: ${refParts || 'no character'}. Lived-in environment with life-like details, character action with clear body language and facial expression, key props present, warm nostalgic lighting (soft sunlight / yellow bulb), ${matched.length?'consistent with characters: '+refText:'no character'}, mid-shot, eye-level, emotional cinematic mood, storybook illustration.`;
-}
-async function generateScenePromptAI(shot, refs, f){
-  const matched=matchRefsForShot(shot, refs);
-  const refText=matched.map(r=>{
-    const detail=[r.age, r.appearance, r.clothing, r.personality, r.behavior].filter(Boolean).join(', ');
-    return `${r.name} -> ${r.prompt} (details: ${detail}). CRITICAL: this exact character must appear with identical face, same age, same hair, same clothing as the reference image.`;
-  }).join('\n');
-  const sys=`You are a professional storyboard-to-image prompt writer for cinematic animated shorts. Convert the given storyboard shot into a SINGLE English image prompt that captures "one image = one complete story moment" — a viewer should understand the place, what happens, and why the character acts this way WITHOUT any text or narration.
-Rules:
-1. Each prompt MUST include: location/setting, time of day, environmental details, character action, facial expression and body language, key objects/props, lighting (specify clearly, e.g. sunlight, yellow bulb, tube light), camera angle (close-up / mid-shot / wide shot, add eye-level or over-the-shoulder when relevant), and overall mood. The environment must feel lived-in and cinematic; lighting should convey a warm, nostalgic atmosphere. Keep a consistent visual style across all shots.
-2. CHARACTER CONSISTENCY IS MANDATORY: For EVERY character that appears in the shot, copy the character's specific age, appearance, clothing, hair style/color, and key visual features from the reference prompts into the scene prompt. Explicitly state "identical face, same age, same hair, same clothing as reference image, do not alter the character design". Do NOT change hair color, age, or clothing style between shots.
-3. Output ONLY the English prompt, no explanation, no Chinese characters.`;
-  const user=`Title: ${f.title}\nGenre: ${f.genre}\nStyle: ${f.style}\nShot number: ${shot.num}\nShot description (Chinese, for reference): ${shot.desc}\n\nCharacter/prop reference prompts for consistency (MUST preserve these exact visual traits in the scene):\n${refText}`;
-  const text=await callSiteAI([{role:'system',content:sys},{role:'user',content:user}]);
-  return (text||'').replace(/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/g,'').trim() || buildScenePrompt(shot, refs, f);
-}
-async function generateSceneImages(storyboard, refs, f, useAI){
-  const grid=document.getElementById('out-scenes');
-  const mc=getMediaCfg();
-  pipelineScenes=[];
-  const shots=parseStoryboard(storyboard);
-  if(!shots.length) shots.push({num:1, scene:null, desc:`${f.title} 场景：${f.premise}`});
-  shots.forEach(s=>{ pipelineScenes.push({num:s.num, scene:s.scene, desc:s.desc, prompt:'', url:'', originalUrl:'', inputImage:''}); });
-  renderScenesGrid(grid);
-
-  // 先为每条镜头生成英文绘图提示词（有文本 AI 时调用模型，否则用模板）
-  for(const s of pipelineScenes){
-    if(useAI){ try{ s.prompt=await generateScenePromptAI(s, refs, f); }catch(e){ s.prompt=buildScenePrompt(s, refs, f); } }
-    else s.prompt=buildScenePrompt(s, refs, f);
-  }
-  renderScenesGrid(grid); // 刷新以展示每条英文提示词
-
-  const imgUrlStr=String(mc.imgUrl||'').trim();
-  const imgUrlInvalid=imgUrlStr && !/^https?:\/\//i.test(imgUrlStr);
-  if(!imgUrlStr || imgUrlInvalid){
-    pipelineScenes.forEach((s,idx)=>{
-      s.url=genManjuPic('镜头'+s.num, s.desc); s.originalUrl=s.url;
-      updateSceneCell(idx, imgUrlInvalid?'图像接口 URL 无效：'+imgUrlStr:null);
-    });
-    return;
-  }
-  for(let idx=0; idx<pipelineScenes.length; idx++){
-    const s=pipelineScenes[idx];
-    updateSceneCell(idx, '生成中…');
-    try{
-      // 把场景涉及的主要角色参考图作为图生图参考图传入（若接口支持 {{image_url}} 模板则生效）
-      const matched=matchRefsForShot(s, refs);
-      const primaryCharacter=matched.find(r=>r.type==='角色') || refs.find(r=>r.type==='角色');
-      let refImageUrl='';
-      if(primaryCharacter && primaryCharacter.url && /^https?:\/\//i.test(primaryCharacter.url)){
-        refImageUrl=primaryCharacter.url;
-      }
-      const u=await genImage(s.prompt, mc, refImageUrl);
-      if(u){ s.url=u; s.originalUrl=u; s.inputImage=refImageUrl; }
-      updateSceneCell(idx, u?null:'生成失败（未返回 URL）');
-    }catch(e){ updateSceneCell(idx, '生成失败：'+e.message.slice(0,30)); }
-    await sleep(200);
-  }
-}
-function renderScenesGrid(container){
-  container.innerHTML=pipelineScenes.map((s,idx)=>`
-    <div class="pic-cell" data-idx="${idx}">
-      <span class="ref-type">镜头 ${s.num}</span>
-      <img src="${s.url||genManjuPic('镜头'+s.num,s.desc)}" alt="镜头 ${s.num}" onerror="this.style.display='none'">
-      <div class="cap"><b>镜头 ${s.num}</b>${s.desc?` · <span>${esc((s.desc||'').slice(0,18))}${(s.desc||'').length>18?'…':''}</span>`:''}</div>
-      <details class="ref-detail">
-        <summary>英文提示词</summary>
-        <div class="ref-detail-body">
-          ${s.prompt?`<div class="ref-prompt">${esc(s.prompt)}</div>`:'<div class="ref-prompt">（生成中…）</div>'}
-        </div>
-      </details>
-      <div class="ref-actions">
-        <button class="btn btn-sm" onclick="openReplaceModal(${idx},'scene')">替换</button>
-      </div>
-    </div>
-  `).join('');
-}
-function updateSceneCell(idx, errMsg){
-  const container=document.getElementById('out-scenes');
-  const cell=container.children[idx]; if(!cell) return;
-  const s=pipelineScenes[idx];
-  cell.querySelector('img').src=s.url||genManjuPic('镜头'+s.num, s.desc);
-  let cap=cell.querySelector('.cap');
-  if(!cap){ cap=document.createElement('div'); cap.className='cap'; cell.appendChild(cap); }
-  cap.innerHTML=errMsg?`<b>镜头 ${s.num}</b> · <span style="color:var(--error)">${esc(errMsg)}</span>`:`<b>镜头 ${s.num}</b>`;
-}
-
-/* ============ 参考图确认暂停（2 分钟超时） ============ */
-function startRefConfirm(resolve){
-  refConfirmResolver=resolve;
-  refConfirmSeconds=120;
-  const pause=document.getElementById('refPause');
-  const count=document.getElementById('refCountdown');
-  pause.classList.add('active');
-  count.textContent=fmtTime(refConfirmSeconds);
-  const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=false;
-  document.getElementById('out-pics').scrollIntoView({behavior:'smooth', block:'center'});
-  toast('参考图已生成，请检查或替换；2 分钟后自动继续');
-  if(refConfirmTimer) clearInterval(refConfirmTimer);
-  refConfirmTimer=setInterval(()=>{
-    refConfirmSeconds--;
-    count.textContent=fmtTime(refConfirmSeconds);
-    if(refConfirmSeconds<=0) confirmRefContinue(true);
-  },1000);
-}
-
-function confirmRefContinue(auto=false){
-  if(!refConfirmResolver) return;
-  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
-  const pause=document.getElementById('refPause'); pause.classList.remove('active');
-  const btn=document.getElementById('refContinueBtn'); if(btn) btn.disabled=true;
-  if(!auto) toast('已确认，继续生成分镜场景图');
-  const res=refConfirmResolver; refConfirmResolver=null;
-  if(stepResolve){ stepResolve=null; currentStep=null; }
-  res('continue');
-}
-
-function retryRefStep(){
-  if(currentStep!=='refs' || !stepResolve) return;
-  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
-  document.getElementById('refPause').classList.remove('active');
-  const res=stepResolve; stepResolve=null; currentStep=null;
-  res('retry');
-}
-
-/* ============ 替换参考图弹窗 ============ */
-let replaceIdx=-1;
-function refDetailHTML(r){
-  const rows=[];
-  if(r.identity) rows.push(`<div><b>故事身份：</b>${esc(r.identity)}</div>`);
-  if(r.age) rows.push(`<div><b>年龄：</b>${esc(r.age)}</div>`);
-  if(r.appearance) rows.push(`<div><b>外貌特征：</b>${esc(r.appearance)}</div>`);
-  if(r.clothing) rows.push(`<div><b>穿着风格：</b>${esc(r.clothing)}</div>`);
-  if(r.personality) rows.push(`<div><b>性格特点：</b>${esc(r.personality)}</div>`);
-  if(r.behavior) rows.push(`<div><b>行为细节：</b>${esc(r.behavior)}</div>`);
-  if(r.emotion) rows.push(`<div><b>情绪作用：</b>${esc(r.emotion)}</div>`);
-  if(r.scenes) rows.push(`<div><b>出现场景：</b>${esc(r.scenes)}</div>`);
-  if(r.desc) rows.push(`<div><b>英文视觉描述：</b>${esc(r.desc)}</div>`);
-  return rows.join('');
-}
-let replaceKind='ref';
-function openReplaceModal(idx, kind){
-  replaceKind=kind||'ref';
-  replaceIdx=idx;
-  if(replaceKind==='scene'){
-    const s=pipelineScenes[idx]; if(!s) return;
-    document.getElementById('replaceTitle').textContent='替换分镜场景图：镜头 '+s.num;
-    document.getElementById('replaceName').value='镜头 '+s.num;
-    document.getElementById('replaceDetail').innerHTML=`<div><b>分镜描述：</b>${esc(s.desc||'')}</div>`;
-    document.getElementById('replacePrompt').value=s.prompt||'';
-    document.getElementById('replacePreviewRegen').src=s.url||'';
-  } else {
-    const r=pipelineRefs[idx]; if(!r) return;
-    document.getElementById('replaceTitle').textContent='替换参考图：'+r.name+'（'+r.type+'）';
-    document.getElementById('replaceName').value=r.name;
-    document.getElementById('replaceDetail').innerHTML=refDetailHTML(r);
-    document.getElementById('replacePrompt').value=r.prompt||'';
-    document.getElementById('replacePreviewRegen').src=r.url||'';
-  }
-  document.getElementById('replaceFile').value='';
-  document.getElementById('replacePreviewUpload').style.display='none';
-  document.getElementById('replacePreviewUpload').src='';
-  switchReplaceTab('regen');
-  document.getElementById('replaceModal').classList.add('active');
-}
-function closeReplaceModal(){ document.getElementById('replaceModal').classList.remove('active'); replaceIdx=-1; }
-function switchReplaceTab(tab){
-  document.querySelectorAll('.modal-tab').forEach((b,i)=>b.classList.toggle('active', (tab==='regen'&&i===0)||(tab==='upload'&&i===1)));
-  document.getElementById('tab-regen').classList.toggle('active', tab==='regen');
-  document.getElementById('tab-upload').classList.toggle('active', tab==='upload');
-}
-async function doRegenerateRef(){
-  if(replaceIdx<0) return;
-  const isScene = replaceKind==='scene';
-  const el = isScene ? pipelineScenes[replaceIdx] : pipelineRefs[replaceIdx];
-  if(!el) return;
-  el.prompt=document.getElementById('replacePrompt').value.trim();
-  const btn=document.getElementById('replaceRegenBtn'); btn.disabled=true; btn.textContent='生成中…';
-  const mc=getMediaCfg();
-  try{
-    if(!mc.imgUrl){ await sleep(800); el.url=genManjuPic(isScene?('镜头'+el.num):el.name, el.prompt); }
-    else {
-      const prompt=buildImagePrompt(el);
-      let inputImage='';
-      if(mc.imgMode==='img2img'){
-        inputImage=el.url && (el.url.startsWith('http')||el.url.startsWith('data:')) ? el.url : (el.inputImage||'');
-      }
-      const u=await genImage(prompt, mc, inputImage);
-      if(u) el.url=u;
-      else throw new Error('未返回图片');
-    }
-    if(isScene){ renderScenesGrid(document.getElementById('out-scenes')); }
-    else { renderRefGrid(document.getElementById('out-pics')); }
-    closeReplaceModal();
-    toast(isScene?('场景图已替换：镜头 '+el.num):('参考图已替换：'+el.name));
-  }catch(e){ toast('替换失败：'+e.message); }
-  finally{ btn.disabled=false; btn.textContent='🔄 重新生成'; }
-}
-function previewReplaceFile(input){
-  const f=input.files[0]; if(!f) return;
-  const rd=new FileReader();
-  rd.onload=()=>{
-    const img=document.getElementById('replacePreviewUpload');
-    img.src=rd.result; img.style.display='block';
-  };
-  rd.readAsDataURL(f);
-}
-function doUploadRef(){
-  if(replaceIdx<0) return;
-  const isScene = replaceKind==='scene';
-  const el = isScene ? pipelineScenes[replaceIdx] : pipelineRefs[replaceIdx];
-  if(!el) return;
-  const file=document.getElementById('replaceFile').files[0];
-  if(!file){ toast('请先选择图片'); return; }
-  const rd=new FileReader();
-  rd.onload=()=>{
-    el.url=rd.result;
-    if(isScene){ const c=document.getElementById('out-scenes').children[replaceIdx]; if(c&&c.querySelector('img')) c.querySelector('img').src=rd.result; }
-    else { updateRefCell(replaceIdx); }
-    closeReplaceModal();
-    toast(isScene?('已上传替换：镜头 '+el.num):('已上传替换：'+el.name));
-  };
-  rd.readAsDataURL(file);
-}
-
-/* ============ 视频生成（使用参考图保持一致性） ============ */
-let videoFailed=false;
-let videoErrorMsg='';
-
-/* 构建视频提示词（移植自 Agnes：强制嵌入角色/道具/场景外观，禁止把参考设计板放进视频） */
-function buildVideoPrompt(shot, matchedAssets, f){
-  let prompt = (shot && shot.prompt) ? shot.prompt : (shot && shot.desc ? shot.desc : 'cinematic animated short scene');
-  if(matchedAssets && matchedAssets.length){
-    const charParts=[], sceneParts=[], propParts=[];
-    matchedAssets.forEach(a=>{
-      let d=(a.desc||a.prompt||'');
-      ['three views','three-view','character design sheet','design board','front view','side view','back view','orthographic','design sheet','multiple views','close-up detail','detail showcase','white background'].forEach(t=>{ d=d.replace(new RegExp(t,'gi'),' '); });
-      d=d.split(/\s+/).filter(Boolean).join(' ').trim();
-      if(!d) return;
-      if(a.category==='characters' || a.type==='角色') charParts.push(`${a.name}: ${d}`);
-      else if(a.category==='scenes' || a.type==='场景') sceneParts.push(d);
-      else propParts.push(d);
-    });
-    const parts=[];
-    if(charParts.length) parts.push('Character appearance (MUST match exactly): '+charParts.join('; '));
-    if(propParts.length) parts.push('Props: '+propParts.join('; '));
-    if(sceneParts.length) parts.push('Scene: '+sceneParts.join('; '));
-    if(parts.length) prompt=`${prompt}. ${parts.join('. ')}. Use the provided reference image ONLY to lock character appearance and identity, NOT as the first frame.`;
-  }
-  prompt=`${prompt}. The video MUST open directly on the real cinematic scene — never show any design sheet, character board, three-view orthographic, or reference layout. Begin immediately with the story.`;
-  return sanitizePrompt(prompt);
-}
-async function generateVideos(storyboard, scenes, refs, f, useAI){
-  const mc=getMediaCfg();
-  const vEl=document.getElementById('out-video');
-  const vHint=document.getElementById('vidHint');
-  const vIntro=document.getElementById('vidIntro');
-  const gallery=document.getElementById('out-video-gallery');
-  videoFailed=false; videoErrorMsg='';
-  if(gallery) gallery.innerHTML='';
-  if(!mc.vidUrl){
-    if(vIntro) vIntro.textContent='未配置视频接口，使用占位视频（真实生成需填写视频接口）';
-    if(vHint) vHint.textContent='未配置视频接口';
-    return;
-  }
-  if(vIntro) vIntro.textContent='正在真实生成视频（以角色参考图为种子，确保人物一致）…';
-  const shots=parseStoryboard(storyboard);
-  if(!shots.length) shots.push({num:1, scene:null, desc:`漫剧短片：${f.title}。${f.premise}`, prompt:''});
-
-  const vidPrompts=[];
-  const vidUrls=[];
-  let successCount=0;
-
-  for(let i=0;i<shots.length;i++){
-    const shot=shots[i];
-    const scene=scenes.find(s=>s.num===shot.num) || scenes[i] || scenes[0];
-    if(scene && scene.prompt) shot.prompt=scene.prompt;
-    const matchedRefs=matchRefsForShot(shot, refs);
-    const prompt=buildVideoPrompt(shot, matchedRefs, f);
-    vidPrompts.push({num:shot.num, prompt});
-    // 种子图：优先用匹配到的角色/场景参考图（Agnes 做法：以参考图为种子保证人物一致）
-    // 仅当参考图为可访问的 http(s) URL 时才作为图生视频种子；data: 占位图则仅用提示词约束外观
-    let primaryImage='';
-    const charRef=matchedRefs.find(r=>r.type==='角色' && r.url);
-    const anyRef=matchedRefs.find(r=>r.url);
-    const seed = charRef ? charRef.url : (anyRef ? anyRef.url : (scene && scene.url && /^https?:\/\//i.test(scene.url) ? scene.url : ''));
-    if(seed && /^https?:\/\//i.test(seed)) primaryImage=seed;
-    try{
-      const u=await genVideo(prompt, mc, primaryImage);
-      if(u){
-        successCount++; vidUrls.push(u);
-        if(successCount===1){ vEl.src=u; vEl.load(); if(vHint) vHint.textContent=`✅ 镜头 ${shot.num}/${shots.length} 已生成，可播放`; }
-        else if(vHint) vHint.textContent=`✅ 已生成 ${successCount}/${shots.length} 段视频`;
-      } else {
-        throw new Error('接口未返回视频 URL');
-      }
-    }catch(e){
-      videoFailed=true; videoErrorMsg=e.message;
-      if(vHint) vHint.innerHTML=`⚠️ 镜头 ${shot.num} 视频生成失败：${e.message.slice(0,120)}<br><small>点击「🔄 重新生成视频」可再次尝试</small>`;
-    }
-    await sleep(300);
-  }
-
-  // 渲染全部镜头视频画廊，便于逐条核对人物一致性
-  if(gallery){
-    if(vidUrls.length){
-      gallery.innerHTML=vidUrls.map((u,i)=>`<div class="pic-cell"><span class="ref-type">镜头 ${i+1}</span><video class="vid-cell" controls preload="metadata" src="${u}" onerror="this.style.display='none'"></video></div>`).join('');
-    } else if(!videoFailed){
-      gallery.innerHTML='<div class="note">未生成视频</div>';
-    }
-  }
-
-  if(videoFailed && successCount===0){
-    if(vIntro) vIntro.textContent='视频生成失败，可点击重新生成再次尝试';
-    const acts=document.getElementById('actions-video'); if(acts) acts.style.display='flex';
-  } else if(successCount>0 && videoFailed){
-    if(vHint) vHint.innerHTML=`⚠️ 部分视频生成失败（成功 ${successCount}/${shots.length}）：${videoErrorMsg.slice(0,80)}<br><small>点击下方「🔄 重新生成视频」可补全剩余镜头</small>`;
-  }
-  fillVideoPromptSummary(vidPrompts);
-}
-
-function playVideoPlaylist(){
-  const gallery=document.getElementById('out-video-gallery');
-  if(!gallery) return;
-  const cells=[...gallery.querySelectorAll('video')];
-  if(!cells.length){ toast('暂无可播放的视频'); return; }
-  cells.forEach((v,idx)=>{ v.onended=()=>{ if(idx+1<cells.length) cells[idx+1].play(); }; });
-  cells[0].scrollIntoView({behavior:'smooth',block:'center'});
-  cells[0].play();
-}
-
-function parseStoryboard(storyboard){
-  const lines=(storyboard||'').split('\n');
-  const shots=[];
-  lines.forEach(line=>{
-    const m=line.match(/镜头\s*(\d+)/);
-    if(m){
-      const num=+m[1];
-      const sm=line.match(/场景\s*(\d+)/);
-      const scene=sm?+sm[1]:null;
-      const descPart=line.replace(/^.*?[·.\-:：]\s*/, '');
-      shots.push({num, scene, desc:descPart.trim()});
-    }
-  });
-  return shots;
-}
-
-function matchRefsForShot(shot, refs){
-  const matched=[];
-  refs.forEach(r=>{
-    if(!r.name) return;
-    if(shot.desc.includes(r.name)) matched.push(r);
-  });
-  if(!matched.find(r=>r.type==='角色')){ const c=refs.find(r=>r.type==='角色'); if(c) matched.unshift(c); }
-  if(!matched.find(r=>r.type==='场景')){ const s=refs.find(r=>r.type==='场景'); if(s) matched.unshift(s); }
-  return matched.length?matched:refs.slice(0,2);
-}
-
-function resetPipeline(){
-  running=false;
-  outputs={story:'',script:'',storyboard:''};
-  pipelineRefs=[];
-  pipelineScenes=[];
-  videoFailed=false; videoErrorMsg='';
-  if(stepResolve){ stepResolve=null; currentStep=null; }
-  if(refConfirmTimer){ clearInterval(refConfirmTimer); refConfirmTimer=null; }
-  refConfirmResolver=null;
-  hideAllStepActions();
-  document.getElementById('refPause').classList.remove('active');
-  document.getElementById('result').classList.add('hidden');
-  document.getElementById('log').style.display='none';
-  document.getElementById('log').textContent='';
-  document.getElementById('bar').style.display='none';
-  document.getElementById('bar').firstElementChild.style.width='0';
-  document.getElementById('out-story').textContent='（等待开始…）';
-  document.getElementById('out-script').textContent='（等待故事梗概确认…）';
-  document.getElementById('out-storyboard').textContent='（等待专业剧本确认…）';
-  document.getElementById('out-pics').innerHTML='<div class="note">（等待分镜脚本确认…）</div>';
-  document.getElementById('out-scenes').innerHTML='<div class="note">（等待角色参考图确认…）</div>';
-  const v=document.getElementById('out-video'); v.src='#';
-  document.getElementById('vidHint').textContent='（等待参考图确认…）';
-  document.getElementById('vidIntro').textContent='配置视频接口后，将真实生成可播放视频；未配置时显示占位。';
-  const rb=document.getElementById('runBtn'); if(rb) rb.disabled=false;
-  toast('已重置');
-}
-
-function loadDemo(){
-  if(running) return;
-  resetPipeline();
-  outputs={story:DEMO.story, script:DEMO.script, storyboard:DEMO.storyboard};
-  const result=document.getElementById('result');
-  result.classList.remove('hidden');
-  document.getElementById('out-story').textContent='【演示示例】\n'+DEMO.story;
-  document.getElementById('out-script').textContent='【演示示例】\n'+DEMO.script;
-  document.getElementById('out-storyboard').textContent='【演示示例】\n'+DEMO.storyboard;
-  pipelineRefs=DEMO.refs.map(r=>({...r, url:'', originalUrl:'', inputImage:''}));
-  const picGrid=document.getElementById('out-pics');
-  renderRefGrid(picGrid);
-  pipelineRefs.forEach((r,idx)=>{ r.url=genManjuPic(r.name, r.prompt); r.originalUrl=r.url; updateRefCell(idx); });
-  pipelineScenes=parseStoryboard(DEMO.storyboard).map(s=>({num:s.num, scene:s.scene, desc:s.desc, prompt:'', url:'', originalUrl:'', inputImage:''}));
-  renderScenesGrid(document.getElementById('out-scenes'));
-  pipelineScenes.forEach((s,idx)=>{ s.url=genManjuPic('镜头'+s.num, s.desc); s.originalUrl=s.url; updateSceneCell(idx); });
-  hideAllStepActions();
-  toast('已加载演示示例（与当前创作参数无关）');
-  result.scrollIntoView({behavior:'smooth'});
-}
-
-/* ============ 媒体 AI 接口配置（用户自填） ============ */
-const DEFAULT_IMG_STYLE='人物角色五官清晰、写实古风、国风、史诗级电影质感、专业级运镜';
+/* ============ 媒体配置（设置页） ============ */
 const MEDIA_KEYS=['img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
-function isLocalhostUrl(u){ try{ const h=new URL(u).hostname; return h==='localhost'||h==='127.0.0.1'||h==='[::1]'; }catch(e){ return false; } }
-function fillTextAIInputs(){
-  const mode = localStorage.getItem('useLocalAI')==='true' ? 'ollama' : 'cloud';
-  const modeEl = document.getElementById('ai_mode');
-  if(modeEl) modeEl.value = mode;
-  const cloudBaseUrl = localStorage.getItem('cloudBaseUrl') || '';
-  const cloudModel = localStorage.getItem('cloudModel') || '';
-  const cloudApiKey = localStorage.getItem('cloudApiKey') || '';
-  const ollamaEndpoint = localStorage.getItem('ollamaEndpoint') || '';
-  const localModel = localStorage.getItem('localModel') || '';
-  const cBase=document.getElementById('ai_cloudBaseUrl'); if(cBase) cBase.value = cloudBaseUrl;
-  const cModel=document.getElementById('ai_cloudModel'); if(cModel) cModel.value = cloudModel;
-  const cKey=document.getElementById('ai_cloudApiKey'); if(cKey) cKey.value = cloudApiKey;
-  const oEp=document.getElementById('ai_ollamaEndpoint'); if(oEp) oEp.value = ollamaEndpoint;
-  const oModel=document.getElementById('ai_localModel'); if(oModel) oModel.value = localModel;
-  onAIModeChange();
-}
-function onAIModeChange(){
-  const mode = document.getElementById('ai_mode')?.value || 'cloud';
-  const cloudCfg = document.getElementById('cloudCfg');
-  const ollamaCfg = document.getElementById('ollamaCfg');
-  if(cloudCfg) cloudCfg.style.display = mode==='cloud' ? 'block' : 'none';
-  if(ollamaCfg) ollamaCfg.style.display = mode==='ollama' ? 'block' : 'none';
-}
-function saveTextAIConfig(){
-  const modeEl = document.getElementById('ai_mode');
-  const mode = modeEl ? modeEl.value : 'cloud';
-  localStorage.setItem('useLocalAI', mode==='ollama' ? 'true' : 'false');
-  if(mode==='cloud'){
-    const baseUrlEl = document.getElementById('ai_cloudBaseUrl');
-    const modelEl = document.getElementById('ai_cloudModel');
-    const keyEl = document.getElementById('ai_cloudApiKey');
-    localStorage.setItem('cloudBaseUrl', (baseUrlEl?baseUrlEl.value.trim():'') || 'https://api.openai.com/v1');
-    localStorage.setItem('cloudModel', (modelEl?modelEl.value.trim():'') || 'gpt-4o');
-    const key = keyEl ? keyEl.value.trim() : '';
-    if(key) localStorage.setItem('cloudApiKey', key);
-  } else {
-    const epEl = document.getElementById('ai_ollamaEndpoint');
-    const modelEl = document.getElementById('ai_localModel');
-    localStorage.setItem('ollamaEndpoint', (epEl?epEl.value.trim():'') || 'http://localhost:11434');
-    localStorage.setItem('localModel', (modelEl?modelEl.value.trim():'') || 'qwen2.5:14b');
-  }
-  const h = document.getElementById('textAICfgHint');
-  if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓，状态条已更新'; setTimeout(()=>h.textContent='',2500); }
-  updateModePill();
-  // 触发 storage 事件让同一窗口内其它监听也能同步（同页配置时 storage 事件不会自动触发）
-  window.dispatchEvent(new StorageEvent('storage', { key: 'useLocalAI' }));
-  window.dispatchEvent(new StorageEvent('storage', { key: 'cloudApiKey' }));
-}
-
-function fillMediaInputs(){
-  MEDIA_KEYS.forEach(id=>{
-    const el=document.getElementById(id); const v=localStorage.getItem(id);
-    if(!el||v==null) return;
-    if(el.tagName==='SELECT'){
-      const hasOption=Array.from(el.options).some(o=>o.value===v);
-      if(!hasOption){
-        const custom=document.createElement('option'); custom.value=v; custom.textContent=`自定义（${v}）`; custom.selected=true; el.appendChild(custom);
-      } else {
-        el.value=v;
-      }
-    } else {
-      el.value=v;
-    }
-  });
-}
-function saveMediaCfg(){
-  const iu=document.getElementById('img_url').value.trim();
-  const vu=document.getElementById('vid_url').value.trim();
-  if(iu && iu.startsWith('http://') && !isLocalhostUrl(iu)) toast('⚠️ 图像接口为 HTTP，建议改用 https://（HTTPS 站点下浏览器会拦截该请求）');
-  if(vu && vu.startsWith('http://') && !isLocalhostUrl(vu)) toast('⚠️ 视频接口为 HTTP，建议改用 https://（HTTPS 站点下浏览器会拦截该请求）');
-  MEDIA_KEYS.forEach(id=>{ const el=document.getElementById(id); if(el) localStorage.setItem(id, el.value); });
-  const h=document.getElementById('mediaCfgHint'); if(h){ h.style.color='var(--success)'; h.textContent='已保存 ✓'; setTimeout(()=>h.textContent='',2000); }
-  updateModePill();
-}
-function loadMediaCfg(){
-  fillMediaInputs();
-  const h=document.getElementById('mediaCfgHint'); if(h){ h.textContent='已载入已存配置'; setTimeout(()=>h.textContent='',2000); }
-}
 function getMediaCfg(){
   return {
-    imgUrl:localStorage.getItem('img_url')||'',
-    imgKey:localStorage.getItem('img_key')||'',
-    imgModel:localStorage.getItem('img_model')||'',
-    imgSize:localStorage.getItem('img_size')||'1024x1024',
-    imgMode:localStorage.getItem('img_mode')||'txt2img',
-    imgStyle:localStorage.getItem('img_style')||'',
-    imgBody:localStorage.getItem('img_body')||'',
-    imgResp:localStorage.getItem('img_resp')||'data[0].url',
-    vidUrl:localStorage.getItem('vid_url')||'',
-    vidKey:localStorage.getItem('vid_key')||'',
-    vidModel:localStorage.getItem('vid_model')||'',
-    vidMode:localStorage.getItem('vid_mode')||'img2vid',
-    vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}","image_url":"{{image_url}}"}',
-    vidImgField:localStorage.getItem('vid_img_field')||'',
-    vidResp:localStorage.getItem('vid_resp')||'data[0].url'
+    imgUrl:localStorage.getItem('img_url')||'', imgKey:localStorage.getItem('img_key')||'', imgModel:localStorage.getItem('img_model')||'',
+    imgSize:localStorage.getItem('img_size')||'1024x1024', imgMode:localStorage.getItem('img_mode')||'txt2img',
+    imgStyle:localStorage.getItem('img_style')||'', imgBody:localStorage.getItem('img_body')||'', imgResp:localStorage.getItem('img_resp')||'data[0].url',
+    vidUrl:localStorage.getItem('vid_url')||'', vidKey:localStorage.getItem('vid_key')||'', vidModel:localStorage.getItem('vid_model')||'',
+    vidMode:localStorage.getItem('vid_mode')||'img2vid', vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}","image_url":"{{image_url}}"}',
+    vidImgField:localStorage.getItem('vid_img_field')||'', vidResp:localStorage.getItem('vid_resp')||'data[0].url'
   };
 }
 function resolvePath(obj, path){
@@ -1788,9 +272,8 @@ function resolvePath(obj, path){
 async function genImage(prompt, cfg, imageUrl){
   const urlStr=String(cfg.imgUrl||'').trim();
   if(!urlStr) return null;
-  if(!/^https?:\/\//i.test(urlStr)) throw new Error('图像接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
-  if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
-  // 通用风格约束提示词作为前缀拼接到所有图片提示词
+  if(!/^https?:\/\//i.test(urlStr)) throw new Error('图像接口 URL 无效');
+  if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('图像接口为 HTTP，HTTPS 页无法访问');
   let full=prompt;
   if(cfg.imgStyle && cfg.imgStyle.trim()){
     const sep=/[。.!?！？]$/.test(cfg.imgStyle.trim()) ? ' ' : '。';
@@ -1800,211 +283,247 @@ async function genImage(prompt, cfg, imageUrl){
   if(cfg.imgBody && cfg.imgBody.trim()){
     let tpl=cfg.imgBody.replace(/\{\{prompt\}\}/g, full);
     if(imageUrl) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
-    try{ body=JSON.parse(tpl); }
-    catch(e){ body={prompt:full}; if(imageUrl) body.image_url=imageUrl; }
+    try{ body=JSON.parse(tpl); }catch(e){ body={prompt:full}; if(imageUrl) body.image_url=imageUrl; }
   } else {
     body={ prompt:full, n:1, size:cfg.imgSize||'1024x1024' };
     if(cfg.imgModel) body.model=cfg.imgModel;
   }
   const headers={'Content-Type':'application/json'}; if(cfg.imgKey) headers['Authorization']='Bearer '+cfg.imgKey;
-  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
+  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
   if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
   const val=resolvePath(data, cfg.imgResp);
   if(!val) throw new Error('响应中未找到图片（路径 '+cfg.imgResp+'）');
   return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
 }
-// 带重试的 fetch：对 5xx / 429 / 网络失败自动重试；401/400/404 等客户端错误不重试
-async function fetchRetry(url, opts, retries=3, baseDelay=4000){
-  let lastErr;
-  for(let i=0;i<=retries;i++){
-    try{
-      const res=await fetch(url, opts);
-      if(res.ok) return res;
-      if(res.status===400||res.status===401||res.status===404) return res;
-      let m='HTTP '+res.status;
-      try{ const e=await res.json(); m=e.error?.message||e.message||m; }catch{}
-      lastErr=new Error(m);
-    }catch(e){ lastErr=e; }
-    if(i<retries) await sleep(baseDelay*(i+1));
-  }
-  if(lastErr && /Failed to fetch/i.test(lastErr.message)){
-    throw new Error('网络请求失败：可能是 CORS 跨域被拦截或服务不可达，请确认接口 URL 正确，且服务商允许本站跨域（Origin: '+location.origin+'）');
-  }
-  throw lastErr;
-}
-async function genVideo(prompt, cfg, imageUrl){
+async function genVideoSettings(prompt, imageUrl){
+  const cfg=getMediaCfg();
   const urlStr=String(cfg.vidUrl||'').trim();
   if(!urlStr) return null;
-  if(!/^https?:\/\//i.test(urlStr)) throw new Error('视频接口 URL 无效：必须以 http:// 或 https:// 开头（当前：'+urlStr+'）');
-  if(location.protocol==='https:' && urlStr.startsWith('http://')) throw new Error('视频接口为 HTTP，HTTPS 页无法访问（混合内容限制）');
-  const isAgnes = /agnes/i.test(urlStr);
-
-  // 构建请求体
   let tpl=cfg.vidBody.replace(/\{\{prompt\}\}/g, prompt);
   if(imageUrl){
     if(tpl.includes('{{image}}')) tpl=tpl.replace(/\{\{image\}\}/g, imageUrl);
     else if(tpl.includes('{{image_url}}')) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
   }
-  let bodyTpl;
-  try{ bodyTpl=JSON.parse(tpl); }
-  catch(e){ bodyTpl={prompt}; if(imageUrl) bodyTpl[cfg.vidImgField||(isAgnes?'image':'image_url')]=imageUrl; }
-  // Agnes 图生视频字段名是 image（非 image_url），做兼容归一化
-  if(imageUrl && isAgnes && bodyTpl.image_url!==undefined && bodyTpl.image===undefined){
-    bodyTpl.image=bodyTpl.image_url; delete bodyTpl.image_url;
-  }
-  // 模型名：优先用配置，Agnes 缺省补 agnes-video-v2.0
-  const model = cfg.vidModel || (isAgnes ? 'agnes-video-v2.0' : '');
-  if(model) bodyTpl.model=model;
-  if(!imageUrl){
-    delete bodyTpl.image_url; delete bodyTpl.image;
-    if(cfg.vidImgField) delete bodyTpl[cfg.vidImgField];
-  }
-
+  let body; try{ body=JSON.parse(tpl); }catch(e){ body={prompt}; if(imageUrl) body[cfg.vidImgField||'image_url']=imageUrl; }
+  const model=cfg.vidModel; if(model) body.model=model;
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
-  const res=await fetchRetry(urlStr,{method:'POST',headers,body:JSON.stringify(bodyTpl),signal:AbortSignal.timeout(120000)}, 3, 4000);
-  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||e.message||m;}catch{} throw new Error(m); }
+  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
   const data=await res.json();
-
-  // 异步任务（Agnes 风格）：创建后返回 video_id/task_id + status=queued/in_progress
-  const taskId = data.video_id || data.task_id || data.id;
-  if(taskId && data.status && data.status!=='completed'){
-    return await pollAsyncVideo(cfg, taskId, isAgnes);
-  }
-  if(data.status==='failed'){
-    throw new Error('视频任务失败：'+(data.error?JSON.stringify(data.error):'服务端生成失败'));
-  }
-  // 已完成或同步风格
-  if(taskId && data.metadata && data.metadata.url) return data.metadata.url;
   const val=resolvePath(data, cfg.vidResp);
-  if(!val) throw new Error('响应中未找到视频 URL（路径 '+cfg.vidResp+'）');
+  if(!val) throw new Error('响应中未找到视频（路径 '+cfg.vidResp+'）');
   return val;
 }
 
-// 异步视频轮询：Agnes 用 GET /agnesapi?video_id= 直到 status=completed
-async function pollAsyncVideo(cfg, taskId, isAgnes){
-  const headers={'Authorization':'Bearer '+cfg.vidKey};
-  let url;
-  if(isAgnes){
-    const base=(cfg.vidUrl||'').replace(/\/v1\/videos\/?.*$/,'');
-    url=base+'/agnesapi?video_id='+encodeURIComponent(taskId);
-  } else {
-    url=buildPollUrl(cfg, taskId);
-  }
-  const deadline=Date.now()+5*60*1000; // 最多等 5 分钟
-  let last='';
-  while(Date.now()<deadline){
-    await sleep(5000);
-    try{
-      const r=await fetch(url,{headers,signal:AbortSignal.timeout(30000)});
-      if(!r.ok) continue;
-      const j=await r.json();
-      last=j.status||'';
-      if(j.status==='completed' && j.metadata && j.metadata.url) return j.metadata.url;
-      if(j.status==='failed') throw new Error('视频生成失败：'+(j.error?JSON.stringify(j.error):'任务失败'));
-    }catch(e){ if(/失败|超时/.test(e.message)) throw e; }
-  }
-  throw new Error('视频生成轮询超时（5 分钟，最后状态：'+last+'；若一直请求失败，可能是 CORS 跨域被拦截或服务繁忙，请稍后点「重新生成视频」重试）');
+/* ============ Agnes 后端（可选，仅地址；key 来自设置页） ============ */
+function getAgnesBase(){ return (localStorage.getItem('agnesBaseUrl')||'http://localhost:8787').trim()||'http://localhost:8787'; }
+function getAgnesKey(){ return localStorage.getItem('cloudApiKey')||''; }
+async function agnesGenImage(prompt){
+  const base=getAgnesBase(); const key=getAgnesKey();
+  const body={prompt, creds:{api_key:key||''}};
+  const res=await fetch(base.replace(/\/+$/,'')+'/api/image/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error||m;}catch{} throw new Error(m); }
+  const data=await res.json();
+  const url=data.url||data.data?.url||(data.b64_json?('data:image/png;base64,'+data.b64_json):(typeof data==='string'?data:null));
+  if(!url) throw new Error('Agnes 返回中未找到图片 URL');
+  return url;
+}
+async function agnesGenVideo(prompt){
+  const base=getAgnesBase(); const key=getAgnesKey();
+  const body={prompt, creds:{api_key:key||''}};
+  const res=await fetch(base.replace(/\/+$/,'')+'/api/video/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
+  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error||m;}catch{} throw new Error(m); }
+  const data=await res.json();
+  const url=data.url||data.data?.url||data.task_id||null;
+  if(!url) throw new Error('Agnes 返回中未找到视频（若为异步任务，请在后端查看）');
+  return url;
 }
 
-// 非 Agnes 异步接口的轮询 URL（兼容旧版 /v1/videos/<taskId>）
-function buildPollUrl(cfg, taskId){
-  const v=cfg.vidUrl||'';
-  let base=v.replace(/\/v1\/videos\/?$/,'');
-  if(base===v) base=v.replace(/\/videos\/?$/,'');
-  const seg=v.includes('/v1/') ? 'v1/videos/' : 'videos/';
-  return base+'/'+seg+taskId;
+/* ============ 示例 & 清空 ============ */
+const DEMO = {
+  story: "暴雨如注的深夜，废弃的花房在雷声中摇摇欲坠。林秋浑身湿透，死死护着怀中那盆唯一的红玫瑰。这是已故妻子留下的最后遗物，也是他在这座冷漠城市中仅存的温情寄托。\n\n次日清晨，邻居小孩好奇地凑过来：「叔叔，这花快死了，为什么还留着？」林秋沉默不语。然而，一场突如其来的入室盗窃打破了宁静。小偷为了抢夺值钱物品，粗暴地推倒了花盆。泥土飞溅，玫瑰折断，鲜红的汁液染红了林秋的白衬衫。愤怒瞬间爆发，林秋冲上去与小偷搏斗，最终将其制服报警。\n\n警察带走小偷后，林秋瘫坐在地，望着断成两截的玫瑰，泪水终于决堤。就在他绝望之际，他发现断茎处竟然冒出了一颗嫩绿的新芽。那一刻，林秋明白，死亡并非终结，而是新生的序章。"
+};
+function loadDemo(){ document.getElementById('inpText').value=DEMO.story; setStatus(0,'已载入示例','ok'); toast('已载入示例'); }
+function clearAll(){
+  ['inpText','outBible','outScenes','outShots','outFountain','outVideoPrompts'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  ['refGrid','vidGrid'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
+  state.bible=state.scenes=state.shots=state.fountain=''; state.videoPrompts=[]; state.refs=[];
+  for(let i=0;i<7;i++) setStatus(i, i===0?'待输入':'等待');
+  toast('已清空');
 }
 
-function updateModePill(){
-  const cfg=getAIConfig();
-  const mc=getMediaCfg()||{imgUrl:'',vidUrl:''};
-  const pill=document.getElementById('modePill');
-  const hint=document.getElementById('aiHint');
-  if(!pill) return;
-  const aiOn = cfg.cloudApiKey || cfg.mode==='ollama';
-  const mediaOn = mc.imgUrl || mc.vidUrl;
-  if(aiOn || mediaOn){
-    let t='🔑 已配置：'; if(aiOn) t+='文本真实生成'; if(mediaOn) t+=(aiOn?'，':'')+'图/视频真实生成';
-    pill.className='mode-pill live'; pill.textContent=t;
-  } else {
-    pill.className='mode-pill demo'; pill.textContent='🎭 未配置文本 AI（点击「加载示例」可看效果，或去「设置」配置）';
+/* ============ 步骤生成 ============ */
+const SYS_BIBLE = "你是影视前期开发分镜师。根据用户提供的叙事文本（小说章节/梗概/一句话创意），建立跨章节一致的人物与风格库。\n输出 Markdown：\n# 视觉风格锚点\n- 世界观基调：\n- 色彩情绪板（主色+情绪）：\n- 镜头语言偏好：\n- 参考影片/画师：\n# 角色设定卡\n## 角色名\n- 身份/阵营：\n- 视觉锚点（写成可复用的英文描述词，含服装、发色发型、标志物/法器、体型神态）：\n- 嗓音语调：\n- 性格关键词：\n- 口头禅：\n规则：不编造文本未给出的设定，未知标 TODO；视觉锚点必须是可直接用于视频提示词的英文短句。";
+const SYS_SCENES = "你是编剧。把用户提供的叙事文本拆成场景(Scene) block（以时间/地点/人物切换为边界）。\n输出 Markdown 表格：\n| 场景编号 | INT/EXT | 地点 | 时间 | 在场人物 | 核心节拍 | 情绪 | 时长(秒) |\n场景编号从 SC01 起。只基于给定文本，不添加未出现内容。";
+const SYS_SHOTS = "你是分镜师。基于用户提供的场景表，为每个场景生成镜头(Shot)列表。\n输出 Markdown 表格：\n| 镜号 | 景别 | 机位 | 运动 | 时长(s) | 画面内容 | 声音/配乐 | 情绪 |\n景别用：远景/全景/中景/近景/特写/大特写。机位用：平/俯/仰/过肩/POV。运动用：固定/推/拉/摇/移/跟/手持/升降。镜号格式 SC01-S01。";
+const SYS_FOUNTAIN = "你是编剧。依据用户提供的场景表与分镜表，生成标准 Fountain 剧本。\n规则：场景标题用 INT. 地点 - 时间 / EXT. 地点 - 时间；动作行只写可见可拍画面，避免心理描写；对白符合人物；转场用 >；章节用 #。输出纯 Fountain 文本，不要解释。";
+const SYS_VP = "你是 AI 视频提示词工程师。基于分镜表与角色圣经的英文视觉锚点，为每个镜头生成一段英文视频提示词。\n结构：[镜头运动] + [主体与动作，调用人物英文锚点] + [场景环境] + [光照/氛围] + [风格/参考] + [负面词]。\n人物外观必须复用给定锚点，禁止每镜重新描述。\n输出 Markdown 表格：\n| 镜号 | 中文说明 | English Prompt |\n每镜附一行中文说明便于人工调参。";
+const SYS_REFS = "从下方角色圣经中提取需要出参考图的元素，返回 JSON 数组（不超过 8 个）：\n[{\"name\":\"名称\",\"type\":\"角色|道具\",\"prompt\":\"英文视觉描述词，复用圣经中的视觉锚点，full body / three views / clean white background / character reference sheet\"}]\n只输出 JSON，不要解释。";
+
+async function genBible(){
+  const text=document.getElementById('inpText').value.trim();
+  if(!text){ setStatus(1,'请先输入','err'); toast('请先在 Step 0 输入'); return; }
+  setStatus(1,'生成中…','warn');
+  try{
+    const out=await callSiteAI([{role:'system',content:SYS_BIBLE},{role:'user',content:text}]);
+    document.getElementById('outBible').value=out; state.bible=out; setStatus(1,'已生成 ✓','ok');
+  }catch(e){ setStatus(1,'失败','err'); toast('角色圣经生成失败：'+e.message); }
+}
+async function genScenes(){
+  const text=document.getElementById('inpText').value.trim();
+  const bible=document.getElementById('outBible').value.trim();
+  if(!text){ setStatus(2,'请先输入','err'); toast('请先在 Step 0 输入'); return; }
+  setStatus(2,'生成中…','warn');
+  const user="【叙事文本】\n"+text+(bible?("\n\n【风格参考】\n"+bible):"");
+  try{
+    const out=await callSiteAI([{role:'system',content:SYS_SCENES},{role:'user',content:user}]);
+    document.getElementById('outScenes').value=out; state.scenes=out; setStatus(2,'已生成 ✓','ok');
+  }catch(e){ setStatus(2,'失败','err'); toast('场景拆解失败：'+e.message); }
+}
+async function genShots(){
+  const scenes=document.getElementById('outScenes').value.trim();
+  if(!scenes){ setStatus(3,'等待场景','err'); toast('请先生成场景表（Step 2）'); return; }
+  setStatus(3,'生成中…','warn');
+  try{
+    const out=await callSiteAI([{role:'system',content:SYS_SHOTS},{role:'user',content:scenes}]);
+    document.getElementById('outShots').value=out; state.shots=out; setStatus(3,'已生成 ✓','ok');
+  }catch(e){ setStatus(3,'失败','err'); toast('分镜生成失败：'+e.message); }
+}
+async function genFountain(){
+  const scenes=document.getElementById('outScenes').value.trim();
+  const shots=document.getElementById('outShots').value.trim();
+  if(!scenes||!shots){ setStatus(4,'等待前序','err'); toast('需要场景表与分镜表'); return; }
+  setStatus(4,'生成中…','warn');
+  const user="【场景表】\n"+scenes+"\n\n【分镜表】\n"+shots;
+  try{
+    const out=await callSiteAI([{role:'system',content:SYS_FOUNTAIN},{role:'user',content:user}]);
+    document.getElementById('outFountain').value=out; state.fountain=out; setStatus(4,'已生成 ✓','ok');
+  }catch(e){ setStatus(4,'失败','err'); toast('剧本生成失败：'+e.message); }
+}
+async function genVideoPrompts(){
+  const shots=document.getElementById('outShots').value.trim();
+  const bible=document.getElementById('outBible').value.trim();
+  if(!shots){ setStatus(5,'等待分镜','err'); toast('请先生成分镜表（Step 3）'); return; }
+  setStatus(5,'生成中…','warn');
+  const user="【角色圣经锚点】\n"+(bible||'(无)')+"\n\n【分镜表】\n"+shots;
+  try{
+    const out=await callSiteAI([{role:'system',content:SYS_VP},{role:'user',content:user}]);
+    document.getElementById('outVideoPrompts').value=out;
+    state.videoPrompts=parseVPTable(out);
+    setStatus(5,'已生成 ✓','ok');
+  }catch(e){ setStatus(5,'失败','err'); toast('提示词生成失败：'+e.message); }
+}
+function parseVPTable(md){
+  const rows=[]; const lines=(md||'').split('\n');
+  for(const ln of lines){
+    if(!ln.trim().startsWith('|')) continue;
+    const cells=ln.split('|').map(c=>c.trim()).filter((c,i,arr)=>!(i===0&&c==='')&&!(i===arr.length-1&&c===''));
+    if(cells.length<3) continue;
+    if(/^镜号|^shot|^镜/i.test(cells[0]) && /prompt/i.test(cells[2]+cells[1])) continue; // 表头
+    rows.push({shot:cells[0], zh:cells[1]||'', en:cells[2]||''});
   }
-  if(hint){
-    if(aiOn){
-      hint.textContent = '文本阶段由你配置的 AI 真实生成' + (mediaOn?'，图/视频接口已配置':'');
-    } else {
-      hint.textContent='当前域名「'+location.hostname+'」未读到文本 AI 配置；点击 🔍 诊断查看详情，或去「设置」配置。';
+  return rows;
+}
+async function extractRefs(bible){
+  const out=await callSiteAI([{role:'system',content:SYS_REFS},{role:'user',content:bible}]);
+  const json=extractJSON(out);
+  if(!json||!Array.isArray(json)) throw new Error('未能从角色圣经解析出参考元素');
+  return json;
+}
+function extractJSON(t){
+  t=(t||'').trim();
+  const m=t.match(/\[[\s\S]*\]/); if(m){ try{return JSON.parse(m[0]);}catch(e){} }
+  const m2=t.match(/\{[\s\S]*\}/); if(m2){ try{return JSON.parse(m2[0]);}catch(e){} }
+  return null;
+}
+
+/* ============ 媒体动作 ============ */
+async function genRefImages(){
+  const bible=document.getElementById('outBible').value.trim();
+  if(!bible){ toast('请先生成角色圣经（Step 1）'); return; }
+  const engine=document.getElementById('mediaEngine').value;
+  if(engine==='settings'){ const cfg=getMediaCfg(); if(!cfg.imgUrl){ toast('设置页未配置图像接口'); return; } }
+  else { if(!getAgnesBase()){ toast('请填写 Agnes 后端地址'); return; } }
+  setStatus(1,'参考图生成中…','warn');
+  try{
+    const refs=await extractRefs(bible);
+    state.refs=refs;
+    const grid=document.getElementById('refGrid'); grid.innerHTML='';
+    for(const r of refs){
+      const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">生成中…</div>'; grid.appendChild(cell);
+      try{
+        const url = engine==='settings' ? await genImage(r.prompt, getMediaCfg()) : await agnesGenImage(r.prompt);
+        cell.innerHTML='<img src="'+url+'" alt="'+esc(r.name)+'"><div class="ref-detail"><b>'+esc(r.name)+'</b> · '+esc(r.type)+'</div>';
+      }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.name)+' 失败：'+esc(e.message)+'</div>'; }
     }
+    setStatus(1,'参考图完成 ✓','ok');
+  }catch(e){ toast('参考图失败：'+e.message); setStatus(1,'参考图失败','err'); }
+}
+async function genVideos(){
+  if(!state.videoPrompts||!state.videoPrompts.length){ setStatus(6,'等待提示词','err'); toast('请先生成视频提示词（Step 5）'); return; }
+  const engine=document.getElementById('mediaEngine').value;
+  if(engine==='settings'){ const cfg=getMediaCfg(); if(!cfg.vidUrl){ toast('设置页未配置视频接口'); return; } }
+  else { if(!getAgnesBase()){ toast('请填写 Agnes 后端地址'); return; } }
+  setStatus(6,'视频生成中…','warn');
+  const grid=document.getElementById('vidGrid'); grid.innerHTML='';
+  for(const vp of state.videoPrompts){
+    const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(vp.shot)+' 生成中…</div>'; grid.appendChild(cell);
+    try{
+      const url = engine==='settings' ? await genVideoSettings(vp.en) : await agnesGenVideo(vp.en);
+      cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b></div>';
+    }catch(e){ cell.innerHTML='<div class="ph err">'+esc(vp.shot)+' 失败：'+esc(e.message)+'</div>'; }
   }
+  setStatus(6,'视频完成 ✓','ok');
 }
 
-/* 配置诊断：显示当前页面实际读到的 localStorage，帮助定位「设置页保存了但这里显示未配置」 */
-function showAIConfigDiag(){
-  const cfg=getAIConfig();
-  const mc=getMediaCfg()||{imgUrl:'',vidUrl:''};
-  const mask = (s)=> s ? (s.slice(0,4)+'***'+s.slice(-4)) : '(空)';
-  const lines=[
-    '【AI 配置诊断】',
-    '当前域名：'+location.hostname,
-    '当前协议：'+location.protocol,
-    '',
-    '文本 AI：',
-    '  mode: '+cfg.mode,
-    '  useLocalAI: '+localStorage.getItem('useLocalAI'),
-    '  cloudApiKey: '+(cfg.cloudApiKey?'已设置 ('+mask(cfg.cloudApiKey)+')':'未设置'),
-    '  cloudModel: '+(cfg.cloudModel||'(空)'),
-    '  cloudBaseUrl: '+(cfg.cloudBaseUrl||'(空)'),
-    '  ollamaEndpoint: '+(cfg.ollamaUrl||'(空)'),
-    '  localModel: '+(cfg.ollamaModel||'(空)'),
-    '',
-    '图像/视频接口：',
-    '  imgUrl: '+(mc.imgUrl?'已设置':'未设置'),
-    '  vidUrl: '+(mc.vidUrl?'已设置':'未设置'),
-    '',
-    '常见原因：',
-    '1. 设置页保存时所在域名与当前域名不同，localStorage 不共享。',
-    '2. 只填了 API 地址/模型名，未填写 API Key。',
-    '3. 浏览器隐私模式/清理数据后配置被清空。'
-  ];
-  alert(lines.join('\n'));
+/* ============ 一键流水线 ============ */
+async function runPipeline(){
+  const text=document.getElementById('inpText').value.trim();
+  if(!text){ toast('请先在 Step 0 输入文本'); setStatus(0,'缺少输入','err'); return; }
+  const btn=document.querySelector('button.btn-primary[onclick="runPipeline()"]'); if(btn) btn.disabled=true;
+  try{
+    await genBible();
+    await genScenes();
+    await genShots();
+    await genFountain();
+    await genVideoPrompts();
+    toast('流水线完成 ✓');
+  }catch(e){ toast('流水线中断：'+e.message); }
+  finally{ if(btn) btn.disabled=false; }
 }
 
-/* 初始化：提示当前 AI 状态，并实时响应配置变化，避免「返回/切换标签页后必须强制刷新」 */
-(function(){
-  // 首次访问时把默认风格约束写入 localStorage（仅当从未设置过，用户主动清空后仍为空）
-  if(localStorage.getItem('img_style')==null) localStorage.setItem('img_style', DEFAULT_IMG_STYLE);
-  fillTextAIInputs();
-  fillMediaInputs();
-  updateModePill();
+/* ============ 导出 ============ */
+function downloadFile(name,content,mime){
+  const blob=new Blob([content||''],{type:(mime||'text/plain')+';charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function exportAll(){
+  const bible=document.getElementById('outBible').value;
+  const scenes=document.getElementById('outScenes').value;
+  const shots=document.getElementById('outShots').value;
+  const fountain=document.getElementById('outFountain').value;
+  const vprompts=document.getElementById('outVideoPrompts').value;
+  if(!bible && !scenes && !fountain && !vprompts){ toast('暂无内容可导出'); return; }
+  downloadFile('角色圣经.md', bible, 'text/markdown');
+  downloadFile('分镜表.md', '# 场景表\n'+scenes+'\n\n# 分镜表\n'+shots+'\n\n# 视频提示词\n'+vprompts, 'text/markdown');
+  downloadFile('剧本.fountain', fountain, 'text/plain');
+  toast('已下载 3 个文件 ✓');
+}
 
-  // 跨标签页：在「设置」页保存配置后，本页立即刷新状态（storage 事件只在「其他」标签页触发）
-  const AI_KEYS=['useLocalAI','ollamaEndpoint','localModel','cloudBaseUrl','cloudModel','cloudApiKey','img_url','img_key','img_model','img_size','img_mode','img_style','img_body','img_resp','vid_url','vid_key','vid_model','vid_mode','vid_body','vid_img_field','vid_resp'];
-  window.addEventListener('storage', function(e){
-    if(!e.key || AI_KEYS.indexOf(e.key)>=0) updateModePill();
-  });
-  // 切回本标签页（从「设置」配置后切回来）立即刷新
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) updateModePill(); });
-  // 浏览器前进/后退（bfcache 还原）时刷新，无需强制刷新
-  window.addEventListener('pageshow', function(e){ if(e.persisted) updateModePill(); });
-})();
-</script>
-<script src="text-pressure.js"></script>
-<script>
-(function(){
-  function initBrandText(){
-    document.querySelectorAll('.brand-text').forEach(function(el){
-      if(window.initTextPressure && !el.__btInited){
-        el.__btInited = true;
-        try {
-          initTextPressure(el, { text: el.dataset.text, minFontSize:18, maxFontSize:28, flex:false, scale:false, textColor: (getComputedStyle(el).color || '#f0eee6') });
-        } catch(e){ console.error('brand-text init failed', e); }
-      }
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', initBrandText);
-  else initBrandText();
-})();
+/* ============ 初始化 ============ */
+function onMediaEngineChange(){
+  const v=document.getElementById('mediaEngine').value;
+  document.getElementById('agnesAddrRow').style.display = v==='agnes' ? 'inline-block' : 'none';
+}
+function init(){
+  const saved=localStorage.getItem('theme'); if(saved) document.documentElement.setAttribute('data-theme',saved);
+  updateThemeBtns();
+  const ab=localStorage.getItem('agnesBaseUrl'); if(ab) document.getElementById('agnesBaseUrl').value=ab;
+  onMediaEngineChange();
+}
+init();
 </script>
 </body>
 </html>
