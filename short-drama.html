@@ -206,9 +206,14 @@
             <label class="lbl" style="margin:0">⚙️ 生成引擎</label>
             <select id="genMode" onchange="onGenModeChange()" style="max-width:340px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
                 <option value="local">本地配置（页面内 AI 接口）</option>
-                <option value="agnes">Agnes 后端（本地 http://localhost:8787）</option>
+                <option value="agnes">Agnes 后端（可配置地址）</option>
             </select>
             <span id="genModeHint" class="hint" style="color:var(--text-tertiary);font-size:12px"></span>
+        </div>
+        <div class="row" id="agnesUrlRow" style="display:none;margin-top:8px;align-items:center">
+            <label class="lbl" style="margin:0">🔗 Agnes 后端地址</label>
+            <input id="agnesBaseUrl" placeholder="http://localhost:8787" oninput="localStorage.setItem('agnesBaseUrl', this.value.trim())" style="max-width:440px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-primary)">
+            <span id="agnesUrlHint" class="hint" style="color:var(--text-tertiary);font-size:12px">部署到公网后，把这里改成你的后端地址即可（自动保存）</span>
         </div>
     </div>
 
@@ -784,15 +789,25 @@ function resetResultPhases(){
   hideAllStepActions();
 }
 
-/* ============ Agnes 后端生成引擎（本地 http://localhost:8787） ============ */
-const AGNES_BASE = 'http://localhost:8787';
+/* ============ Agnes 后端生成引擎（地址可配置，默认本地） ============ */
+const AGNES_BASE_DEFAULT = 'http://localhost:8787';
+function getAgnesBase(){
+  return (localStorage.getItem('agnesBaseUrl') || AGNES_BASE_DEFAULT).trim() || AGNES_BASE_DEFAULT;
+}
+function syncAgnesUrlInput(){
+  const row=document.getElementById('agnesUrlRow');
+  const inp=document.getElementById('agnesBaseUrl');
+  if(row) row.style.display = (document.getElementById('genMode').value==='agnes') ? 'flex' : 'none';
+  if(inp) inp.value = getAgnesBase();
+}
 
 function onGenModeChange(){
   const sel=document.getElementById('genMode');
   const hint=document.getElementById('genModeHint');
   if(!sel || !hint) return;
   if(sel.value==='agnes'){
-    hint.textContent='将在本机 '+AGNES_BASE+' 调用 Agnes 后端（需后端已启动）';
+    syncAgnesUrlInput();
+    hint.textContent='将调用 Agnes 后端（'+getAgnesBase()+'）——需后端已启动/可访问';
   } else {
     hint.textContent='';
   }
@@ -830,7 +845,7 @@ async function runPipelineAgnes(){
   if(running) return; running=true;
   const btn=document.getElementById('runBtn'); if(btn) btn.disabled=true;
   const f=collectForm();
-  const base=AGNES_BASE;
+  const base=getAgnesBase();
 
   // 探测后端存活
   let alive=false;
@@ -907,7 +922,7 @@ async function runPipelineAgnes(){
 }
 
 async function agnesResume(dramaId){
-  const base=AGNES_BASE;
+  const base=getAgnesBase();
   try{ await fetch(base+'/api/drama/resume',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({drama_id:dramaId})}); }catch(e){}
   const acts=document.getElementById('actions-refs'); if(acts){ acts.style.display='none'; acts.innerHTML=''; }
 }
