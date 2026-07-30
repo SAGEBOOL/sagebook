@@ -579,6 +579,57 @@
             </div>
         </div>
 
+        <!-- 多模态模型（图像 / 视频） -->
+        <div class="settings-group">
+            <div class="group-title">
+                <span>🎨</span>
+                <span>多模态模型（图像 / 视频）</span>
+            </div>
+            <div class="group-desc">
+                分别填写你自己的图像生成与视频生成接口。两者互不干扰，可填不同服务商、不同模型、不同 Key。所有密钥仅保存在本机浏览器，由浏览器直连服务商，不经过本站服务器。
+            </div>
+
+            <!-- 图像生成 -->
+            <div class="setting-item">
+                <div class="setting-header">
+                    <div class="setting-label">🖼️ 图像生成（角色参考图 / 分镜场景图）</div>
+                </div>
+                <div class="setting-desc">
+                    填写你自己的图像生成接口（如 Stable Diffusion、可灵图生图等任意兼容端点）。
+                </div>
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">接口地址（Base URL）</label>
+                <input type="text" class="input-box" id="imgUrl" placeholder="https://your-image-api.com/v1" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">模型名称（如 sd-xl、kling-image）</label>
+                <input type="text" class="input-box" id="imgModel" placeholder="sd-xl" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">API Key</label>
+                <input type="password" class="input-box" id="imgKey" placeholder="sk-..." style="margin-top:4px;">
+                <span id="imgKeyStatus" style="font-size:12px;margin-left:8px;color:var(--text-secondary)"></span>
+                <div style="display:flex;gap:10px;margin-top:15px;">
+                    <button class="btn" onclick="saveImgConfig()">💾 保存</button>
+                </div>
+            </div>
+
+            <!-- 视频生成 -->
+            <div class="setting-item">
+                <div class="setting-header">
+                    <div class="setting-label">🎬 视频生成（分镜视频）</div>
+                </div>
+                <div class="setting-desc">
+                    填写你自己的视频生成接口（如 可灵、Runway、即梦等任意兼容端点）。
+                </div>
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">接口地址（Base URL）</label>
+                <input type="text" class="input-box" id="vidUrl" placeholder="https://your-video-api.com/v1" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">模型名称（如 kling-v1、runway-gen2）</label>
+                <input type="text" class="input-box" id="vidModel" placeholder="kling-v1" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">API Key</label>
+                <input type="password" class="input-box" id="vidKey" placeholder="sk-..." style="margin-top:4px;">
+                <span id="vidKeyStatus" style="font-size:12px;margin-left:8px;color:var(--text-secondary)"></span>
+                <div style="display:flex;gap:10px;margin-top:15px;">
+                    <button class="btn" onclick="saveVidConfig()">💾 保存</button>
+                </div>
+            </div>
+        </div>
+
         <!-- AI 功能设置 -->
         <div class="settings-group">
             <div class="group-title">
@@ -830,6 +881,46 @@
         function updateApiKeyStatus(){
             const el = document.getElementById('apiKeyStatus'); if(!el) return;
             const saved = localStorage.getItem('cloudApiKey');
+            if(saved){ el.textContent='✅ 已配置（留空则保留原 Key）'; el.style.color='var(--success,#2f8f5b)'; }
+            else { el.textContent='未配置'; el.style.color='var(--text-secondary,#7a776f)'; }
+        }
+
+        // 保存图像生成配置（用户自定义：接口地址 + 模型名 + key）
+        function saveImgConfig(){
+            const url=document.getElementById('imgUrl').value.trim();
+            const model=document.getElementById('imgModel').value.trim();
+            const key=document.getElementById('imgKey').value;
+            const savedKey=localStorage.getItem('img_key');
+            if(!url && !model && !key && !savedKey){ showToast('⚠️ 请至少填写接口地址或模型名'); return; }
+            if(url) localStorage.setItem('img_url', url); else localStorage.removeItem('img_url');
+            if(model) localStorage.setItem('img_model', model); else localStorage.removeItem('img_model');
+            if(key) localStorage.setItem('img_key', key); // 仅在用户填写时才覆盖旧 Key
+            updateImgKeyStatus();
+            showToast(key ? '✅ 图像配置已保存！' : '✅ 已保存（API Key 沿用之前配置）');
+        }
+        function updateImgKeyStatus(){
+            const el=document.getElementById('imgKeyStatus'); if(!el) return;
+            const saved=localStorage.getItem('img_key');
+            if(saved){ el.textContent='✅ 已配置（留空则保留原 Key）'; el.style.color='var(--success,#2f8f5b)'; }
+            else { el.textContent='未配置'; el.style.color='var(--text-secondary,#7a776f)'; }
+        }
+
+        // 保存视频生成配置（用户自定义：接口地址 + 模型名 + key）
+        function saveVidConfig(){
+            const url=document.getElementById('vidUrl').value.trim();
+            const model=document.getElementById('vidModel').value.trim();
+            const key=document.getElementById('vidKey').value;
+            const savedKey=localStorage.getItem('vid_key');
+            if(!url && !model && !key && !savedKey){ showToast('⚠️ 请至少填写接口地址或模型名'); return; }
+            if(url) localStorage.setItem('vid_url', url); else localStorage.removeItem('vid_url');
+            if(model) localStorage.setItem('vid_model', model); else localStorage.removeItem('vid_model');
+            if(key) localStorage.setItem('vid_key', key); // 仅在用户填写时才覆盖旧 Key
+            updateVidKeyStatus();
+            showToast(key ? '✅ 视频配置已保存！' : '✅ 已保存（API Key 沿用之前配置）');
+        }
+        function updateVidKeyStatus(){
+            const el=document.getElementById('vidKeyStatus'); if(!el) return;
+            const saved=localStorage.getItem('vid_key');
             if(saved){ el.textContent='✅ 已配置（留空则保留原 Key）'; el.style.color='var(--success,#2f8f5b)'; }
             else { el.textContent='未配置'; el.style.color='var(--text-secondary,#7a776f)'; }
         }
@@ -1149,6 +1240,20 @@
                 localStorage.setItem('localModel', localModel);
             }
 
+            // 多模态（图像 / 视频）配置落盘
+            const imgUrl = document.getElementById('imgUrl')?.value.trim();
+            const imgModel = document.getElementById('imgModel')?.value.trim();
+            const imgKey = document.getElementById('imgKey')?.value;
+            if (imgUrl) localStorage.setItem('img_url', imgUrl); else localStorage.removeItem('img_url');
+            if (imgModel) localStorage.setItem('img_model', imgModel); else localStorage.removeItem('img_model');
+            if (imgKey) localStorage.setItem('img_key', imgKey);
+            const vidUrl = document.getElementById('vidUrl')?.value.trim();
+            const vidModel = document.getElementById('vidModel')?.value.trim();
+            const vidKey = document.getElementById('vidKey')?.value;
+            if (vidUrl) localStorage.setItem('vid_url', vidUrl); else localStorage.removeItem('vid_url');
+            if (vidModel) localStorage.setItem('vid_model', vidModel); else localStorage.removeItem('vid_model');
+            if (vidKey) localStorage.setItem('vid_key', vidKey);
+
             // 云同步 Token / Gist ID 落盘
             const gistToken = document.getElementById('gistToken')?.value.trim();
             if (gistToken) localStorage.setItem('sagebook_gist_token', gistToken);
@@ -1281,6 +1386,15 @@
                     const ms = document.getElementById('modelStrategy');
                     if (ms && ms.querySelector(`option[value="${modelStrategy}"]`)) ms.value = modelStrategy;
                 }
+                // 恢复多模态（图像 / 视频）配置
+                const restoreMedia = (urlId, urlKey, modelId, modelKey) => {
+                    const u = localStorage.getItem(urlKey); const mu = document.getElementById(urlId); if (u && mu) mu.value = u;
+                    const m = localStorage.getItem(modelKey); const mm = document.getElementById(modelId); if (m && mm) mm.value = m;
+                };
+                restoreMedia('imgUrl', 'img_url', 'imgModel', 'img_model');
+                restoreMedia('vidUrl', 'vid_url', 'vidModel', 'vid_model');
+                if (typeof updateImgKeyStatus === 'function') updateImgKeyStatus();
+                if (typeof updateVidKeyStatus === 'function') updateVidKeyStatus();
                 // 恢复云同步设置（按平台）
                 const platform = localStorage.getItem('sagebook_sync_platform') || 'github';
                 const sp = document.getElementById('syncPlatform'); if (sp) sp.value = platform;
