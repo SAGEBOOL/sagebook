@@ -343,7 +343,25 @@ API Key：sk-xxxxxxxxxxxxxxxx
         <div class="ex-row"><span class="ex-tag">操作</span>点「测试连接」→ 返回「✅ 连通」即可回到编辑器使用。若填了 <code>http://</code> 开头的地址，会收到「混合内容被浏览器拦截」的友好提示，改为 <code>https://</code> 即可。</div>
       </div>
 
-      <h3>2. 一键本地启动器（解决混合内容限制）</h3>
+      <h3>2. 多模态模型（图像 / 视频）</h3>
+      <p>短剧 / 漫剧工作台在 Step 1（角色参考图）与 Step 6（分镜视频）会调用你自己的图像 / 视频生成接口。文本与多模态分开配置、互不影响——可填不同服务商、不同模型、不同 Key。</p>
+      <div class="card"><span class="lbl">🖼️ 图像生成</span>
+        <ul>
+          <li><b>接口地址（Base URL）</b>：你自己的图像生成端点（如 Stable Diffusion、可灵图生图等任意兼容端点）。</li>
+          <li><b>模型名称</b>：对应服务商要求的模型标识（如 <code>sd-xl</code>、<code>kling-image</code>）。</li>
+          <li><b>API Key</b>：你自己的密钥；留空则不覆盖已保存的旧 Key。</li>
+        </ul>
+      </div>
+      <div class="card"><span class="lbl">🎬 视频生成</span>
+        <ul>
+          <li><b>接口地址（Base URL）</b>：你自己的视频生成端点（如 可灵、Runway、即梦等任意兼容端点）。</li>
+          <li><b>模型名称</b>：如 <code>kling-v1</code>、<code>runway-gen2</code>。</li>
+          <li><b>API Key</b>：你自己的密钥；留空不覆盖旧 Key。</li>
+        </ul>
+      </div>
+      <div class="card note"><span class="lbl info">隐私</span>所有密钥仅保存在本机浏览器 <code>localStorage</code>，由浏览器<b>直连</b>服务商，不经过本站任何服务器。未配置时，工作台对应出图 / 出片按钮会提示先到设置页填写。</div>
+
+      <h3>3. 一键本地启动器（解决混合内容限制）</h3>
       <div class="card warn"><span class="lbl warn">重要</span>当你通过公网地址（<code>https://sagebool.github.io</code>）访问时，浏览器出于安全策略<strong>禁止</strong>网页连接本地 <code>http://localhost</code> 的 Ollama（混合内容限制）。此时「扫描本地模型」会提示改用本地模式。</div>
       <p>解决：双击项目里的 <code>start-local.command</code>（macOS）/ <code>start-local.bat</code>（Windows），它会自动起一个本地服务器并打开浏览器，让你以 <code>http://localhost</code> 访问本站，从而正常使用本地 Ollama。无需安装任何额外软件。</p>
       <div class="example">
@@ -353,7 +371,7 @@ API Key：sk-xxxxxxxxxxxxxxxx
         <div class="ex-row ex-note">此后在 <code>http://localhost</code> 下访问设置页，「🔄 扫描本地模型」可正常列出本机 Ollama 模型。</div>
       </div>
 
-      <h3>3. 云同步（手机 / 电脑互通）</h3>
+      <h3>4. 云同步（手机 / 电脑互通）</h3>
       <p>见 <a class="link" href="#sync">第八节</a> 详解。</p>
     </section>
 
@@ -625,36 +643,43 @@ Token：你的 Gitee 私人令牌
     <!-- 十 -->
     <section id="shortdrama">
       <h2>十、短剧 / 漫剧创作工作台</h2>
-      <p>地址：<code>short-drama.html</code>。一个面向短剧 / 漫剧的「剧本 → 人物 → 分镜 → 生图 → 生视频」生产流工作台，内嵌 AI 生成，并复用 WorkRally 的场次 / 分镜结构（仅结构示意，不实际调用其接口）。</p>
+      <p>地址：<code>short-drama.html</code>。一个面向短剧 / 漫剧的「故事设定 → 角色圣经 → 场景 → 分镜 → 剧本 → 视频提示词 → 导出 / 视频」七步生产流水线，内嵌 AI 生成。所有密钥与接口均来自你自己的配置（文本走「设置」页 AI，图像 / 视频走「设置 → 多模态模型」），<b>不经过本站任何服务器</b>。</p>
 
-      <h3>顶部 · WorkRally 结构示意</h3>
-      <p>页面顶部保留一个 WorkRally 设置区（含 API Key 输入框），仅作为<b>结构示意</b>：本工作台复用 WorkRally 的「场次 / 分镜」数据模型（shot、series），但<b>不实际调用</b>其生图 / 生视频接口，所有生图、生视频均为本地占位演示。</p>
+      <h3>顶部 · 引擎与一键运行</h3>
+      <ul>
+        <li><b>文本生成引擎</b>：读取「设置」页已存的云端 Key / 本地 Ollama，本页不重复填写；无配置时点「载入示例」可查看各步骤结构。</li>
+        <li><b>媒体生成（参考图 / 视频）</b>：读取「设置 → 多模态模型（图像 / 视频）」已存的接口地址与 Key，浏览器直连服务商生成图片 / 视频。</li>
+        <li><b>▶ 一键运行流水线</b>：按顺序自动跑 Step 1–5（角色圣经 → 场景 → 分镜 → 剧本 → 视频提示词）；每步也可单独「生成」并手动编辑。</li>
+      </ul>
 
-      <h3>五个标签页</h3>
+      <h3>七个步骤</h3>
       <table>
-        <tr><th>标签</th><th>功能</th></tr>
-        <tr><td>📝 剧本 / 提示词</td><td>点「🤖 生成知识库与分镜草稿」调用你已配置的 AI，产出故事知识库 + 多场次草稿；或点「✨ 填充示例剧本」快速体验。每场含文生图 / 动效提示词，兼容 <code>image_prompt</code> 与 <code>imagePrompt</code> 两种字段名。</td></tr>
-        <tr><td>👤 人物设定</td><td>「🎨 人物形象设定生成（定型形象图片）」：根据剧本 / 分镜提炼 4–6 个反复出现的主要角色，统一魔幻 / 修仙 / 玄幻 / 复古国风动画风格，生成可复制的英文角色绘图提示词（定型形象）。约束词可自由编辑。</td></tr>
-        <tr><td>🎞️ 分镜 · 场次</td><td>逐场查看 / 编辑分镜；每场可独立调整文生图与动效提示词。</td></tr>
-        <tr><td>🖼️ AI 生图</td><td>选择场次生成该场视觉图；本页不调用外部接口，生成本地占位演示图（复用 WorkRally 分镜结构）。</td></tr>
-        <tr><td>🎬 AI 生视频</td><td>需先有该场图片（去「生图」标签生成），本页仅显示占位播放框（不调用外部接口）。</td></tr>
+        <tr><th>步骤</th><th>产出</th><th>说明</th></tr>
+        <tr><td>0 输入</td><td>创意 / 正文</td><td>粘贴小说章节、梗概或一句话创意。有正文直接进场景拆解；仅一句话会先扩写为短纲。</td></tr>
+        <tr><td>1 角色圣经</td><td>角色设定卡 + 视觉风格锚点</td><td>AI 生成角色圣经与英文视觉锚点（锚点会复用到视频提示词，保证人物一致）；可「🎨 生成角色参考图」出定型形象。</td></tr>
+        <tr><td>2 场景拆解</td><td>场景表</td><td>Markdown 表格：场景编号 / 内外景 / 地点 / 时间 / 在场人物 / 核心节拍 / 情绪 / 时长。</td></tr>
+        <tr><td>3 镜头语言</td><td>分镜表</td><td>Markdown 表格：镜号 / 景别 / 机位 / 运动 / 时长 / 画面内容 / 声音配乐 / 情绪。</td></tr>
+        <tr><td>4 剧本</td><td>Fountain 剧本</td><td>标准 Fountain 格式，可导入 Celtx / WriterDuet 等编剧软件。</td></tr>
+        <tr><td>5 视频提示词</td><td>文生图 / 文生视频提示词包</td><td>从分镜提炼可直接喂给生图 / 生视频工具的提示词（含角色英文锚点）。</td></tr>
+        <tr><td>6 导出 / 视频</td><td>打包文件 + 分镜视频</td><td>「下载全部」打包 角色圣经.md + 分镜表.md + 剧本.fountain；视频由「设置 → 多模态模型」生成。</td></tr>
       </table>
 
-      <h3>🎨 人物形象设定生成（定型形象图片）</h3>
+      <h3>🎨 角色参考图（定型形象）</h3>
       <ul>
-        <li>点「生成角色」后，AI 依据剧本 / 分镜内容提炼主要角色，并输出每人一段英文绘图提示词（含外貌、服饰、法器、风格等定型描述）。</li>
-        <li>「角色设定约束词」框可自由编辑，约束整体画风（如统一复古国风、魔幻感、真实细节），生成时一并带入。</li>
-        <li>输出可直接复制到文生图工具批量出图，保证主要角色形象跨场一致。</li>
+        <li>Step 1 点「生成角色圣经」后，再点「🎨 生成角色参考图」：从圣经提取元素，按「设置 → 多模态模型（图像）」配置出图，保证主要角色形象跨场一致。</li>
+        <li>约束词（画风）可自由编辑，生成时一并带入。</li>
       </ul>
       <div class="example">
         <div class="ex-lbl">📌 举例 · 人物提示词整理</div>
         <div class="ex-row"><span class="ex-tag">输出格式</span><pre>【沈鸢】
 a young woman in retro Chinese fantasy attire, jade hairpin, misty mountain background, ink-wash magic aura, detailed embroidery, cinematic lighting</pre></div>
-        <div class="ex-row ex-note">点「复制全部提示词」可一次性复制所有角色的英文提示词，便于批量生图。</div>
+        <div class="ex-row ex-note">参考图按此提示词批量生成，可保证主要角色形象跨场一致。</div>
       </div>
 
       <h3>🧠 知识库关联</h3>
-      <p>工作台与「角色管理 / 知识图谱 / 世界观」等页共享同一份本地数据：生成剧本与角色时，会自动注入知识库摘要，提示 AI 直接复用已有角色、贴合已有世界观，避免重名或设定漂移。人物设定区顶部显示「🧠 知识库关联」实时计数。</p>
+      <p>工作台与「角色管理 / 知识图谱 / 世界观」等页共享同一份本地数据：生成剧本与角色时，会自动注入知识库摘要，提示 AI 直接复用已有角色、贴合已有世界观，避免重名或设定漂移。</p>
+
+      <div class="card note"><span class="lbl info">提示</span>文本阶段（Step 1–5）全部走「设置」页已配的 AI；图像 / 视频走「设置 → 多模态模型」。本页不要求、也不收集你的任何 API Key——所有 Key 只存在你自己的浏览器。</div>
     </section>
 
     </main>
