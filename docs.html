@@ -352,12 +352,24 @@ API Key：sk-xxxxxxxxxxxxxxxx
           <li><b>API Key</b>：你自己的密钥；留空则不覆盖已保存的旧 Key。</li>
         </ul>
       </div>
-      <div class="card"><span class="lbl">🎬 视频生成</span>
+      <div class="card"><span class="lbl">🎬 视频生成（同步 / 异步均可，由你决定）</span>
         <ul>
-          <li><b>接口地址（Base URL）</b>：你自己的视频生成端点（如 可灵、Runway、即梦等任意兼容端点）。</li>
-          <li><b>模型名称</b>：如 <code>kling-v1</code>、<code>runway-gen2</code>。</li>
+          <li><b>接口地址（Base URL）</b>：你自己的视频生成端点（可灵、Runway、即梦、Agnes 等任意兼容端点）。</li>
+          <li><b>模型名称</b>：如 <code>agnes-video-v2.0</code>、<code>kling-v1</code>。</li>
           <li><b>API Key</b>：你自己的密钥；留空不覆盖旧 Key。</li>
+          <li><b>异步模式（勾选）</b>：多数视频接口是「提交任务 → 轮询结果」的异步流程（如 Agnes、可灵、Runway）。勾选后需填写：<br>
+            · <b>任务 ID 字段路径</b>（默认 <code>task_id</code>，留空自动探测 <code>task_id</code>/<code>video_id</code>/<code>id</code>）；<br>
+            · <b>轮询地址模板</b>（留空则自动由接口地址 + <code>/{task_id}</code> 推导）；<br>
+            · <b>状态字段路径</b>（默认 <code>status</code>）、<b>完成状态值</b>（默认 <code>completed</code>）；<br>
+            · <b>视频 URL 字段路径</b>（默认自动探测，Agnes 实际字段为 <code>remixed_from_video_id</code>）；<br>
+            · <b>轮询间隔</b>（默认 10000ms）。<br>
+            留空的项会用合理默认值并自动探测常见字段名，无需逐项死记。</li>
+          <li><b>请求体模板（高级）</b>：JSON，用 <code>{{prompt}}</code> 与 <code>{{image_url}}</code> 占位。留空用默认；图生视频时把图片放进服务商要求的字段（如 Agnes 用 <code>image</code>，可灵用 <code>image_url</code>）。</li>
+          <li><b>生成间隔</b>（默认 12000ms）：多个分镜之间的最小间隔，避免触发服务商「每分钟请求数」限流。</li>
+          <li><b>视频 URL 响应路径</b>：仅同步模式使用（默认 <code>data[0].url</code>）。</li>
+          <li><b>⚡ 载入 Agnes 预设</b>：一键填好上述异步参数与 Agnes 实际字段，再填 Key 保存即可。</li>
         </ul>
+        <div class="ex-note">响应路径与轮询参数<b>全部由你的设置决定，不写死在代码里</b>——换服务商只改设置即可。被限流时会自动等待并最多重试 2 次。</div>
       </div>
       <div class="card note"><span class="lbl info">隐私</span>所有密钥仅保存在本机浏览器 <code>localStorage</code>，由浏览器<b>直连</b>服务商，不经过本站任何服务器。未配置时，工作台对应出图 / 出片按钮会提示先到设置页填写。</div>
 
