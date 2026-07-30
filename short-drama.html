@@ -265,7 +265,11 @@ function getMediaCfg(){
     imgStyle:localStorage.getItem('img_style')||'', imgBody:localStorage.getItem('img_body')||'', imgResp:localStorage.getItem('img_resp')||'data[0].url',
     vidUrl:localStorage.getItem('vid_url')||'', vidKey:localStorage.getItem('vid_key')||'', vidModel:localStorage.getItem('vid_model')||'',
     vidMode:localStorage.getItem('vid_mode')||'img2vid', vidBody:localStorage.getItem('vid_body')||'{"prompt":"{{prompt}}","image_url":"{{image_url}}"}',
-    vidImgField:localStorage.getItem('vid_img_field')||'', vidResp:localStorage.getItem('vid_resp')||'data[0].url'
+    vidImgField:localStorage.getItem('vid_img_field')||'', vidResp:localStorage.getItem('vid_resp')||'data[0].url',
+    vidAsync:localStorage.getItem('vid_async')==='1',
+    vidTaskPath:localStorage.getItem('vid_task_path')||'', vidPollUrl:localStorage.getItem('vid_poll_url')||'',
+    vidStatusPath:localStorage.getItem('vid_status_path')||'', vidDoneValue:localStorage.getItem('vid_done_value')||'',
+    vidUrlPath:localStorage.getItem('vid_url_path')||'', vidPollInterval:localStorage.getItem('vid_poll_interval')||''
   };
 }
 function resolvePath(obj, path){
@@ -298,7 +302,7 @@ async function genImage(prompt, cfg, imageUrl){
   if(!val) throw new Error('响应中未找到图片（路径 '+cfg.imgResp+'）');
   return cfg.imgResp.includes('b64_json') ? 'data:image/png;base64,'+val : val;
 }
-async function genVideoSettings(prompt, imageUrl){
+async function genVideoSettings(prompt, imageUrl, onStatus){
   const cfg=getMediaCfg();
   const urlStr=String(cfg.vidUrl||'').trim();
   if(!urlStr) return null;
@@ -320,19 +324,59 @@ async function genVideoSettings(prompt, imageUrl){
   }
   const model=cfg.vidModel; if(model) body.model=model;
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
-  const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
-  if(!res.ok){
-    let m='HTTP '+res.status; let isRateLimit=false;
-    try{ const e=await res.json(); m=e.error?.message||e.message||m; }catch{}
-    if(/rate\s*limit|too\s*many\s*requests|requests\s*per/i.test(m)) isRateLimit=true;
-    const err=new Error(m); err.isRateLimit=isRateLimit; throw err;
+  const setStatus=onStatus||(()=>{});
+
+  // —— 提交任务（同步 / 异步共用） ——
+  const submit=async()=>{
+    const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
+    if(!res.ok){
+      let m='HTTP '+res.status; let isRateLimit=false;
+      try{ const e=await res.json(); m=e.error?.message||e.message||m; }catch{}
+      if(/rate\s*limit|too\s*many\s*requests|requests\s*per/i.test(m)) isRateLimit=true;
+      const err=new Error(m); err.isRateLimit=isRateLimit; throw err;
+    }
+    return res.json();
+  };
+  const submitData=await submit();
+
+  // —— 同步模式：URL 直接含在提交响应里 ——
+  if(!cfg.vidAsync){
+    const paths=[cfg.vidResp, 'data[0].url','data.url','url','video_url','data.video_url','data[0].video_url','output.url','output.video_url','data[0].output_url'].filter((v,i,a)=>v&&a.indexOf(v)===i);
+    for(const p of paths){ const val=resolvePath(submitData,p); if(val) return val; }
+    throw new Error('未找到视频 URL；已尝试 '+paths.join(' / ')+'。请在「设置 → 多模态模型（视频）」vid_resp 填写正确路径。');
   }
-  const data=await res.json();
-  const paths=[cfg.vidResp, 'data[0].url','data.url','url','video_url','data.video_url','data[0].video_url','output.url','output.video_url','data[0].output_url'].filter((v,i,a)=>v&&a.indexOf(v)===i);
-  for(const p of paths){ const val=resolvePath(data,p); if(val) return val; }
-  const taskId=resolvePath(data,'task_id')||resolvePath(data,'data.task_id')||resolvePath(data,'id');
-  if(taskId) throw new Error('接口返回异步任务 ID（'+taskId+'），未找到视频 URL。当前仅支持同步返回 URL 的接口，请检查「vid_resp」或改用对应 provider。');
-  throw new Error('未找到视频 URL；已尝试 '+paths.join(' / ')+'。请在「设置 → 多模态模型（视频）」vid_resp 填写正确路径。');
+
+  // —— 异步模式：提交后轮询任务状态，直到 completed ——
+  const taskId=resolvePath(submitData, cfg.vidTaskPath||'task_id') || submitData.task_id || submitData.video_id || submitData.id;
+  if(!taskId) throw new Error('异步模式：提交响应中未找到任务 ID（请检查 vid_task_path）。实际响应：'+JSON.stringify(submitData).slice(0,300));
+  // 轮询地址：优先用用户配置的完整模板（含 {task_id}），否则由 vid_url 推导（末尾 /videos → +/{task_id}）
+  let pollUrl=cfg.vidPollUrl ? cfg.vidPollUrl.replace('{task_id}', encodeURIComponent(taskId))
+                             : String(urlStr).replace(/\/$/,'')+'/'+encodeURIComponent(taskId);
+  const pollInterval=Math.max(2000, parseInt(cfg.vidPollInterval||'10000',10));
+  const maxPolls=Math.ceil(300000/pollInterval); // 最多轮询约 5 分钟
+  setStatus('已提交任务 '+taskId.slice(0,8)+'…，轮询中');
+  for(let i=0;i<maxPolls;i++){
+    await new Promise(r=>setTimeout(r, pollInterval));
+    let data;
+    try{
+      const res=await fetch(pollUrl,{method:'GET',headers,signal:AbortSignal.timeout(120000)});
+      if(!res.ok){
+        let m='HTTP '+res.status; try{ const e=await res.json(); m=e.error?.message||m; }catch{}
+        if(/rate\s*limit|too\s*many/i.test(m)){ setStatus('轮询限流，稍后重试 ('+(i+1)+'/'+maxPolls+')'); continue; }
+        throw new Error(m);
+      }
+      data=await res.json();
+    }catch(e){ if(i===maxPolls-1) throw e; setStatus('轮询异常，重试 ('+(i+1)+'/'+maxPolls+')'); continue; }
+    const status=resolvePath(data, cfg.vidStatusPath||'status') || data.status;
+    if(status==='failed'||status==='error') throw new Error('视频任务失败：'+(data.error||JSON.stringify(data).slice(0,200)));
+    if(status===(cfg.vidDoneValue||'completed')){
+      const urlPaths=[cfg.vidUrlPath, 'remixed_from_video_id','video_url','url','data[0].url','output.url'].filter((v,i,a)=>v&&a.indexOf(v)===i);
+      for(const p of urlPaths){ const val=resolvePath(data,p); if(val) return val; }
+      throw new Error('任务完成但未找到视频 URL（请检查 vid_url_path）。实际响应：'+JSON.stringify(data).slice(0,300));
+    }
+    setStatus('生成中（'+(status||'?')+' '+(i+1)+'/'+maxPolls+'）');
+  }
+  throw new Error('轮询超时（超过约 5 分钟仍未 completed）');
 }
 
 /* ============ 示例 & 清空 ============ */
@@ -611,7 +655,7 @@ async function genVideos(){
     while(retries<=2 && !ok){
       try{
         const img=findSceneImgForShot(vp.shot); // 若 Step 2 已生成该场景图，则用其做图生视频
-        const url = await genVideoSettings(vp.en, img);
+        const url = await genVideoSettings(vp.en, img, (msg)=>{ const ph=cell.querySelector('.ph'); if(ph) ph.textContent=esc(vp.shot)+' '+msg; });
         cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b>'+(img?' · 图生视频':'')+'</div>';
         ok=true;
       }catch(e){
