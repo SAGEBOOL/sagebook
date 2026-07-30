@@ -617,19 +617,45 @@
                 <div class="setting-desc">
                     填写你自己的视频生成接口（如 可灵、Runway、即梦等任意兼容端点）。
                 </div>
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">接口地址（Base URL）</label>
-                <input type="text" class="input-box" id="vidUrl" placeholder="https://your-video-api.com/v1" style="margin-top:4px;">
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">模型名称（如 kling-v1、runway-gen2）</label>
-                <input type="text" class="input-box" id="vidModel" placeholder="kling-v1" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin-bottom:6px;">接口地址（提交任务的 Base URL）</label>
+                <input type="text" class="input-box" id="vidUrl" placeholder="https://apihub.agnes-ai.com/v1/videos" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">模型名称（如 agnes-video-v2.0、kling-v1）</label>
+                <input type="text" class="input-box" id="vidModel" placeholder="agnes-video-v2.0" style="margin-top:4px;">
                 <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">API Key</label>
                 <input type="password" class="input-box" id="vidKey" placeholder="sk-..." style="margin-top:4px;">
                 <span id="vidKeyStatus" style="font-size:12px;margin-left:8px;color:var(--text-secondary)"></span>
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">生成间隔（毫秒，避免限流，默认 12000）</label>
+
+                <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:14px 0 4px;cursor:pointer;">
+                  <input type="checkbox" id="vidAsync"> 异步模式（提交任务后轮询，如 Agnes / 可灵 / Runway）
+                </label>
+                <div style="font-size:12px;color:var(--text-secondary);margin:6px 0 10px;line-height:1.6;">
+                  同步接口（URL 直接返回）留空下面字段即可；异步接口按实际填写，留空则用合理默认值并自动探测常见字段名。
+                </div>
+
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:10px 0 6px;">任务 ID 字段路径（默认 task_id）</label>
+                <input type="text" class="input-box" id="vidTaskPath" placeholder="task_id" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">轮询地址模板（留空则自动由接口地址 + /{task_id} 推导）</label>
+                <input type="text" class="input-box" id="vidPollUrl" placeholder="https://.../videos/{task_id}" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">状态字段路径（默认 status）</label>
+                <input type="text" class="input-box" id="vidStatusPath" placeholder="status" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">完成状态值（默认 completed）</label>
+                <input type="text" class="input-box" id="vidDoneValue" placeholder="completed" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">视频 URL 字段路径（Agnes 实际为 remixed_from_video_id）</label>
+                <input type="text" class="input-box" id="vidUrlPath" placeholder="remixed_from_video_id" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">轮询间隔（毫秒，默认 10000）</label>
+                <input type="number" class="input-box" id="vidPollInterval" placeholder="10000" style="margin-top:4px;">
+
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">请求体模板（高级，{{prompt}} 与 {{image_url}} 占位，留空用默认）</label>
+                <textarea id="vidBody" class="input-box" rows="3" placeholder='{"prompt":"{{prompt}}","image":"{{image_url}}"}' style="margin-top:4px;font-family:monospace;"></textarea>
+
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">生成间隔（毫秒，避免提交限流，默认 12000）</label>
                 <input type="number" class="input-box" id="vidDelay" placeholder="12000" style="margin-top:4px;">
-                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">视频 URL 响应路径（默认 data[0].url，选填）</label>
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">视频 URL 响应路径（仅同步模式，默认 data[0].url）</label>
                 <input type="text" class="input-box" id="vidResp" placeholder="data[0].url" style="margin-top:4px;">
-                <div style="display:flex;gap:10px;margin-top:15px;">
+
+                <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;">
                     <button class="btn" onclick="saveVidConfig()">💾 保存</button>
+                    <button class="btn btn-sm" onclick="loadAgnesPreset()">⚡ 载入 Agnes 预设</button>
                 </div>
             </div>
         </div>
@@ -909,22 +935,55 @@
             else { el.textContent='未配置'; el.style.color='var(--text-secondary,#7a776f)'; }
         }
 
-        // 保存视频生成配置（用户自定义：接口地址 + 模型名 + key）
+        // 保存视频生成配置（用户自定义：接口地址 + 模型名 + key + 异步轮询参数）
         function saveVidConfig(){
             const url=document.getElementById('vidUrl').value.trim();
             const model=document.getElementById('vidModel').value.trim();
             const key=document.getElementById('vidKey').value;
             const delay=document.getElementById('vidDelay').value.trim();
             const resp=document.getElementById('vidResp').value.trim();
+            const body=document.getElementById('vidBody').value.trim();
+            const asyncOn=document.getElementById('vidAsync').checked;
+            const taskPath=document.getElementById('vidTaskPath').value.trim();
+            const pollUrl=document.getElementById('vidPollUrl').value.trim();
+            const statusPath=document.getElementById('vidStatusPath').value.trim();
+            const doneValue=document.getElementById('vidDoneValue').value.trim();
+            const urlPath=document.getElementById('vidUrlPath').value.trim();
+            const pollInterval=document.getElementById('vidPollInterval').value.trim();
             const savedKey=localStorage.getItem('vid_key');
-            if(!url && !model && !key && !savedKey && !delay && !resp){ showToast('⚠️ 请至少填写一项'); return; }
+            if(!url && !model && !key && !savedKey && !delay && !resp && !body){ showToast('⚠️ 请至少填写一项'); return; }
             if(url) localStorage.setItem('vid_url', url); else localStorage.removeItem('vid_url');
             if(model) localStorage.setItem('vid_model', model); else localStorage.removeItem('vid_model');
             if(key) localStorage.setItem('vid_key', key); // 仅在用户填写时才覆盖旧 Key
             if(delay) localStorage.setItem('vid_delay', delay); else localStorage.removeItem('vid_delay');
             if(resp) localStorage.setItem('vid_resp', resp); else localStorage.removeItem('vid_resp');
+            if(body) localStorage.setItem('vid_body', body); else localStorage.removeItem('vid_body');
+            localStorage.setItem('vid_async', asyncOn?'1':'0');
+            if(taskPath) localStorage.setItem('vid_task_path', taskPath); else localStorage.removeItem('vid_task_path');
+            if(pollUrl) localStorage.setItem('vid_poll_url', pollUrl); else localStorage.removeItem('vid_poll_url');
+            if(statusPath) localStorage.setItem('vid_status_path', statusPath); else localStorage.removeItem('vid_status_path');
+            if(doneValue) localStorage.setItem('vid_done_value', doneValue); else localStorage.removeItem('vid_done_value');
+            if(urlPath) localStorage.setItem('vid_url_path', urlPath); else localStorage.removeItem('vid_url_path');
+            if(pollInterval) localStorage.setItem('vid_poll_interval', pollInterval); else localStorage.removeItem('vid_poll_interval');
             updateVidKeyStatus();
             showToast(key ? '✅ 视频配置已保存！' : '✅ 视频配置已保存（API Key 沿用之前配置）');
+        }
+        // 一键填入 Agnes 视频接口参数（异步轮询 + 实际响应字段）
+        function loadAgnesPreset(){
+            const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v; };
+            set('vidUrl','https://apihub.agnes-ai.com/v1/videos');
+            set('vidModel','agnes-video-v2.0');
+            document.getElementById('vidAsync').checked=true;
+            set('vidTaskPath','task_id');
+            set('vidPollUrl','');
+            set('vidStatusPath','status');
+            set('vidDoneValue','completed');
+            set('vidUrlPath','remixed_from_video_id');
+            set('vidPollInterval','10000');
+            set('vidDelay','13000');
+            set('vidBody','{"prompt":"{{prompt}}","image":"{{image_url}}"}');
+            set('vidResp','');
+            showToast('已载入 Agnes 预设，请填写 API Key 后点「保存」');
         }
         function updateVidKeyStatus(){
             const el=document.getElementById('vidKeyStatus'); if(!el) return;
@@ -1403,6 +1462,11 @@
                 restoreMedia('vidUrl', 'vid_url', 'vidModel', 'vid_model');
                 const vd = localStorage.getItem('vid_delay'); const vde = document.getElementById('vidDelay'); if (vd && vde) vde.value = vd;
                 const vr = localStorage.getItem('vid_resp'); const vre = document.getElementById('vidResp'); if (vr && vre) vre.value = vr;
+                const vb = localStorage.getItem('vid_body'); const vbe = document.getElementById('vidBody'); if (vb && vbe) vbe.value = vb;
+                const va = localStorage.getItem('vid_async'); const vae = document.getElementById('vidAsync'); if (vae) vae.checked = va==='1';
+                const setV = (key, id) => { const v=localStorage.getItem(key); const e=document.getElementById(id); if (v && e) e.value=v; };
+                setV('vid_task_path','vidTaskPath'); setV('vid_poll_url','vidPollUrl'); setV('vid_status_path','vidStatusPath');
+                setV('vid_done_value','vidDoneValue'); setV('vid_url_path','vidUrlPath'); setV('vid_poll_interval','vidPollInterval');
                 if (typeof updateImgKeyStatus === 'function') updateImgKeyStatus();
                 if (typeof updateVidKeyStatus === 'function') updateVidKeyStatus();
                 // 恢复云同步设置（按平台）
