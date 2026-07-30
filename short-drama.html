@@ -157,6 +157,11 @@
             <label>场景表（Markdown 表格，可编辑）</label>
             <textarea id="outScenes" class="out" rows="10" placeholder="| 场景编号 | INT/EXT | 地点 | 时间 | 在场人物 | 核心节拍 | 情绪 | 时长(秒) |"></textarea>
         </div>
+        <div class="row">
+            <button class="btn btn-sm" onclick="genSceneImages()">🎨 生成场景图片</button>
+            <span class="hint" id="sceneHint">从场景表逐场出图，复用角色圣经锚点 + 视觉风格，保证画风/人物前后一致；生成的图会在 Step 6 作为图生视频的首帧</span>
+        </div>
+        <div id="sceneGrid" class="ref-grid"></div>
     </section>
 
     <!-- Step 3 -->
@@ -200,6 +205,7 @@
             <button class="btn btn-sm" onclick="exportAll()">⬇ 下载全部（Fountain + 分镜 + 提示词）</button>
             <button class="btn btn-sm btn-primary" onclick="genVideos()">🎬 生成视频</button>
         </div>
+        <div class="hint" id="vidHint">若 Step 2 已生成场景图片，则每个镜头按「所属场景图」做图生视频（image-to-video），人物与画风更一致；否则退化为纯文生视频。视频接口需在「设置 → 多模态模型（视频）」配置且支持图生视频。</div>
         <div id="vidGrid" class="ref-grid"></div>
     </section>
 
@@ -213,7 +219,7 @@ function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 function setStatus(i,text,cls){ const el=document.getElementById('status'+i); if(el){ el.textContent=text; el.className='step-status'+(cls?(' '+cls):''); } }
 
-const state = { bible:'', scenes:'', shots:'', fountain:'', videoPrompts:[], refs:[] };
+const state = { bible:'', scenes:'', shots:'', fountain:'', videoPrompts:[], refs:[], sceneImgs:[] };
 
 /* ============ 主题 ============ */
 function setTheme(t){ document.documentElement.setAttribute('data-theme',t); localStorage.setItem('theme',t); updateThemeBtns(); }
@@ -300,8 +306,18 @@ async function genVideoSettings(prompt, imageUrl){
   if(imageUrl){
     if(tpl.includes('{{image}}')) tpl=tpl.replace(/\{\{image\}\}/g, imageUrl);
     else if(tpl.includes('{{image_url}}')) tpl=tpl.replace(/\{\{image_url\}\}/g, imageUrl);
+  } else {
+    tpl=tpl.replace(/\{\{image_url\}\}/g,'').replace(/\{\{image\}\}/g,'');
   }
-  let body; try{ body=JSON.parse(tpl); }catch(e){ body={prompt}; if(imageUrl) body[cfg.vidImgField||'image_url']=imageUrl; }
+  let body; try{ body=JSON.parse(tpl); }catch(e){ body={prompt}; }
+  if(!imageUrl){ // 清理残留的图片占位字段，退化为纯文生视频
+    for(const k of Object.keys(body)){
+      const v=body[k];
+      if(typeof v==='string' && (v.includes('{{image')||v.trim()==='')) delete body[k];
+    }
+  } else if(cfg.vidImgField && !tpl.includes('{{image')){
+    body[cfg.vidImgField]=imageUrl;
+  }
   const model=cfg.vidModel; if(model) body.model=model;
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
   const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
@@ -319,19 +335,27 @@ const DEMO = {
 function loadDemo(){ document.getElementById('inpText').value=DEMO.story; setStatus(0,'已载入示例','ok'); toast('已载入示例'); }
 function clearAll(){
   ['inpText','outBible','outScenes','outShots','outFountain','outVideoPrompts'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  ['refGrid','vidGrid'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
-  state.bible=state.scenes=state.shots=state.fountain=''; state.videoPrompts=[]; state.refs=[];
+  ['refGrid','vidGrid','sceneGrid'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
+  state.bible=state.scenes=state.shots=state.fountain=''; state.videoPrompts=[]; state.refs=[]; state.sceneImgs=[];
   for(let i=0;i<7;i++) setStatus(i, i===0?'待输入':'等待');
   toast('已清空');
 }
 
 /* ============ 步骤生成 ============ */
-const SYS_BIBLE = "你是影视前期开发分镜师。根据用户提供的叙事文本（小说章节/梗概/一句话创意），建立跨章节一致的人物与风格库。\n输出 Markdown：\n# 视觉风格锚点\n- 世界观基调：\n- 色彩情绪板（主色+情绪）：\n- 镜头语言偏好：\n- 参考影片/画师：\n# 角色设定卡\n## 角色名\n- 身份/阵营：\n- 视觉锚点（写成可复用的英文描述词，含服装、发色发型、标志物/法器、体型神态）：\n- 嗓音语调：\n- 性格关键词：\n- 口头禅：\n规则：不编造文本未给出的设定，未知标 TODO；视觉锚点必须是可直接用于视频提示词的英文短句。";
+const SYS_BIBLE = "你是影视前期开发分镜师。根据用户提供的叙事文本（小说章节/梗概/一句话创意），建立跨章节一致的人物与风格库。\n输出 Markdown：\n# 视觉风格锚点\n- 世界观基调：\n- 色彩情绪板（主色+情绪）：\n- 镜头语言偏好：\n- 参考影片/画师：\n# 角色设定卡\n## 角色名\n- 身份/阵营：\n- 视觉锚点（写成可复用的英文描述词，含服装、发色发型、标志物/法器、体型神态）：\n- 嗓音语调：\n- 性格关键词：\n- 口头禅：\n规则：不编造文本未给出的设定，未知标 TODO；视觉锚点必须是可直接用于视频提示词的英文短句。视觉锚点一旦写出必须稳定、可跨步骤逐字复用——后续分镜、剧本、视频提示词、出图、出视频都将严格引用，不得改写。";
 const SYS_SCENES = "你是编剧。把用户提供的叙事文本拆成场景(Scene) block（以时间/地点/人物切换为边界）。\n输出 Markdown 表格：\n| 场景编号 | INT/EXT | 地点 | 时间 | 在场人物 | 核心节拍 | 情绪 | 时长(秒) |\n场景编号从 SC01 起。只基于给定文本，不添加未出现内容。";
 const SYS_SHOTS = "你是分镜师。基于用户提供的场景表，为每个场景生成镜头(Shot)列表。\n输出 Markdown 表格：\n| 镜号 | 景别 | 机位 | 运动 | 时长(s) | 画面内容 | 声音/配乐 | 情绪 |\n景别用：远景/全景/中景/近景/特写/大特写。机位用：平/俯/仰/过肩/POV。运动用：固定/推/拉/摇/移/跟/手持/升降。镜号格式 SC01-S01。";
 const SYS_FOUNTAIN = "你是编剧。依据用户提供的场景表与分镜表，生成标准 Fountain 剧本。\n规则：场景标题用 INT. 地点 - 时间 / EXT. 地点 - 时间；动作行只写可见可拍画面，避免心理描写；对白符合人物；转场用 >；章节用 #。输出纯 Fountain 文本，不要解释。";
 const SYS_VP = "你是 AI 视频提示词工程师。基于分镜表与角色圣经的英文视觉锚点，为每个镜头生成一段英文视频提示词。\n结构：[镜头运动] + [主体与动作，调用人物英文锚点] + [场景环境] + [光照/氛围] + [风格/参考] + [负面词]。\n人物外观必须复用给定锚点，禁止每镜重新描述。\n输出 Markdown 表格：\n| 镜号 | 中文说明 | English Prompt |\n每镜附一行中文说明便于人工调参。";
 const SYS_REFS = "从下方角色圣经中提取需要出参考图的元素，返回 JSON 数组（不超过 8 个）：\n[{\"name\":\"名称\",\"type\":\"角色|道具\",\"prompt\":\"英文视觉描述词，复用圣经中的视觉锚点，full body / three views / clean white background / character reference sheet\"}]\n只输出 JSON，不要解释。";
+
+// 一致性铁律：每个步骤都强制复用角色圣经与视觉锚点，杜绝前后不一致
+const CONSISTENCY = "\n【一致性铁律（必须严格遵守）】\n"+
+"- 人物外观必须逐字复用「角色圣经」给出的英文视觉锚点，禁止用新词重新描述或自由发挥。\n"+
+"- 色彩、光影、镜头语言、整体画风必须延续「视觉风格锚点」，前后统一，不漂移。\n"+
+"- 叙事必须前后连贯：不新增未出现的角色/地点/设定/道具；已出场人物保持同一身份与动机。\n"+
+"- 圣经未给出的信息标 TODO，绝不可编造。\n"+
+"- 每一个镜头/场景都要能回溯到角色圣经中的具体锚点。";
 
 async function genBible(){
   const text=document.getElementById('inpText').value.trim();
@@ -347,18 +371,20 @@ async function genScenes(){
   const bible=document.getElementById('outBible').value.trim();
   if(!text){ setStatus(2,'请先输入','err'); toast('请先在 Step 0 输入'); return; }
   setStatus(2,'生成中…','warn');
-  const user="【叙事文本】\n"+text+(bible?("\n\n【风格参考】\n"+bible):"");
+  const user="【叙事文本】\n"+text+(bible?("\n\n【角色圣经 / 视觉锚点（所有后续步骤必须逐字复用，禁止重新描述）】\n"+bible):"");
   try{
-    const out=await callSiteAI([{role:'system',content:SYS_SCENES},{role:'user',content:user}]);
+    const out=await callSiteAI([{role:'system',content:SYS_SCENES+CONSISTENCY},{role:'user',content:user}]);
     document.getElementById('outScenes').value=out; state.scenes=out; setStatus(2,'已生成 ✓','ok');
   }catch(e){ setStatus(2,'失败','err'); toast('场景拆解失败：'+e.message); }
 }
 async function genShots(){
   const scenes=document.getElementById('outScenes').value.trim();
+  const bible=document.getElementById('outBible').value.trim();
   if(!scenes){ setStatus(3,'等待场景','err'); toast('请先生成场景表（Step 2）'); return; }
   setStatus(3,'生成中…','warn');
+  const user="【角色圣经 / 视觉锚点（必须逐字复用，禁止重新描述）】\n"+(bible||'(无)')+"\n\n【场景表】\n"+scenes;
   try{
-    const out=await callSiteAI([{role:'system',content:SYS_SHOTS},{role:'user',content:scenes}]);
+    const out=await callSiteAI([{role:'system',content:SYS_SHOTS+CONSISTENCY},{role:'user',content:user}]);
     document.getElementById('outShots').value=out; state.shots=out; setStatus(3,'已生成 ✓','ok');
   }catch(e){ setStatus(3,'失败','err'); toast('分镜生成失败：'+e.message); }
 }
@@ -367,9 +393,10 @@ async function genFountain(){
   const shots=document.getElementById('outShots').value.trim();
   if(!scenes||!shots){ setStatus(4,'等待前序','err'); toast('需要场景表与分镜表'); return; }
   setStatus(4,'生成中…','warn');
-  const user="【场景表】\n"+scenes+"\n\n【分镜表】\n"+shots;
+  const bible=document.getElementById('outBible').value.trim();
+  const user="【角色圣经 / 视觉锚点（必须逐字复用）】\n"+(bible||'(无)')+"\n\n【场景表】\n"+scenes+"\n\n【分镜表】\n"+shots;
   try{
-    const out=await callSiteAI([{role:'system',content:SYS_FOUNTAIN},{role:'user',content:user}]);
+    const out=await callSiteAI([{role:'system',content:SYS_FOUNTAIN+CONSISTENCY},{role:'user',content:user}]);
     document.getElementById('outFountain').value=out; state.fountain=out; setStatus(4,'已生成 ✓','ok');
   }catch(e){ setStatus(4,'失败','err'); toast('剧本生成失败：'+e.message); }
 }
@@ -380,7 +407,7 @@ async function genVideoPrompts(){
   setStatus(5,'生成中…','warn');
   const user="【角色圣经锚点】\n"+(bible||'(无)')+"\n\n【分镜表】\n"+shots;
   try{
-    const out=await callSiteAI([{role:'system',content:SYS_VP},{role:'user',content:user}]);
+    const out=await callSiteAI([{role:'system',content:SYS_VP+CONSISTENCY},{role:'user',content:user}]);
     document.getElementById('outVideoPrompts').value=out;
     state.videoPrompts=parseVPTable(out);
     setStatus(5,'已生成 ✓','ok');
@@ -398,7 +425,7 @@ function parseVPTable(md){
   return rows;
 }
 async function extractRefs(bible){
-  const out=await callSiteAI([{role:'system',content:SYS_REFS},{role:'user',content:bible}]);
+  const out=await callSiteAI([{role:'system',content:SYS_REFS+CONSISTENCY},{role:'user',content:bible}]);
   const json=extractJSON(out);
   if(!json||!Array.isArray(json)) throw new Error('未能从角色圣经解析出参考元素');
   return json;
@@ -408,6 +435,95 @@ function extractJSON(t){
   const m=t.match(/\[[\s\S]*\]/); if(m){ try{return JSON.parse(m[0]);}catch(e){} }
   const m2=t.match(/\{[\s\S]*\}/); if(m2){ try{return JSON.parse(m2[0]);}catch(e){} }
   return null;
+}
+
+/* ============ 一致性辅助（解析圣经锚点 / 场景表） ============ */
+// 从角色圣经中提取：① 视觉风格锚点段落 ② 每个角色的英文视觉锚点
+function extractBibleAnchors(bible){
+  const styleLines=[]; const anchors=[];
+  const lines=(bible||'').split('\n');
+  let inStyle=false, cur=null;
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    const h=l.match(/^#\s*(.+?)\s*$/);
+    if(h){
+      const title=h[1];
+      inStyle=/视觉风格锚点/.test(title);
+      cur=/^角色/.test(title)?title.replace(/^角色\s*/,''):null;
+      continue;
+    }
+    if(inStyle){
+      const t=l.replace(/^[-*]\s*/,'').trim();
+      if(t) styleLines.push(t);
+    }
+    if(cur){
+      const am=l.match(/视觉锚点[：:]\s*(.+)$/);
+      if(am) anchors.push({name:cur, anchor:am[1].trim()});
+    }
+  }
+  return { style: styleLines.join('；'), anchors };
+}
+// 把"在场人物"列里的名字，匹配到圣经锚点，拼成可复用外观描述
+function matchAnchors(characters, anchors){
+  if(!characters||!anchors.length) return '';
+  const parts=[];
+  for(const a of anchors){ if(characters.includes(a.name)) parts.push(a.name+'：'+a.anchor); }
+  return parts.join('；');
+}
+// 解析场景表为逐场对象
+function parseSceneTable(md){
+  const rows=[]; const lines=(md||'').split('\n');
+  for(const ln of lines){
+    if(!ln.trim().startsWith('|')) continue;
+    const cells=ln.split('|').map(c=>c.trim()).filter((c,i,arr)=>!(i===0&&c==='')&&!(i===arr.length-1&&c===''));
+    if(cells.length<5) continue;
+    if(/^场景编号|^scene|^场景/i.test(cells[0])) continue; // 表头
+    rows.push({id:cells[0], intExt:cells[1]||'', location:cells[2]||'', time:cells[3]||'', characters:cells[4]||'', beat:cells[5]||'', emotion:cells[6]||''});
+  }
+  return rows;
+}
+function buildScenePrompt(style, r, charPart){
+  let p='';
+  if(style) p+='风格：'+style+'。';
+  p+='场景：'+(r.intExt||'')+' '+(r.location||'')+'，'+(r.time||'')+'，情绪'+(r.emotion||'')+'。'+(r.beat||'');
+  if(charPart) p+=' 在场人物外观：'+charPart+'（严格复用上述人物外观锚点，禁止改述）。';
+  p+=' 电影感，国潮玄幻动画风格，画面前后一致。';
+  return p;
+}
+// 按镜号前缀（SC01）匹配所属场景图，供图生视频
+function findSceneImgForShot(shot){
+  const m=String(shot||'').match(/^(SC\d+)/i); if(!m) return null;
+  const sid=m[1].toUpperCase();
+  const found=state.sceneImgs.find(s=>String(s.id).toUpperCase()===sid);
+  return found?found.url:null;
+}
+
+/* ============ 场景图片生成（Step 2） ============ */
+async function genSceneImages(){
+  const scenes=document.getElementById('outScenes').value.trim();
+  const bible=document.getElementById('outBible').value.trim();
+  if(!scenes){ toast('请先生成场景表（Step 2）'); return; }
+  const cfg=getMediaCfg();
+  if(!cfg.imgUrl){ toast('设置页未配置图像接口（请到「设置 → 多模态模型」填写）'); return; }
+  setStatus(2,'场景图生成中…','warn');
+  try{
+    const rows=parseSceneTable(scenes);
+    if(!rows.length) throw new Error('未能从场景表解析出场景行');
+    const {style, anchors}=extractBibleAnchors(bible);
+    state.sceneImgs=[];
+    const grid=document.getElementById('sceneGrid'); grid.innerHTML='';
+    for(const r of rows){
+      const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(r.id)+' 生成中…</div>'; grid.appendChild(cell);
+      try{
+        const charPart=matchAnchors(r.characters, anchors);
+        const prompt=buildScenePrompt(style, r, charPart);
+        const url=await genImage(prompt, getMediaCfg());
+        cell.innerHTML='<img src="'+url+'" alt="'+esc(r.id)+'"><div class="ref-detail"><b>'+esc(r.id)+'</b> · '+esc(r.location||'')+'</div>';
+        state.sceneImgs.push({id:r.id, url});
+      }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.id)+' 失败：'+esc(e.message)+'</div>'; }
+    }
+    setStatus(2,'场景图完成 ✓','ok');
+  }catch(e){ toast('场景图失败：'+e.message); setStatus(2,'场景图失败','err'); }
 }
 
 /* ============ 媒体动作 ============ */
@@ -420,11 +536,13 @@ async function genRefImages(){
   try{
     const refs=await extractRefs(bible);
     state.refs=refs;
+    const {style}=extractBibleAnchors(bible);
     const grid=document.getElementById('refGrid'); grid.innerHTML='';
     for(const r of refs){
       const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">生成中…</div>'; grid.appendChild(cell);
       try{
-        const url = await genImage(r.prompt, getMediaCfg());
+        const prompt=(style?('风格：'+style+'。'):'')+r.prompt;
+        const url = await genImage(prompt, getMediaCfg());
         cell.innerHTML='<img src="'+url+'" alt="'+esc(r.name)+'"><div class="ref-detail"><b>'+esc(r.name)+'</b> · '+esc(r.type)+'</div>';
       }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.name)+' 失败：'+esc(e.message)+'</div>'; }
     }
@@ -440,8 +558,9 @@ async function genVideos(){
   for(const vp of state.videoPrompts){
     const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(vp.shot)+' 生成中…</div>'; grid.appendChild(cell);
     try{
-      const url = await genVideoSettings(vp.en);
-      cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b></div>';
+      const img=findSceneImgForShot(vp.shot); // 若 Step 2 已生成该场景图，则用其做图生视频
+      const url = await genVideoSettings(vp.en, img);
+      cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b>'+(img?' · 图生视频':'')+'</div>';
     }catch(e){ cell.innerHTML='<div class="ph err">'+esc(vp.shot)+' 失败：'+esc(e.message)+'</div>'; }
   }
   setStatus(6,'视频完成 ✓','ok');
