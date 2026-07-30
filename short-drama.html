@@ -321,11 +321,18 @@ async function genVideoSettings(prompt, imageUrl){
   const model=cfg.vidModel; if(model) body.model=model;
   const headers={'Content-Type':'application/json'}; if(cfg.vidKey) headers['Authorization']='Bearer '+cfg.vidKey;
   const res=await fetch(urlStr,{method:'POST',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
-  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error?.message||m;}catch{} throw new Error(m); }
+  if(!res.ok){
+    let m='HTTP '+res.status; let isRateLimit=false;
+    try{ const e=await res.json(); m=e.error?.message||e.message||m; }catch{}
+    if(/rate\s*limit|too\s*many\s*requests|requests\s*per/i.test(m)) isRateLimit=true;
+    const err=new Error(m); err.isRateLimit=isRateLimit; throw err;
+  }
   const data=await res.json();
-  const val=resolvePath(data, cfg.vidResp);
-  if(!val) throw new Error('响应中未找到视频（路径 '+cfg.vidResp+'）');
-  return val;
+  const paths=[cfg.vidResp, 'data[0].url','data.url','url','video_url','data.video_url','data[0].video_url','output.url','output.video_url','data[0].output_url'].filter((v,i,a)=>v&&a.indexOf(v)===i);
+  for(const p of paths){ const val=resolvePath(data,p); if(val) return val; }
+  const taskId=resolvePath(data,'task_id')||resolvePath(data,'data.task_id')||resolvePath(data,'id');
+  if(taskId) throw new Error('接口返回异步任务 ID（'+taskId+'），未找到视频 URL。当前仅支持同步返回 URL 的接口，请检查「vid_resp」或改用对应 provider。');
+  throw new Error('未找到视频 URL；已尝试 '+paths.join(' / ')+'。请在「设置 → 多模态模型（视频）」vid_resp 填写正确路径。');
 }
 
 /* ============ 示例 & 清空 ============ */
@@ -596,13 +603,30 @@ async function genVideos(){
   if(!cfg.vidUrl){ toast('设置页未配置视频接口（请到「设置 → 多模态模型」填写）'); return; }
   setStatus(6,'视频生成中…','warn');
   const grid=document.getElementById('vidGrid'); grid.innerHTML='';
-  for(const vp of state.videoPrompts){
+  const delay=Math.max(0, parseInt(localStorage.getItem('vid_delay')||'12000', 10)); // 默认 12s，避免触发 5/min 限流
+  for(let i=0;i<state.videoPrompts.length;i++){
+    const vp=state.videoPrompts[i];
     const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(vp.shot)+' 生成中…</div>'; grid.appendChild(cell);
-    try{
-      const img=findSceneImgForShot(vp.shot); // 若 Step 2 已生成该场景图，则用其做图生视频
-      const url = await genVideoSettings(vp.en, img);
-      cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b>'+(img?' · 图生视频':'')+'</div>';
-    }catch(e){ cell.innerHTML='<div class="ph err">'+esc(vp.shot)+' 失败：'+esc(e.message)+'</div>'; }
+    let retries=0, ok=false;
+    while(retries<=2 && !ok){
+      try{
+        const img=findSceneImgForShot(vp.shot); // 若 Step 2 已生成该场景图，则用其做图生视频
+        const url = await genVideoSettings(vp.en, img);
+        cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b>'+(img?' · 图生视频':'')+'</div>';
+        ok=true;
+      }catch(e){
+        if(e.isRateLimit && retries<2){
+          retries++;
+          const wait=delay*retries;
+          cell.innerHTML='<div class="ph warn">'+esc(vp.shot)+' 限流，'+Math.round(wait/1000)+'s 后重试…</div>';
+          await new Promise(r=>setTimeout(r, wait));
+        }else{
+          cell.innerHTML='<div class="ph err">'+esc(vp.shot)+' 失败：'+esc(e.message)+'</div>';
+          ok=true;
+        }
+      }
+    }
+    if(i<state.videoPrompts.length-1 && delay>0) await new Promise(r=>setTimeout(r, delay));
   }
   setStatus(6,'视频完成 ✓','ok');
 }
