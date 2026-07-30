@@ -99,16 +99,9 @@
             <label>文本生成引擎</label>
             <div class="hint">读「设置」页已存的云端 Key / 本地 Ollama，本页不重复填。无配置时点「载入示例」可看结构。</div>
         </div>
-        <div class="field" style="max-width:300px;display:inline-block;vertical-align:top;margin-right:14px">
-            <label>媒体引擎（参考图 / 视频）</label>
-            <select id="mediaEngine" onchange="onMediaEngineChange()">
-                <option value="settings">设置页媒体配置</option>
-                <option value="agnes">Agnes 后端</option>
-            </select>
-        </div>
-        <div class="field" id="agnesAddrRow" style="display:none;max-width:440px;display:inline-block;vertical-align:top">
-            <label>🔗 Agnes 后端地址</label>
-            <input id="agnesBaseUrl" placeholder="http://localhost:8787" oninput="localStorage.setItem('agnesBaseUrl',this.value.trim())">
+        <div class="field" style="max-width:560px">
+            <label>媒体生成（参考图 / 视频）</label>
+            <div class="hint">读「设置」页「多模态模型（图像 / 视频）」已存的接口地址与 Key，浏览器直连服务商，不经过本站服务器。未配置时 Step 1 / Step 6 的出图、出片按钮会提示去设置页填写。</div>
         </div>
         <div class="row" style="margin-top:6px">
             <button class="btn btn-primary" onclick="runPipeline()">▶ 一键运行流水线</button>
@@ -150,7 +143,7 @@
         </div>
         <div class="row">
             <button class="btn btn-sm" onclick="genRefImages()">🎨 生成角色参考图</button>
-            <span class="hint" id="refHint">从角色圣经提取元素，按媒体引擎出图</span>
+            <span class="hint" id="refHint">从角色圣经提取元素，按「设置 → 多模态模型」配置出图</span>
         </div>
         <div id="refGrid" class="ref-grid"></div>
     </section>
@@ -319,30 +312,6 @@ async function genVideoSettings(prompt, imageUrl){
   return val;
 }
 
-/* ============ Agnes 后端（可选，仅地址；key 来自设置页） ============ */
-function getAgnesBase(){ return (localStorage.getItem('agnesBaseUrl')||'http://localhost:8787').trim()||'http://localhost:8787'; }
-function getAgnesKey(){ return localStorage.getItem('cloudApiKey')||''; }
-async function agnesGenImage(prompt){
-  const base=getAgnesBase(); const key=getAgnesKey();
-  const body={prompt, creds:{api_key:key||''}};
-  const res=await fetch(base.replace(/\/+$/,'')+'/api/image/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
-  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error||m;}catch{} throw new Error(m); }
-  const data=await res.json();
-  const url=data.url||data.data?.url||(data.b64_json?('data:image/png;base64,'+data.b64_json):(typeof data==='string'?data:null));
-  if(!url) throw new Error('Agnes 返回中未找到图片 URL');
-  return url;
-}
-async function agnesGenVideo(prompt){
-  const base=getAgnesBase(); const key=getAgnesKey();
-  const body={prompt, creds:{api_key:key||''}};
-  const res=await fetch(base.replace(/\/+$/,'')+'/api/video/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(120000)});
-  if(!res.ok){ let m='HTTP '+res.status; try{const e=await res.json(); m=e.error||m;}catch{} throw new Error(m); }
-  const data=await res.json();
-  const url=data.url||data.data?.url||data.task_id||null;
-  if(!url) throw new Error('Agnes 返回中未找到视频（若为异步任务，请在后端查看）');
-  return url;
-}
-
 /* ============ 示例 & 清空 ============ */
 const DEMO = {
   story: "暴雨如注的深夜，废弃的花房在雷声中摇摇欲坠。林秋浑身湿透，死死护着怀中那盆唯一的红玫瑰。这是已故妻子留下的最后遗物，也是他在这座冷漠城市中仅存的温情寄托。\n\n次日清晨，邻居小孩好奇地凑过来：「叔叔，这花快死了，为什么还留着？」林秋沉默不语。然而，一场突如其来的入室盗窃打破了宁静。小偷为了抢夺值钱物品，粗暴地推倒了花盆。泥土飞溅，玫瑰折断，鲜红的汁液染红了林秋的白衬衫。愤怒瞬间爆发，林秋冲上去与小偷搏斗，最终将其制服报警。\n\n警察带走小偷后，林秋瘫坐在地，望着断成两截的玫瑰，泪水终于决堤。就在他绝望之际，他发现断茎处竟然冒出了一颗嫩绿的新芽。那一刻，林秋明白，死亡并非终结，而是新生的序章。"
@@ -445,9 +414,8 @@ function extractJSON(t){
 async function genRefImages(){
   const bible=document.getElementById('outBible').value.trim();
   if(!bible){ toast('请先生成角色圣经（Step 1）'); return; }
-  const engine=document.getElementById('mediaEngine').value;
-  if(engine==='settings'){ const cfg=getMediaCfg(); if(!cfg.imgUrl){ toast('设置页未配置图像接口'); return; } }
-  else { if(!getAgnesBase()){ toast('请填写 Agnes 后端地址'); return; } }
+  const cfg=getMediaCfg();
+  if(!cfg.imgUrl){ toast('设置页未配置图像接口（请到「设置 → 多模态模型」填写）'); return; }
   setStatus(1,'参考图生成中…','warn');
   try{
     const refs=await extractRefs(bible);
@@ -456,7 +424,7 @@ async function genRefImages(){
     for(const r of refs){
       const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">生成中…</div>'; grid.appendChild(cell);
       try{
-        const url = engine==='settings' ? await genImage(r.prompt, getMediaCfg()) : await agnesGenImage(r.prompt);
+        const url = await genImage(r.prompt, getMediaCfg());
         cell.innerHTML='<img src="'+url+'" alt="'+esc(r.name)+'"><div class="ref-detail"><b>'+esc(r.name)+'</b> · '+esc(r.type)+'</div>';
       }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.name)+' 失败：'+esc(e.message)+'</div>'; }
     }
@@ -465,15 +433,14 @@ async function genRefImages(){
 }
 async function genVideos(){
   if(!state.videoPrompts||!state.videoPrompts.length){ setStatus(6,'等待提示词','err'); toast('请先生成视频提示词（Step 5）'); return; }
-  const engine=document.getElementById('mediaEngine').value;
-  if(engine==='settings'){ const cfg=getMediaCfg(); if(!cfg.vidUrl){ toast('设置页未配置视频接口'); return; } }
-  else { if(!getAgnesBase()){ toast('请填写 Agnes 后端地址'); return; } }
+  const cfg=getMediaCfg();
+  if(!cfg.vidUrl){ toast('设置页未配置视频接口（请到「设置 → 多模态模型」填写）'); return; }
   setStatus(6,'视频生成中…','warn');
   const grid=document.getElementById('vidGrid'); grid.innerHTML='';
   for(const vp of state.videoPrompts){
     const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(vp.shot)+' 生成中…</div>'; grid.appendChild(cell);
     try{
-      const url = engine==='settings' ? await genVideoSettings(vp.en) : await agnesGenVideo(vp.en);
+      const url = await genVideoSettings(vp.en);
       cell.innerHTML='<video class="vid" src="'+url+'" controls></video><div class="ref-detail"><b>'+esc(vp.shot)+'</b></div>';
     }catch(e){ cell.innerHTML='<div class="ph err">'+esc(vp.shot)+' 失败：'+esc(e.message)+'</div>'; }
   }
@@ -516,15 +483,9 @@ function exportAll(){
 }
 
 /* ============ 初始化 ============ */
-function onMediaEngineChange(){
-  const v=document.getElementById('mediaEngine').value;
-  document.getElementById('agnesAddrRow').style.display = v==='agnes' ? 'inline-block' : 'none';
-}
 function init(){
   const saved=localStorage.getItem('theme'); if(saved) document.documentElement.setAttribute('data-theme',saved);
   updateThemeBtns();
-  const ab=localStorage.getItem('agnesBaseUrl'); if(ab) document.getElementById('agnesBaseUrl').value=ab;
-  onMediaEngineChange();
 }
 init();
 </script>
