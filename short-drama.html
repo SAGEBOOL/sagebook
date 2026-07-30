@@ -442,22 +442,24 @@ function extractJSON(t){
 function extractBibleAnchors(bible){
   const styleLines=[]; const anchors=[];
   const lines=(bible||'').split('\n');
-  let inStyle=false, cur=null;
+  let inStyle=false, inChars=false, cur=null;
   for(let i=0;i<lines.length;i++){
     const l=lines[i];
-    const h=l.match(/^#\s*(.+?)\s*$/);
+    const h=l.match(/^(#{1,3})\s*(.+?)\s*$/);
     if(h){
-      const title=h[1];
-      inStyle=/视觉风格锚点/.test(title);
-      cur=/^角色/.test(title)?title.replace(/^角色\s*/,''):null;
+      const title=h[2].trim();
+      if(/视觉风格锚点/.test(title)){ inStyle=true; inChars=false; cur=null; }
+      else if(/角色设定卡|角色/.test(title)){ inStyle=false; inChars=true; cur=null; }
+      else if(inChars){ inStyle=false; cur=title; }
+      else { inStyle=false; cur=null; }
       continue;
     }
     if(inStyle){
-      const t=l.replace(/^[-*]\s*/,'').trim();
+      const t=l.replace(/^[-*\d+.]\s*/,'').trim();
       if(t) styleLines.push(t);
     }
     if(cur){
-      const am=l.match(/视觉锚点[：:]\s*(.+)$/);
+      const am=l.match(/视觉锚点.*?[：:]\s*(.+)$/);
       if(am) anchors.push({name:cur, anchor:am[1].trim()});
     }
   }
@@ -467,8 +469,13 @@ function extractBibleAnchors(bible){
 function matchAnchors(characters, anchors){
   if(!characters||!anchors.length) return '';
   const parts=[];
-  for(const a of anchors){ if(characters.includes(a.name)) parts.push(a.name+'：'+a.anchor); }
-  return parts.join('；');
+  const names=String(characters).split(/[,，、/\s]+/).map(s=>s.trim()).filter(Boolean);
+  for(const a of anchors){
+    if(names.some(n=>n===a.name||characters.includes(a.name))){
+      parts.push(a.name+': '+a.anchor);
+    }
+  }
+  return parts.join(' | ');
 }
 // 解析场景表为逐场对象
 function parseSceneTable(md){
@@ -483,12 +490,13 @@ function parseSceneTable(md){
   return rows;
 }
 function buildScenePrompt(style, r, charPart){
-  let p='';
-  if(style) p+='风格：'+style+'。';
-  p+='场景：'+(r.intExt||'')+' '+(r.location||'')+'，'+(r.time||'')+'，情绪'+(r.emotion||'')+'。'+(r.beat||'');
-  if(charPart) p+=' 在场人物外观：'+charPart+'（严格复用上述人物外观锚点，禁止改述）。';
-  p+=' 电影感，国潮玄幻动画风格，画面前后一致。';
-  return p;
+  const parts=[];
+  // 图像模型对提示词开头权重最高：先放人物锚点，确保角色外观被遵循
+  if(charPart) parts.push('CHARACTER LOCK: '+charPart+' (exactly these faces, costumes, hair, age; do not redesign).');
+  if(style) parts.push('VISUAL STYLE: '+style+' (keep consistent across all scenes).');
+  parts.push('SCENE: '+(r.intExt||'')+' '+(r.location||'')+', '+(r.time||'')+', mood '+(r.emotion||'')+'. '+(r.beat||''));
+  parts.push('cinematic lighting, coherent character design, same style as reference images, best quality.');
+  return parts.join(' | ');
 }
 // 按镜号前缀（SC01）匹配所属场景图，供图生视频
 function findSceneImgForShot(shot){
