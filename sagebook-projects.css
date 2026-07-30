@@ -1,0 +1,58 @@
+/* ============================================================
+   SAGEBOOK 多项目管理浮层（Phase 4）—— 纯加法，不碰现有 nav
+   书架按钮放左下（帮助?在右下），避免遮挡顶部导航
+   ============================================================ */
+.sb-bs-fab {
+  position: fixed; left: 20px; bottom: 20px; z-index: 3000;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--bg-secondary, #1c1c1a); color: var(--accent, #d97757);
+  border: 1px solid var(--border-primary, #3d3d3a); cursor: pointer;
+  font-size: 20px; line-height: 1; font-family: var(--font-sans, sans-serif);
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(0,0,0,0.4));
+  display: flex; align-items: center; justify-content: center;
+  transition: transform var(--transition-fast, 0.15s ease), border-color var(--transition-fast, 0.15s ease);
+}
+.sb-bs-fab:hover { transform: translateY(-2px); border-color: var(--accent, #d97757); }
+
+.sb-bs-panel {
+  position: fixed; left: 20px; bottom: 76px; z-index: 3000;
+  width: 320px; max-width: calc(100vw - 40px);
+  background: var(--bg-secondary, #1c1c1a); border: 1px solid var(--border-primary, #3d3d3a);
+  border-radius: var(--radius-lg, 12px); box-shadow: var(--shadow-lg, 0 8px 32px rgba(0,0,0,0.5));
+  padding: 14px; color: var(--text-secondary, #c8c6bd); font-family: var(--font-sans, sans-serif);
+  display: none;
+}
+.sb-bs-panel.open { display: block; animation: sb-fade 0.15s ease; }
+.sb-bs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.sb-bs-title { font-size: var(--font-size-sm, 0.8125rem); font-weight: 600; color: var(--fg-primary, #f0eee6); }
+.sb-bs-x { background: none; border: none; color: var(--fg-muted, #5c5b55); font-size: 20px; cursor: pointer; line-height: 1; }
+.sb-bs-x:hover { color: var(--fg-primary, #f0eee6); }
+.sb-bs-note {
+  display: none; font-size: 11.5px; line-height: 1.6; color: var(--fg-secondary, #c8c6bd);
+  background: var(--accent-dim, rgba(217,119,87,0.12)); border: 1px solid var(--accent, #d97757);
+  border-radius: var(--radius-md, 8px); padding: 8px 10px; margin-bottom: 10px;
+}
+.sb-bs-note b { color: var(--accent, #d97757); }
+.sb-bs-list { display: flex; flex-direction: column; gap: 4px; max-height: 46vh; overflow-y: auto; }
+.sb-bs-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px; border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent;
+}
+.sb-bs-row.on { background: var(--accent-dim, rgba(217,119,87,0.12)); border-color: var(--accent, #d97757); }
+.sb-bs-name { flex: 1; min-width: 0; font-size: var(--font-size-sm, 0.8125rem); color: var(--fg-secondary, #c8c6bd); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-bs-row.on .sb-bs-name { color: var(--fg-primary, #f0eee6); }
+.sb-bs-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent, #d97757); margin-right: 6px; vertical-align: middle; }
+.sb-bs-name em { font-style: normal; font-size: 10px; color: var(--accent, #d97757); margin-left: 4px; }
+.sb-bs-tools { display: flex; gap: 2px; flex: none; }
+.sb-bs-ic {
+  background: none; border: none; cursor: pointer; color: var(--fg-muted, #5c5b55);
+  font-size: 13px; padding: 2px 5px; border-radius: 6px; line-height: 1.4;
+}
+.sb-bs-ic:hover { background: var(--bg-hover, #333331); color: var(--fg-primary, #f0eee6); }
+.sb-bs-actions { margin-top: 10px; }
+.sb-bs-actions .sb-btn { width: 100%; justify-content: center; }
+
+@media (max-width: 768px) {
+  .sb-bs-panel { width: calc(100vw - 40px); }
+}

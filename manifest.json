@@ -1,0 +1,15 @@
+{
+  "name": "SAGEBOOK 智能创作台",
+  "short_name": "SAGEBOOK",
+  "description": "纯前端写作台：知识库、角色、世界观、编辑器与 AI 技能，数据存在你自己的浏览器里。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#141413",
+  "theme_color": "#141413",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

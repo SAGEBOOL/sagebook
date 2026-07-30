@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script src="sagebook-projects.js"></script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAGE BOOK - 知识图谱</title>
@@ -648,12 +650,49 @@
             z-index: 400; pointer-events: none;
         }
         .kg-toast.show { opacity: 1; }
+
+        /* === 移动端窄屏精排增强（SageBook 优化：仅窄屏，桌面端零改动） === */
+        @media (max-width: 768px) {
+            html, body { height: 100%; }
+            body { display: flex; flex-direction: column; }
+            .header {
+                flex-wrap: wrap; height: auto; min-height: 56px;
+                padding: 8px 12px; gap: 8px 10px; align-items: center;
+            }
+            .logo { flex: 1 1 auto; min-width: 0; }
+            .logo-text { font-size: 17px; }
+            .mobile-menu-btn { display: block !important; order: 2; }
+            .header-actions { order: 3; width: 100%; flex-wrap: wrap; gap: 6px; }
+            .header-actions .btn { flex: 1 1 auto; padding: 8px 10px; font-size: 12px; }
+            .nav { order: 4; width: 100%; overflow-x: auto; flex-wrap: nowrap; gap: 2px; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+            .nav-link { white-space: nowrap; padding: 5px 10px; font-size: 12px; }
+            #kbLinkCard { flex: 0 0 auto; }
+            .header, #kbLinkCard, .site-footer { flex: 0 0 auto; }
+            .main-container { height: auto; flex: 1 1 auto; min-height: 0; }
+            .canvas-container { min-height: 0; }
+            .stats-bar { top: 10px; left: 10px; padding: 8px 10px; gap: 12px; }
+            .stat-value { font-size: 16px; }
+            .canvas-controls { top: 10px; right: 10px; gap: 6px; }
+            .control-btn { width: 36px; height: 36px; font-size: 16px; }
+            .legend { bottom: 10px; left: 10px; padding: 8px 10px; }
+            .legend-item { font-size: 11px; }
+        }
+        @media (max-width: 480px) {
+            .header-actions .btn { font-size: 11px; padding: 7px 8px; }
+            .stat-label { font-size: 10px; }
+        }
     </style>
     <link rel="stylesheet" href="design-system.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="text-pressure.css">
+  <link rel="stylesheet" href="sagebook-enhance.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141413">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="sagebook-projects.css">
 </head>
 <body>
     <!-- Header -->
@@ -1639,5 +1678,6 @@
       else initBrandText();
     })();
     </script>
+  <script defer src="sagebook-enhance.js"></script>
 </body>
 </html>

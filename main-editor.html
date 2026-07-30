@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script src="sagebook-projects.js"></script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SageBook · 写作工坊</title>
@@ -572,6 +574,25 @@ body {
     .sidebar-header { padding: 12px 10px; }
     .editor-pane, .preview-pane { font-size: 15px; }
 }
+
+/* === 移动端窄屏精排增强（SageBook 优化：仅窄屏，桌面端零改动） === */
+@media (max-width: 1024px) {
+    /* 抽屉浮层内容避让 60px 顶栏，避免被顶栏遮住导致无法点按 */
+    .sidebar, .panel { padding-top: 60px; }
+}
+@media (max-width: 768px) {
+    .main-header { flex-wrap: nowrap; padding: 0 12px; gap: 8px; }
+    .main-header .file-info { min-width: 0; flex: 1 1 auto; overflow: hidden; }
+    .main-header .file-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .main-header .header-actions { flex: 0 0 auto; max-width: 50%; overflow-x: auto; flex-wrap: nowrap; }
+    .editor-textarea { padding: 14px 16px; font-size: 16px; line-height: 1.8; }
+    .editor-toolbar { padding: 6px 10px; }
+    .ai-overlay { padding: 12px 16px 16px; }
+    .settings-row { flex-wrap: wrap; }
+    .settings-row label { min-width: 56px; }
+    .kb-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+}
+
 /* 导入文本文件 弹窗 */
 .import-modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
@@ -626,6 +647,12 @@ body {
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wdth,wght,slnt@8..144,25..151,100..1000,-10..0&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="text-pressure.css">
 <script src="knowledge.js"></script>
+  <link rel="stylesheet" href="sagebook-enhance.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141413">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="sagebook-projects.css">
 </head>
 <body>
 
@@ -2655,5 +2682,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.SageKB && typeof updateKBStat === 'function') updateKBStat();
     })();
     </script>
+  <script defer src="sagebook-enhance.js"></script>
 </body>
 </html>

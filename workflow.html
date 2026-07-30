@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <script src="sagebook-projects.js"></script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>推荐创作流 · SAGEBOOK</title>
+  <link rel="stylesheet" href="design-system.css">
+  <link rel="stylesheet" href="sagebook-enhance.css">
+  <style>
+    /* 本页为新增独立视图，沿用站点 token（与现有内部页同源），不修改任何现有页面 */
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg-primary, #141413);
+      color: var(--fg-primary, #f0eee6);
+      font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif);
+      line-height: 1.6;
+    }
+    .wf-topbar {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 24px; border-bottom: 1px solid var(--border-secondary, #2e2e2c);
+      position: sticky; top: 0; background: var(--bg-primary, #141413); z-index: 50;
+    }
+    .wf-logo { font-weight: 700; font-size: 1.05rem; letter-spacing: 0.5px; color: var(--fg-primary, #f0eee6); }
+    .wf-logo b { color: var(--accent, #d97757); }
+    .wf-topbar .wf-hint { margin-left: auto; font-size: 12px; color: var(--fg-muted, #5c5b55); }
+    .wf-topbar .wf-hint kbd {
+      display: inline-block; padding: 1px 6px; border-radius: 5px;
+      background: var(--bg-tertiary, #2a2a28); border: 1px solid var(--border-primary, #3d3d3a);
+      font-family: var(--font-mono, monospace); font-size: 11px; color: var(--fg-tertiary, #8b8a82);
+    }
+    .wf-home {
+      color: var(--fg-tertiary, #8b8a82); text-decoration: none; font-size: 13px;
+      border: 1px solid var(--border-primary, #3d3d3a); padding: 5px 12px; border-radius: var(--radius-md, 8px);
+    }
+    .wf-home:hover { color: var(--fg-primary, #f0eee6); border-color: var(--fg-tertiary, #8b8a82); }
+
+    .wf-hero { max-width: 980px; margin: 0 auto; padding: 44px 24px 8px; }
+    .wf-hero h1 { font-size: clamp(1.6rem, 3vw, 2.3rem); margin: 0 0 10px; font-weight: 700; }
+    .wf-hero h1 span { color: var(--accent, #d97757); }
+    .wf-hero p { color: var(--fg-secondary, #c8c6bd); font-size: 1rem; max-width: 720px; margin: 0; }
+
+    .wf-flow { max-width: 980px; margin: 0 auto; padding: 24px 24px 64px; }
+    .wf-layer { margin-top: 30px; }
+    .wf-layer-head {
+      display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px;
+      padding-left: 14px; border-left: 3px solid var(--accent, #d97757);
+    }
+    .wf-layer-no { font-size: 12px; color: var(--accent, #d97757); font-weight: 700; letter-spacing: 1px; }
+    .wf-layer-title { font-size: 1.15rem; font-weight: 600; }
+    .wf-layer-desc { font-size: 13px; color: var(--fg-muted, #5c5b55); margin-left: auto; max-width: 320px; text-align: right; }
+
+    .wf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .wf-card {
+      background: var(--bg-secondary, #1c1c1a); border: 1px solid var(--border-primary, #3d3d3a);
+      border-radius: var(--radius-lg, 12px); padding: 16px; text-decoration: none;
+      color: inherit; display: block; transition: all var(--transition-fast, 0.15s ease);
+    }
+    .wf-card:hover { border-color: var(--accent, #d97757); transform: translateY(-2px); box-shadow: var(--shadow-md, 0 4px 16px rgba(0,0,0,0.4)); }
+    .wf-card-ico { font-size: 22px; }
+    .wf-card-name { font-weight: 600; margin: 8px 0 4px; color: var(--fg-primary, #f0eee6); }
+    .wf-card-desc { font-size: 12.5px; color: var(--fg-secondary, #c8c6bd); line-height: 1.55; }
+
+    .wf-note {
+      max-width: 980px; margin: 10px auto 0; padding: 0 24px;
+      font-size: 12.5px; color: var(--fg-muted, #5c5b55);
+    }
+    .wf-note b { color: var(--fg-secondary, #c8c6bd); font-weight: 600; }
+    @media (max-width: 640px) {
+      .wf-layer-desc { display: none; }
+      .wf-topbar .wf-hint { display: none; }
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#141413">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="sagebook-projects.css">
+</head>
+<body>
+  <div class="wf-topbar">
+    <span class="wf-logo">SAGE<b>BOOK</b></span>
+    <span style="color:var(--fg-muted,#5c5b55);font-size:13px;">推荐创作流</span>
+    <a class="wf-home" href="index.html">← 首页</a>
+    <span class="wf-hint">按 <kbd>⌘K</kbd> / <kbd>Ctrl K</kbd> 跳任意工具</span>
+  </div>
+
+  <header class="wf-hero">
+    <h1>按 <span>四层</span> 推进，少走弯路</h1>
+    <p>写作不是一上来就硬写。先填资料，再搭骨架，然后动笔，最后出稿校对——每一步用对工具，人物和世界观更一致，效率也更高。点击任意卡片进入对应工具。</p>
+  </header>
+
+  <main class="wf-flow">
+
+    <section class="wf-layer">
+      <div class="wf-layer-head">
+        <span class="wf-layer-no">LAYER 1</span>
+        <span class="wf-layer-title">资料层 · 准备</span>
+        <span class="wf-layer-desc">先填设定，写作时的 AI 技能会自动引用，人物/背景更一致</span>
+      </div>
+      <div class="wf-grid">
+        <a class="wf-card" href="outline-editor.html">
+          <div class="wf-card-ico">📋</div><div class="wf-card-name">知识库</div>
+          <div class="wf-card-desc">上传或创建专有资料：世界观、人物、剧情设定，作为写作依据与 AI 上下文。</div>
+        </a>
+        <a class="wf-card" href="character-management.html">
+          <div class="wf-card-ico">👤</div><div class="wf-card-name">角色管理</div>
+          <div class="wf-card-desc">建立人物卡（外貌/性格/关系），写好后可在编辑器 AI 技能里被直接引用。</div>
+        </a>
+        <a class="wf-card" href="world-builder.html">
+          <div class="wf-card-ico">🌍</div><div class="wf-card-name">世界观管理</div>
+          <div class="wf-card-desc">梳理地点、势力、设定百科等要素，为长篇/系列作提供一致的世界背景。</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="wf-layer">
+      <div class="wf-layer-head">
+        <span class="wf-layer-no">LAYER 2</span>
+        <span class="wf-layer-title">结构层 · 搭骨架</span>
+        <span class="wf-layer-desc">在动笔前定下故事脉络与节奏，避免写到一半推倒重来</span>
+      </div>
+      <div class="wf-grid">
+        <a class="wf-card" href="template-gallery.html">
+          <div class="wf-card-ico">📚</div><div class="wf-card-name">模板库</div>
+          <div class="wf-card-desc">浏览/套用各类写作与结构模板，也可存自定义模板，新项目起步更快。</div>
+        </a>
+        <a class="wf-card" href="knowledge-graph.html">
+          <div class="wf-card-ico">🕸️</div><div class="wf-card-name">知识图谱</div>
+          <div class="wf-card-desc">把人物、地点、事件连成关系网络，直观查看剧情脉络与伏笔。</div>
+        </a>
+        <a class="wf-card" href="book-deconstruction.html">
+          <div class="wf-card-ico">📖</div><div class="wf-card-name">拆书技能</div>
+          <div class="wf-card-desc">拆解优质小说的结构配方，「本地速览」离线可用，拆完可当写作骨架。</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="wf-layer">
+      <div class="wf-layer-head">
+        <span class="wf-layer-no">LAYER 3</span>
+        <span class="wf-layer-title">写作层 · 动笔</span>
+        <span class="wf-layer-desc">打开即写，选中文字即可调 AI / 导出；编辑器内 @ 角色/@世界观 带入上下文</span>
+      </div>
+      <div class="wf-grid">
+        <a class="wf-card" href="main-editor.html">
+          <div class="wf-card-ico">✍️</div><div class="wf-card-name">主编辑器</div>
+          <div class="wf-card-desc">左侧管章节、中间写作、右侧「⚡技能」随时扩写/润色/导出；输入 @ 引用资料。</div>
+        </a>
+        <a class="wf-card" href="short-drama.html">
+          <div class="wf-card-ico">🎬</div><div class="wf-card-name">短剧 / 漫剧创作</div>
+          <div class="wf-card-desc">把灵感拆成爽点密集的短剧本，自动分镜、人物设定与定型形象图。</div>
+        </a>
+        <a class="wf-card" href="ai-suite.html">
+          <div class="wf-card-ico">🤖</div><div class="wf-card-name">AI 深度集成</div>
+          <div class="wf-card-desc">查看 AI 如何贯穿各工具，了解本地 Ollama 与云端模型的取舍。</div>
+        </a>
+      </div>
+    </section>
+
+    <section class="wf-layer">
+      <div class="wf-layer-head">
+        <span class="wf-layer-no">LAYER 4</span>
+        <span class="wf-layer-title">发布层 · 出稿</span>
+        <span class="wf-layer-desc">写完做体检与格式校对，再配置同步实现电脑手机打通</span>
+      </div>
+      <div class="wf-grid">
+        <a class="wf-card" href="writing-analysis.html">
+          <div class="wf-card-ico">📊</div><div class="wf-card-name">写作分析</div>
+          <div class="wf-card-desc">对正文做节奏、对话比、用词等体检，发现可优化的段落与结构。</div>
+        </a>
+        <a class="wf-card" href="platform-tools.html">
+          <div class="wf-card-ico">📱</div><div class="wf-card-name">网文平台工具</div>
+          <div class="wf-card-desc">对接主流网文平台的发布/格式辅助，导出前先校对排版。</div>
+        </a>
+        <a class="wf-card" href="settings.html">
+          <div class="wf-card-ico">⚙️</div><div class="wf-card-name">设置</div>
+          <div class="wf-card-desc">配置 AI 与同步（Gist / Gitee），让电脑与手机的创作数据打通。</div>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <p class="wf-note">
+    <b>小提示：</b>任何页面按 <b>⌘K / Ctrl K</b> 可打开命令面板秒跳工具；主编辑器里输入 <b>@</b> 能直接插入已建好的角色或世界观条目，不用手动复制。
+  </p>
+
+  <script defer src="sagebook-enhance.js"></script>
+</body>
+</html>
