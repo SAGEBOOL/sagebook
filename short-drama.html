@@ -219,7 +219,7 @@ function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
 function scrollTo(id){ const el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
 function setStatus(i,text,cls){ const el=document.getElementById('status'+i); if(el){ el.textContent=text; el.className='step-status'+(cls?(' '+cls):''); } }
 
-const state = { bible:'', scenes:'', shots:'', fountain:'', videoPrompts:[], refs:[], sceneImgs:[] };
+const state = { bible:'', scenes:'', shots:'', fountain:'', videoPrompts:[], refs:[], sceneImgs:[], charAnchors:null };
 
 /* ============ 主题 ============ */
 function setTheme(t){ document.documentElement.setAttribute('data-theme',t); localStorage.setItem('theme',t); updateThemeBtns(); }
@@ -336,7 +336,7 @@ function loadDemo(){ document.getElementById('inpText').value=DEMO.story; setSta
 function clearAll(){
   ['inpText','outBible','outScenes','outShots','outFountain','outVideoPrompts'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   ['refGrid','vidGrid','sceneGrid'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=''; });
-  state.bible=state.scenes=state.shots=state.fountain=''; state.videoPrompts=[]; state.refs=[]; state.sceneImgs=[];
+  state.bible=state.scenes=state.shots=state.fountain=''; state.videoPrompts=[]; state.refs=[]; state.sceneImgs=[]; state.charAnchors=null;
   for(let i=0;i<7;i++) setStatus(i, i===0?'待输入':'等待');
   toast('已清空');
 }
@@ -348,6 +348,8 @@ const SYS_SHOTS = "你是分镜师。基于用户提供的场景表，为每个�
 const SYS_FOUNTAIN = "你是编剧。依据用户提供的场景表与分镜表，生成标准 Fountain 剧本。\n规则：场景标题用 INT. 地点 - 时间 / EXT. 地点 - 时间；动作行只写可见可拍画面，避免心理描写；对白符合人物；转场用 >；章节用 #。输出纯 Fountain 文本，不要解释。";
 const SYS_VP = "你是 AI 视频提示词工程师。基于分镜表与角色圣经的英文视觉锚点，为每个镜头生成一段英文视频提示词。\n结构：[镜头运动] + [主体与动作，调用人物英文锚点] + [场景环境] + [光照/氛围] + [风格/参考] + [负面词]。\n人物外观必须复用给定锚点，禁止每镜重新描述。\n输出 Markdown 表格：\n| 镜号 | 中文说明 | English Prompt |\n每镜附一行中文说明便于人工调参。";
 const SYS_REFS = "从下方角色圣经中提取需要出参考图的元素，返回 JSON 数组（不超过 8 个）：\n[{\"name\":\"名称\",\"type\":\"角色|道具\",\"prompt\":\"英文视觉描述词，复用圣经中的视觉锚点，full body / three views / clean white background / character reference sheet\"}]\n只输出 JSON，不要解释。";
+// 抽取「角色名 -> 英文外观」结构化映射，供场景图/视频提示词逐字复用（与参考图同源）
+const SYS_CHAR_ANCHORS = "从下方角色圣经中提取每个角色的英文视觉锚点，返回 JSON 数组：\n[{\"name\":\"角色名（必须与圣经中出现的名字完全一致）\",\"anchor\":\"英文外观描述，含年龄/发色发型/服装/体型/标志物/神态，可直接逐字用于生图提示词\"}]\n只输出 JSON，不要解释。";
 
 // 一致性铁律：每个步骤都强制复用角色圣经与视觉锚点，杜绝前后不一致
 const CONSISTENCY = "\n【一致性铁律（必须严格遵守）】\n"+
@@ -429,6 +431,30 @@ async function extractRefs(bible){
   const json=extractJSON(out);
   if(!json||!Array.isArray(json)) throw new Error('未能从角色圣经解析出参考元素');
   return json;
+}
+// 用 AI 抽取「角色名 -> 英文外观锚点」映射，避免正则解析圣经格式漂移导致取不到锚点。
+// 与参考图同源（都来自角色圣经），保证场景图与参考图人物一致。
+async function extractCharAnchors(bible){
+  const out=await callSiteAI([{role:'system',content:SYS_CHAR_ANCHORS},{role:'user',content:bible}]);
+  const json=extractJSON(out);
+  const map={};
+  if(json&&Array.isArray(json)){
+    for(const a of json){ if(a&&a.name&&a.anchor) map[String(a.name).trim()]=String(a.anchor).trim(); }
+  }
+  return map;
+}
+// 把"在场人物"列名字匹配到锚点映射，拼成 CHARACTER LOCK 串
+function matchAnchorMap(characters, map){
+  if(!characters||!map||!Object.keys(map).length) return '';
+  const names=String(characters).split(/[,，、/\s]+/).map(s=>s.trim()).filter(Boolean);
+  const keys=Object.keys(map);
+  const parts=[];
+  for(const n of names){
+    // 精确匹配，或锚点名包含该名字 / 该名字包含锚点名
+    const hit=keys.find(k=> k===n || k.includes(n) || n.includes(k));
+    if(hit) parts.push(hit+': '+map[hit]);
+  }
+  return parts.join(' | ');
 }
 function extractJSON(t){
   t=(t||'').trim();
@@ -517,16 +543,20 @@ async function genSceneImages(){
   try{
     const rows=parseSceneTable(scenes);
     if(!rows.length) throw new Error('未能从场景表解析出场景行');
-    const {style, anchors}=extractBibleAnchors(bible);
+    // 优先用 AI 抽取的角色锚点映射（与参考图同源，保证一致）；失败则回退正则解析
+    if(!state.charAnchors) state.charAnchors=await extractCharAnchors(bible);
+    const anchorMap=state.charAnchors||{};
+    const {style}=extractBibleAnchors(bible);
     state.sceneImgs=[];
     const grid=document.getElementById('sceneGrid'); grid.innerHTML='';
     for(const r of rows){
       const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">'+esc(r.id)+' 生成中…</div>'; grid.appendChild(cell);
       try{
-        const charPart=matchAnchors(r.characters, anchors);
+        const charPart=matchAnchorMap(r.characters, anchorMap);
         const prompt=buildScenePrompt(style, r, charPart);
+        console.log('[scene '+r.id+'] prompt:', prompt);
         const url=await genImage(prompt, getMediaCfg());
-        cell.innerHTML='<img src="'+url+'" alt="'+esc(r.id)+'"><div class="ref-detail"><b>'+esc(r.id)+'</b> · '+esc(r.location||'')+'</div>';
+        cell.innerHTML='<img src="'+url+'" alt="'+esc(r.id)+'"><div class="ref-detail"><b>'+esc(r.id)+'</b> · '+esc(r.location||'')+(charPart?'':' · 无角色锚点')+'</div>';
         state.sceneImgs.push({id:r.id, url});
       }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.id)+' 失败：'+esc(e.message)+'</div>'; }
     }
@@ -542,6 +572,7 @@ async function genRefImages(){
   if(!cfg.imgUrl){ toast('设置页未配置图像接口（请到「设置 → 多模态模型」填写）'); return; }
   setStatus(1,'参考图生成中…','warn');
   try{
+    if(!state.charAnchors) state.charAnchors=await extractCharAnchors(bible); // 与场景图同源
     const refs=await extractRefs(bible);
     state.refs=refs;
     const {style}=extractBibleAnchors(bible);
@@ -549,7 +580,9 @@ async function genRefImages(){
     for(const r of refs){
       const cell=document.createElement('div'); cell.className='pic-cell'; cell.innerHTML='<div class="ph">生成中…</div>'; grid.appendChild(cell);
       try{
-        const prompt=(style?('风格：'+style+'。'):'')+r.prompt;
+        // 角色类优先复用 charAnchors 同源锚点，保证与场景图人物一致
+        const anchor=state.charAnchors && state.charAnchors[r.name] ? state.charAnchors[r.name] : r.prompt;
+        const prompt=(style?('风格：'+style+'。'):'')+anchor+' | full body / three views / clean white background / character reference sheet';
         const url = await genImage(prompt, getMediaCfg());
         cell.innerHTML='<img src="'+url+'" alt="'+esc(r.name)+'"><div class="ref-detail"><b>'+esc(r.name)+'</b> · '+esc(r.type)+'</div>';
       }catch(e){ cell.innerHTML='<div class="ph err">'+esc(r.name)+' 失败：'+esc(e.message)+'</div>'; }
