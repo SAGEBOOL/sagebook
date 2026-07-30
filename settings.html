@@ -624,6 +624,10 @@
                 <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">API Key</label>
                 <input type="password" class="input-box" id="vidKey" placeholder="sk-..." style="margin-top:4px;">
                 <span id="vidKeyStatus" style="font-size:12px;margin-left:8px;color:var(--text-secondary)"></span>
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">生成间隔（毫秒，避免限流，默认 12000）</label>
+                <input type="number" class="input-box" id="vidDelay" placeholder="12000" style="margin-top:4px;">
+                <label style="font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 6px;">视频 URL 响应路径（默认 data[0].url，选填）</label>
+                <input type="text" class="input-box" id="vidResp" placeholder="data[0].url" style="margin-top:4px;">
                 <div style="display:flex;gap:10px;margin-top:15px;">
                     <button class="btn" onclick="saveVidConfig()">💾 保存</button>
                 </div>
@@ -910,13 +914,17 @@
             const url=document.getElementById('vidUrl').value.trim();
             const model=document.getElementById('vidModel').value.trim();
             const key=document.getElementById('vidKey').value;
+            const delay=document.getElementById('vidDelay').value.trim();
+            const resp=document.getElementById('vidResp').value.trim();
             const savedKey=localStorage.getItem('vid_key');
-            if(!url && !model && !key && !savedKey){ showToast('⚠️ 请至少填写接口地址或模型名'); return; }
+            if(!url && !model && !key && !savedKey && !delay && !resp){ showToast('⚠️ 请至少填写一项'); return; }
             if(url) localStorage.setItem('vid_url', url); else localStorage.removeItem('vid_url');
             if(model) localStorage.setItem('vid_model', model); else localStorage.removeItem('vid_model');
             if(key) localStorage.setItem('vid_key', key); // 仅在用户填写时才覆盖旧 Key
+            if(delay) localStorage.setItem('vid_delay', delay); else localStorage.removeItem('vid_delay');
+            if(resp) localStorage.setItem('vid_resp', resp); else localStorage.removeItem('vid_resp');
             updateVidKeyStatus();
-            showToast(key ? '✅ 视频配置已保存！' : '✅ 已保存（API Key 沿用之前配置）');
+            showToast(key ? '✅ 视频配置已保存！' : '✅ 视频配置已保存（API Key 沿用之前配置）');
         }
         function updateVidKeyStatus(){
             const el=document.getElementById('vidKeyStatus'); if(!el) return;
@@ -1393,6 +1401,8 @@
                 };
                 restoreMedia('imgUrl', 'img_url', 'imgModel', 'img_model');
                 restoreMedia('vidUrl', 'vid_url', 'vidModel', 'vid_model');
+                const vd = localStorage.getItem('vid_delay'); const vde = document.getElementById('vidDelay'); if (vd && vde) vde.value = vd;
+                const vr = localStorage.getItem('vid_resp'); const vre = document.getElementById('vidResp'); if (vr && vre) vre.value = vr;
                 if (typeof updateImgKeyStatus === 'function') updateImgKeyStatus();
                 if (typeof updateVidKeyStatus === 'function') updateVidKeyStatus();
                 // 恢复云同步设置（按平台）
