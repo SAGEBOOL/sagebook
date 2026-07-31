@@ -5,7 +5,7 @@
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAGE BOOK - 知识库编辑器</title>
+    <title>SAGE BOOK - 大纲编辑器</title>
     <style>
         * {
             margin: 0;
@@ -632,7 +632,7 @@
             <a href="main-editor.html" class="nav-link">编辑器</a>
             <a href="character-management.html" class="nav-link">角色</a>
             <a href="template-gallery.html" class="nav-link">模板</a>
-            <a href="outline-editor.html" class="nav-link active">知识库</a>
+            <a href="outline-editor.html" class="nav-link active">大纲</a>
             <a href="knowledge-graph.html" class="nav-link">图谱</a>
             <a href="settings.html" class="nav-link">设置</a>
         </nav>
@@ -679,7 +679,7 @@
             <div class="editor-area">
                 <div class="outline-editor">
                     <div class="editor-header">
-                        <input type="text" class="editor-title" id="outlineTitle" placeholder="知识库标题" oninput="updateOutline()">
+                        <input type="text" class="editor-title" id="outlineTitle" placeholder="节点标题" oninput="updateOutline()">
                         <div class="editor-meta">
                             <span>类型: <strong id="outlineType">卷</strong></span>
                             <span>状态: <strong id="outlineStatus">进行中</strong></span>
@@ -687,6 +687,10 @@
                         </div>
                     </div>
                     <div class="editor-content" id="outlineContent" contenteditable="true" oninput="updateOutline()"></div>
+                    <div class="node-editor-actions" style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                        <button class="btn btn-secondary btn-sm" onclick="openNodeInEditor()">📝 在编辑器中打开</button>
+                        <span style="font-size:12px;color:var(--text-muted)">按节点标题跳到手稿对应章节</span>
+                    </div>
                 </div>
 
                 <div class="properties-panel">
@@ -958,6 +962,12 @@
 
             // 渲染待办事项
             renderTodos(node.todos || []);
+        }
+
+        function openNodeInEditor() {
+            if (!selectedNode) { return; }
+            var t = encodeURIComponent(selectedNode.title || '');
+            window.open('main-editor.html?chapter=' + t, '_blank');
         }
 
         function getTypeName(type) {

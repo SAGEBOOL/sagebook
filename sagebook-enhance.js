@@ -461,12 +461,48 @@
     });
   }
 
+  /* ---------------- 章节深链：?chapter= 跳主编辑器对应章节 ---------------- */
+  function mountChapterDeepLink() {
+    // 仅主编辑器（暴露了 openFile）需要此能力；其他页面无 openFile 自动跳过
+    if (typeof window.openFile !== 'function') return;
+    function resolve() {
+      try {
+        var p = new URLSearchParams(location.search).get('chapter');
+        if (!p) return;
+        var novel = JSON.parse(localStorage.getItem('sagebook_novel') || 'null');
+        if (!novel || !novel.chapters) return;
+        var ids = Object.keys(novel.chapters);
+        var target = null;
+        if (novel.chapters[p]) {                      // 1) 精确 id
+          target = p;
+        } else {
+          var idx = parseInt(p, 10);
+          if (!isNaN(idx) && idx >= 1 && idx <= ids.length) {  // 2) 1-based 序号
+            target = ids[idx - 1];
+          } else {                                    // 3) 标题包含匹配
+            var t = p.replace(/\.(md|txt)$/i, '');
+            target = ids.filter(function (id) {
+              return (novel.chapters[id].title || '').indexOf(t) >= 0;
+            })[0] || null;
+          }
+        }
+        if (target) window.openFile(target);
+      } catch (e) { /* 不影响页面 */ }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', resolve);
+    } else {
+      resolve();
+    }
+  }
+
   /* ---------------- 启动 ---------------- */
   function boot() {
     if (!document.body) { document.addEventListener('DOMContentLoaded', boot); return; }
     try { mountPalette(); } catch (e) { /* 不影响页面 */ }
     try { mountHelp(); } catch (e) { /* 不影响页面 */ }
     try { mountMentions(); } catch (e) { /* 不影响页面 */ }
+    try { mountChapterDeepLink(); } catch (e) { /* 不影响页面 */ }
     try { showOnboarding(); } catch (e) { /* 不影响页面 */ }
     try { registerServiceWorker(); } catch (e) { /* 不影响页面 */ }
   }
