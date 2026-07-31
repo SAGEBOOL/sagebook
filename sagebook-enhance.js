@@ -150,7 +150,10 @@
 
     function next() { if (idx < ONBOARD_STEPS.length - 1) { idx++; render(); } else finish(); }
     function prev() { if (idx > 0) { idx--; render(); } }
-    function finish() { localStorage.setItem(LS.onboarded, '1'); if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }
+    function finish() {
+      try { localStorage.setItem(LS.onboarded, '1'); } catch (e) { /* 隐私模式/存储受限时不阻断关闭 */ }
+      if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
 
     skip.addEventListener('click', finish);
     // 底部加 上一步 / 下一步
