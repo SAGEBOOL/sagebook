@@ -53,11 +53,16 @@
   }
 
   // 只打一次补丁，避免重复
+  // 注意：必须透传全部参数（setItem 需要 key+value 两个参数），
+  // 只重定向第一个参数（键名），其余原样转发。早期版本只转发了 key，
+  // 导致 setItem 漏掉 value 而抛错 —— 全站 localStorage 写入静默失败（含存稿/设置）。
   if (!Storage.prototype.__sb_proj_patched) {
     ['getItem', 'setItem', 'removeItem'].forEach(function (m) {
       var orig = Storage.prototype[m];
-      Storage.prototype[m] = function (key) {
-        return orig.call(this, remap(key));
+      Storage.prototype[m] = function () {
+        var args = Array.prototype.slice.call(arguments);
+        if (args.length) args[0] = remap(args[0]);
+        return orig.apply(this, args);
       };
     });
     Storage.prototype.__sb_proj_patched = true;

@@ -11,6 +11,29 @@
     helpSeen: 'sagebook_help_seen'
   };
 
+  /* 引导完成标志：多兜底持久化（localStorage 主，cookie 备，sessionStorage / 内存兜底）
+     原因：个别浏览器或隐私模式下 localStorage.setItem 会抛错，导致"跳过"后标志丢失、
+     返回默认页又弹出欢迎页。任一存储成功即可跨页 / 跨会话抑制引导。 */
+  var _onboardedMem = false;
+  function setOnboarded() {
+    _onboardedMem = true;
+    try { localStorage.setItem(LS.onboarded, '1'); } catch (e) {}
+    try { sessionStorage.setItem(LS.onboarded, '1'); } catch (e) {}
+    try {
+      var exp = new Date(Date.now() + 365 * 86400000).toUTCString();
+      document.cookie = LS.onboarded + '=1; path=/; expires=' + exp + '; SameSite=Lax';
+    } catch (e) {}
+  }
+  function isOnboarded() {
+    if (_onboardedMem) return true;
+    try { if (localStorage.getItem(LS.onboarded)) return true; } catch (e) {}
+    try { if (sessionStorage.getItem(LS.onboarded)) return true; } catch (e) {}
+    try {
+      if (document.cookie && document.cookie.indexOf(LS.onboarded + '=1') >= 0) return true;
+    } catch (e) {}
+    return false;
+  }
+
   /* 每页的「这是什么 / 先做什么 / 去哪」帮助内容 */
   var PAGES = {
     'index.html': { ico: '🏠', label: '首页',
@@ -109,7 +132,7 @@
   ];
 
   function showOnboarding() {
-    if (localStorage.getItem(LS.onboarded)) return;
+    if (isOnboarded()) return;
     var idx = 0;
     var overlay = el('div', 'sb-overlay');
     overlay.id = 'sb-onboard';
@@ -137,7 +160,14 @@
       s.actions.forEach(function (a) {
         var b = el('a', 'sb-btn ' + a.cls, a.t);
         b.href = a.url;
-        b.addEventListener('click', finish);
+        // 关键修复：点击后先持久化标志、移除浮层，再显式跳转。
+        // 若依赖 <a> 默认导航，移除浮层（锚点祖先）会取消跳转，按钮表现为"无反应"。
+        b.addEventListener('click', function (e) {
+          e.preventDefault();
+          setOnboarded();
+          closeOverlay();
+          location.href = a.url;
+        });
         actions.appendChild(b);
       });
       dots.innerHTML = '';
@@ -150,9 +180,12 @@
 
     function next() { if (idx < ONBOARD_STEPS.length - 1) { idx++; render(); } else finish(); }
     function prev() { if (idx > 0) { idx--; render(); } }
-    function finish() {
-      try { localStorage.setItem(LS.onboarded, '1'); } catch (e) { /* 隐私模式/存储受限时不阻断关闭 */ }
+    function closeOverlay() {
       if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+    function finish() {
+      setOnboarded();
+      closeOverlay();
     }
 
     skip.addEventListener('click', finish);
