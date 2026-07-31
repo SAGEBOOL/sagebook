@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN" data-theme="dark">
 <head>
-  <script src="sagebook-projects.js"></script>
+  <script src="sagebook-projects.js?v=eff8bed"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -314,12 +314,12 @@
             } else if(fmt==='html'){
                 const ps=transformed.split(/\n\s*\n/).map(s=>s.trim()).filter(s=>s)
                     .map(s=>`<p>${s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</p>`).join('\n');
-                content=`<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="utf-8">\n<title>章节</title>\n  <link rel="stylesheet" href="sagebook-enhance.css">
+                content=`<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="utf-8">\n<title>章节</title>\n  <link rel="stylesheet" href="sagebook-enhance.css?v=eff8bed">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#141413">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="sagebook-projects.css">
+  <link rel="stylesheet" href="sagebook-projects.css?v=eff8bed">
 </head>\n<body>\n<h1>章节</h1>\n${ps}\n</body>\n</html>`;
             }
             const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
@@ -652,6 +652,6 @@
       else initBrandText();
     })();
     </script>
-  <script defer src="sagebook-enhance.js"></script>
+  <script defer src="sagebook-enhance.js?v=eff8bed"></script>
 </body>
 </html>

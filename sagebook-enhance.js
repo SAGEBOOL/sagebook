@@ -493,7 +493,7 @@
     if (p !== 'https:' && p !== 'http:') return;
     if (typeof window.addEventListener !== 'function') return;
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () { /* 注册失败不影响使用 */ });
+      navigator.serviceWorker.register('./sw.js?v=eff8bed').catch(function () { /* 注册失败不影响使用 */ });
     });
   }
 
