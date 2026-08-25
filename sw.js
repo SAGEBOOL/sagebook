@@ -7,14 +7,14 @@
      后台拉最新写入缓存。
    发布新版本时，把下方 CACHE 版本号 +1（如 v1→v2），旧缓存会被清空。
    ============================================================ */
-const CACHE = 'sagebook-shell-bc51223';
+const CACHE = 'sagebook-shell-c67a64f';
 const CORE = [
   './index.html',
   './manifest.json',
   './icon.svg',
   './design-system.css',
-  './sagebook-enhance.css?v=bc51223',
-  './sagebook-enhance.js?v=bc51223'
+  './sagebook-enhance.css?v=c67a64f',
+  './sagebook-enhance.js?v=c67a64f'
 ];
 
 self.addEventListener('install', function (e) {

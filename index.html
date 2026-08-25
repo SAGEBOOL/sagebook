@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <script src="sagebook-projects.js?v=bc51223"></script>
+  <script src="sagebook-projects.js?v=c67a64f"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -201,12 +201,12 @@
     <link rel="stylesheet" href="text-pressure.css">
     <link rel="stylesheet" href="target-cursor.css">
     <link rel="stylesheet" href="design-system.css">
-  <link rel="stylesheet" href="sagebook-enhance.css?v=bc51223">
+  <link rel="stylesheet" href="sagebook-enhance.css?v=c67a64f">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#141413">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icon.svg">
-  <link rel="stylesheet" href="sagebook-projects.css?v=bc51223">
+  <link rel="stylesheet" href="sagebook-projects.css?v=c67a64f">
 </head>
 <body>
     <div class="container">
@@ -329,22 +329,35 @@
     </div>
 
     <script>
-        // 浏览量统计：从 1500 起计，按浏览器会话累计（localStorage 持久化，刷新同会话不重复计）
+        // 浏览量统计：真·全站访问量，计数存于服务端 countapi.xyz，从 1500 起计
+        // 纯前端、零账号、跨域 CORS 已支持；请求失败则保留默认 1,500 不闪烁
         (function () {
-            try {
-                var BASE = 1500;
-                var KEY = 'sagebook_site_visits';
-                var SESS = 'sagebook_site_visits_session';
-                var count = parseInt(localStorage.getItem(KEY), 10);
-                if (isNaN(count)) count = BASE;
-                if (sessionStorage.getItem(SESS) !== '1') {
-                    count += 1;
-                    localStorage.setItem(KEY, String(count));
-                    sessionStorage.setItem(SESS, '1');
-                }
-                var el = document.getElementById('visit-count');
-                if (el) el.textContent = count.toLocaleString('en-US');
-            } catch (e) {}
+            var NS = 'sagebook', KEY = 'home_pv';
+            var el = document.getElementById('visit-count');
+            function set(n) { if (el && typeof n === 'number' && !isNaN(n)) el.textContent = n.toLocaleString('en-US'); }
+            function api(path) {
+                return fetch('https://api.countapi.xyz' + path)
+                    .then(function (r) { return r.json(); })
+                    .catch(function () { return null; });
+            }
+            (async function () {
+                try {
+                    var g = await api('/get/' + NS + '/' + KEY);
+                    if (!g || g.status !== 200) {
+                        await api('/create?namespace=' + NS + '&key=' + KEY + '&value=1500');
+                    }
+                    var h = await api('/hit/' + NS + '/' + KEY);
+                    if (h && typeof h.value === 'number') {
+                        if (h.value <= 1) { // 兜底：若被自动建为 0，则抬升到 1500 基准再 +1
+                            var s = await api('/set/' + NS + '/' + KEY + '?value=1500');
+                            if (s && typeof s.value === 'number') h.value = s.value;
+                            var h2 = await api('/hit/' + NS + '/' + KEY);
+                            if (h2 && typeof h2.value === 'number') h.value = h2.value;
+                        }
+                        set(h.value);
+                    }
+                } catch (e) {}
+            })();
         })();
     </script>
 
@@ -385,6 +398,6 @@
     <script src="target-cursor.js"></script>
     <!-- TextPressure（React Bits <TextPressure /> 原生移植）-->
     <script src="text-pressure.js"></script>
-  <script defer src="sagebook-enhance.js?v=bc51223"></script>
+  <script defer src="sagebook-enhance.js?v=c67a64f"></script>
 </body>
 </html>
